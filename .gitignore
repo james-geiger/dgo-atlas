@@ -217,9 +217,9 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 
-# dgo-site
+# DGO Atlas
 tests/fixtures/*/site/
-tests/fixtures/*/.dgo-site/
+tests/fixtures/*/.dgo-atlas/
 
 # local preview build
 /.preview/

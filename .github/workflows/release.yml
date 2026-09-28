@@ -1,0 +1,84 @@
+# Publish dgo-atlas to PyPI when a GitHub release is published. To rerun a
+# release by hand, start this workflow and choose the release's tag (not a
+# branch) under "Use workflow from".
+#
+# The release tag is the bare version (0.5.0, no "v"). It, `version` in
+# pyproject.toml and `__version__` in the package must all be identical, or
+# nothing is published. tests/test_cli.py checks the last two on every test
+# run; this workflow checks both against the tag.
+#
+# PyPI accepts the upload through trusted publishing, so no token is stored.
+# One-time setup on PyPI: add a trusted publisher for project `dgo-atlas`,
+# owner `james-geiger`, repository `dgo-atlas`, workflow `release.yml`,
+# environment `pypi`.
+
+name: Release
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check this run is for a tag
+        if: github.ref_type != 'tag'
+        run: |
+          echo "::error::$GITHUB_REF_NAME is a branch; run this workflow on a release tag"
+          exit 1
+
+      - uses: actions/checkout@v5
+
+      - uses: astral-sh/setup-uv@v6
+
+      - name: Check pyproject.toml matches the tag
+        run: |
+          tag="$GITHUB_REF_NAME"
+          project="$(uv version --short)"
+          if [ "$project" != "$tag" ]; then
+            echo "::error file=pyproject.toml::version is $project but the tag is $GITHUB_REF_NAME"
+            exit 1
+          fi
+
+      - name: Test
+        # The tests import DGO from its release URL, so they need network.
+        run: uv run --locked pytest
+
+      - name: Build
+        run: uv build
+
+      - name: Check the built package's __version__ matches the tag
+        run: |
+          tag="$GITHUB_REF_NAME"
+          reported="$(uvx --isolated --from ./dist/*.whl dgo-atlas --version | head -n 1)"
+          if [ "$reported" != "dgo-atlas $tag" ]; then
+            echo "::error file=src/dgo_atlas/__init__.py::the built package reports '$reported' but the tag is $GITHUB_REF_NAME"
+            exit 1
+          fi
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+          if-no-files-found: error
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/dgo-atlas
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - uses: pypa/gh-action-pypi-publish@release/v1

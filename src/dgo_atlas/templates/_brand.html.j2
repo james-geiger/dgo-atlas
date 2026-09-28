@@ -1,0 +1,12 @@
+{#- Brand overrides from dgo-atlas.yaml, written after site.css so they win. -#}
+{%- if brand.accent or brand.accent_dark or brand.display_font or brand.body_font or brand.serif_font %}
+<style>
+:root {
+  {%- if brand.accent %} --accent: {{ brand.accent }};{% endif %}
+  {%- if brand.accent_dark %} --accent-dark: {{ brand.accent_dark }};{% endif %}
+  {%- if brand.display_font %} --font-display: {{ brand.display_font }};{% endif %}
+  {%- if brand.body_font %} --font-body: {{ brand.body_font }};{% endif %}
+  {%- if brand.serif_font %} --font-serif: {{ brand.serif_font }};{% endif %}
+}
+</style>
+{%- endif %}

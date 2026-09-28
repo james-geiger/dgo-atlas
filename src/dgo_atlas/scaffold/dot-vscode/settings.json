@@ -1,0 +1,7 @@
+{
+  "yaml.schemas": {
+    ".dgo-atlas/governance.schema.json": ["governance/**/*.yaml"],
+    ".dgo-atlas/config.schema.json": ["dgo-atlas.yaml"]
+  },
+  "yaml.customTags": []
+}

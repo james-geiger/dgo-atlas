@@ -6,9 +6,9 @@ import urllib.request
 import pytest
 import yaml
 
-from dgo_site import config, dgo
-from dgo_site.config import ConfigError
-from dgo_site.resources import CONFIG_SCHEMA, TEMPLATE, VIEWMODEL
+from dgo_atlas import config, dgo
+from dgo_atlas.config import ConfigError
+from dgo_atlas.resources import CONFIG_SCHEMA, TEMPLATE, VIEWMODEL
 
 from .conftest import DGO_VERSION, FIXTURES
 
@@ -41,7 +41,7 @@ def test_editor_schema_accepts_type_by_class_name():
 
 
 def test_local_source_override(tmp_path):
-    """dgo_source points at a local copy, relative to dgo-site.yaml (offline builds)."""
+    """dgo_source points at a local copy, relative to dgo-atlas.yaml (offline builds)."""
     url = dgo.source_for(DGO_VERSION).location + ".yaml"
     with urllib.request.urlopen(url, timeout=30) as response:
         (tmp_path / "dgo.yaml").write_bytes(response.read())
@@ -64,7 +64,7 @@ def test_release_missing_classes_is_rejected(tmp_path):
     source = tmp_path / "old-dgo.yaml"
     source.write_text("id: https://example.org/old\nname: old\nimports: [linkml:types]\n"
                       "prefixes: {linkml: https://w3id.org/linkml/}\nclasses:\n  person: {}\n")
-    with pytest.raises(ConfigError, match="missing classes dgo-site depends on"):
+    with pytest.raises(ConfigError, match="missing classes DGO Atlas depends on"):
         _project(tmp_path, dgo_version="0.0.1", dgo_source="old-dgo.yaml")
     assert dgo.active().version == DGO_VERSION
 
@@ -83,7 +83,7 @@ def test_no_dgo_namespace_minted_by_the_middleware():
     """The middleware's own schemas use their own namespace, never dgo: (handoff §3.1)."""
     for schema in (TEMPLATE, VIEWMODEL, CONFIG_SCHEMA):
         doc = yaml.safe_load(schema.read_text())
-        assert doc["id"].startswith("https://w3id.org/dgo-site/")
+        assert doc["id"].startswith("https://w3id.org/dgo-atlas/")
         for kind in ("classes", "slots"):
             for name, spec in (doc.get(kind) or {}).items():
                 uri = (spec or {}).get("class_uri") or (spec or {}).get("slot_uri") or ""

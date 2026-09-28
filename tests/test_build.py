@@ -4,8 +4,8 @@ import json
 
 import pytest
 
-from dgo_site import config, linkcheck
-from dgo_site.build import build
+from dgo_atlas import config, linkcheck
+from dgo_atlas.build import build
 
 from .conftest import FIXTURES
 

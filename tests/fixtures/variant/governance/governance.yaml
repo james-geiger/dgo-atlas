@@ -45,7 +45,7 @@ people:
 organizations:
   - id: ex:office-of-research
     label: Office of Research
-    has_member:                          # organizations can be members too (DGO v0.1.1)
+    has_member:                          # organizations can be members too (DGO 0.1.1)
       - ex:cto
       - ex:spo
   - id: ex:cto

@@ -1,0 +1,537 @@
+{
+    "$defs": {
+        "Brand": {
+            "additionalProperties": false,
+            "description": "Look of the site. Every field is optional.",
+            "properties": {
+                "accent": {
+                    "description": "Accent colour for links and actions, as a CSS colour (e.g. \"#6B3FA0\").",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "accent_dark": {
+                    "description": "Accent colour used in dark mode; defaults to a lightened accent.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "body_font": {
+                    "description": "CSS font-family for body text.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "display_font": {
+                    "description": "CSS font-family for headings.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "fonts_url": {
+                    "description": "A Google Fonts (or other) stylesheet URL loading the fonts named below.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "mark": {
+                    "description": "One or two characters shown in the header's brand mark.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "serif_font": {
+                    "description": "CSS font-family for definitions and ledes.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                }
+            },
+            "title": "Brand",
+            "type": "object"
+        },
+        "PageSetting": {
+            "additionalProperties": false,
+            "description": "Settings for one page, keyed by the IRI or CURIE of what it is about.",
+            "properties": {
+                "about": {
+                    "type": "string"
+                },
+                "accent": {
+                    "description": "Accent colour for links and actions, as a CSS colour (e.g. \"#6B3FA0\").",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                }
+            },
+            "required": [
+                "about"
+            ],
+            "title": "PageSetting",
+            "type": "object"
+        },
+        "PageSetting__identifier_optional": {
+            "additionalProperties": false,
+            "description": "Settings for one page, keyed by the IRI or CURIE of what it is about.",
+            "properties": {
+                "about": {
+                    "type": "string"
+                },
+                "accent": {
+                    "description": "Accent colour for links and actions, as a CSS colour (e.g. \"#6B3FA0\").",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                }
+            },
+            "required": [],
+            "title": "PageSetting",
+            "type": "object"
+        },
+        "Paths": {
+            "additionalProperties": false,
+            "description": "Where things live, relative to dgo-atlas.yaml.",
+            "properties": {
+                "content": {
+                    "description": "Directory of authored Markdown pages.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "data": {
+                    "description": "Directory of governance YAML files (searched recursively).",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "output": {
+                    "description": "Directory the site is built into. Emptied on every build.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                }
+            },
+            "title": "Paths",
+            "type": "object"
+        },
+        "Prefix": {
+            "additionalProperties": false,
+            "description": "An instance namespace used in governance data, written as `prefix: namespace` (e.g. `acme: https://data.acme.example/`).",
+            "properties": {
+                "namespace": {
+                    "format": "uri",
+                    "type": "string"
+                },
+                "prefix": {
+                    "pattern": "^[a-zA-Z_][\\w.-]*$",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "prefix",
+                "namespace"
+            ],
+            "title": "Prefix",
+            "type": "object"
+        },
+        "Prefix__identifier_optional": {
+            "additionalProperties": false,
+            "description": "An instance namespace used in governance data, written as `prefix: namespace` (e.g. `acme: https://data.acme.example/`).",
+            "properties": {
+                "namespace": {
+                    "format": "uri",
+                    "type": "string"
+                },
+                "prefix": {
+                    "pattern": "^[a-zA-Z_][\\w.-]*$",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "namespace"
+            ],
+            "title": "Prefix",
+            "type": "object"
+        },
+        "Repository": {
+            "additionalProperties": false,
+            "description": "The implementer's source repository, for \"view source\" links. Omit it and the links are left off.",
+            "properties": {
+                "branch": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "url": {
+                    "description": "Repository web URL, e.g. https://github.com/acme/glossary.",
+                    "format": "uri",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "url"
+            ],
+            "title": "Repository",
+            "type": "object"
+        },
+        "SiteConfig": {
+            "additionalProperties": false,
+            "description": "The contents of dgo-atlas.yaml.",
+            "properties": {
+                "base_path": {
+                    "description": "Where the site is served from: \"/\" for a custom domain, \"/<repo>/\" for a GitHub Pages project site. Only the 404 page uses it.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "brand": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Brand"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "contact_email": {
+                    "description": "Where readers report a problem with a definition.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "description": {
+                    "description": "One sentence describing the site, used on the landing page and in search results.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "dgo_source": {
+                    "description": "Import DGO from here instead of the release URL: a URL, or a path relative to dgo-atlas.yaml, to a single-file DGO schema (for a mirror, a fork, or offline builds). dgo_version still names the release.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "dgo_version": {
+                    "description": "The Data Governance Ontology release to use, as its tag (e.g. \"0.1.0\"). Its schema is imported from the DGO repository's dist/dgo.yaml at that tag. Quote it, or YAML may read it as a number.",
+                    "pattern": "^[0-9A-Za-z][0-9A-Za-z._-]*$",
+                    "type": "string"
+                },
+                "organization": {
+                    "description": "The organization the site belongs to, shown under the title.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "pages": {
+                    "additionalProperties": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/$defs/PageSetting__identifier_optional"
+                            },
+                            {
+                                "description": "Accent colour for links and actions, as a CSS colour (e.g. \"#6B3FA0\").",
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "description": "Per-page settings keyed by the IRI or CURIE the page is about.",
+                    "type": [
+                        "object",
+                        "null"
+                    ]
+                },
+                "paths": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Paths"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "prefixes": {
+                    "additionalProperties": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/$defs/Prefix__identifier_optional"
+                            },
+                            {
+                                "format": "uri",
+                                "type": "string"
+                            }
+                        ]
+                    },
+                    "description": "The instance namespaces used in governance data, as `prefix: namespace`.",
+                    "type": "object"
+                },
+                "repository": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Repository"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "show_identifiers": {
+                    "description": "Show the Identifier panel (id, expanded IRI, DGO class) on term, council, person and organization pages. Set false to hide it.",
+                    "type": [
+                        "boolean",
+                        "null"
+                    ]
+                },
+                "suggest_change_url": {
+                    "description": "A URL that starts a change request. The term's CURIE is appended, URL encoded, so end it with a query parameter such as `&term=`.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "text": {
+                    "additionalProperties": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/$defs/TextOverride__identifier_optional"
+                            },
+                            {
+                                "type": "string"
+                            }
+                        ]
+                    },
+                    "description": "Replacement wording for the site, keyed by text key (e.g. `term.history: Change log`). Run `dgo-atlas text` to list every key and its default.",
+                    "type": [
+                        "object",
+                        "null"
+                    ]
+                },
+                "title": {
+                    "description": "The site's name, shown in the header and every page title.",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "dgo_version",
+                "title",
+                "prefixes"
+            ],
+            "title": "SiteConfig",
+            "type": "object"
+        },
+        "TextOverride": {
+            "additionalProperties": false,
+            "description": "Replacement wording for one text key, written as `key: wording` (e.g. `term.history: Change log`). `dgo-atlas text` lists the keys.",
+            "properties": {
+                "key": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "key",
+                "value"
+            ],
+            "title": "TextOverride",
+            "type": "object"
+        },
+        "TextOverride__identifier_optional": {
+            "additionalProperties": false,
+            "description": "Replacement wording for one text key, written as `key: wording` (e.g. `term.history: Change log`). `dgo-atlas text` lists the keys.",
+            "properties": {
+                "key": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "value"
+            ],
+            "title": "TextOverride",
+            "type": "object"
+        }
+    },
+    "$id": "https://w3id.org/dgo-atlas/config",
+    "$schema": "https://json-schema.org/draft/2019-09/schema",
+    "additionalProperties": true,
+    "description": "The contents of dgo-atlas.yaml.",
+    "metamodel_version": "1.11.0",
+    "properties": {
+        "base_path": {
+            "description": "Where the site is served from: \"/\" for a custom domain, \"/<repo>/\" for a GitHub Pages project site. Only the 404 page uses it.",
+            "type": [
+                "string",
+                "null"
+            ]
+        },
+        "brand": {
+            "anyOf": [
+                {
+                    "$ref": "#/$defs/Brand"
+                },
+                {
+                    "type": "null"
+                }
+            ]
+        },
+        "contact_email": {
+            "description": "Where readers report a problem with a definition.",
+            "type": [
+                "string",
+                "null"
+            ]
+        },
+        "description": {
+            "description": "One sentence describing the site, used on the landing page and in search results.",
+            "type": [
+                "string",
+                "null"
+            ]
+        },
+        "dgo_source": {
+            "description": "Import DGO from here instead of the release URL: a URL, or a path relative to dgo-atlas.yaml, to a single-file DGO schema (for a mirror, a fork, or offline builds). dgo_version still names the release.",
+            "type": [
+                "string",
+                "null"
+            ]
+        },
+        "dgo_version": {
+            "description": "The Data Governance Ontology release to use, as its tag (e.g. \"0.1.0\"). Its schema is imported from the DGO repository's dist/dgo.yaml at that tag. Quote it, or YAML may read it as a number.",
+            "pattern": "^[0-9A-Za-z][0-9A-Za-z._-]*$",
+            "type": "string"
+        },
+        "organization": {
+            "description": "The organization the site belongs to, shown under the title.",
+            "type": [
+                "string",
+                "null"
+            ]
+        },
+        "pages": {
+            "additionalProperties": {
+                "anyOf": [
+                    {
+                        "$ref": "#/$defs/PageSetting__identifier_optional"
+                    },
+                    {
+                        "description": "Accent colour for links and actions, as a CSS colour (e.g. \"#6B3FA0\").",
+                        "type": "string"
+                    },
+                    {
+                        "type": "null"
+                    }
+                ]
+            },
+            "description": "Per-page settings keyed by the IRI or CURIE the page is about.",
+            "type": [
+                "object",
+                "null"
+            ]
+        },
+        "paths": {
+            "anyOf": [
+                {
+                    "$ref": "#/$defs/Paths"
+                },
+                {
+                    "type": "null"
+                }
+            ]
+        },
+        "prefixes": {
+            "additionalProperties": {
+                "anyOf": [
+                    {
+                        "$ref": "#/$defs/Prefix__identifier_optional"
+                    },
+                    {
+                        "format": "uri",
+                        "type": "string"
+                    }
+                ]
+            },
+            "description": "The instance namespaces used in governance data, as `prefix: namespace`.",
+            "type": "object"
+        },
+        "repository": {
+            "anyOf": [
+                {
+                    "$ref": "#/$defs/Repository"
+                },
+                {
+                    "type": "null"
+                }
+            ]
+        },
+        "show_identifiers": {
+            "description": "Show the Identifier panel (id, expanded IRI, DGO class) on term, council, person and organization pages. Set false to hide it.",
+            "type": [
+                "boolean",
+                "null"
+            ]
+        },
+        "suggest_change_url": {
+            "description": "A URL that starts a change request. The term's CURIE is appended, URL encoded, so end it with a query parameter such as `&term=`.",
+            "type": [
+                "string",
+                "null"
+            ]
+        },
+        "text": {
+            "additionalProperties": {
+                "anyOf": [
+                    {
+                        "$ref": "#/$defs/TextOverride__identifier_optional"
+                    },
+                    {
+                        "type": "string"
+                    }
+                ]
+            },
+            "description": "Replacement wording for the site, keyed by text key (e.g. `term.history: Change log`). Run `dgo-atlas text` to list every key and its default.",
+            "type": [
+                "object",
+                "null"
+            ]
+        },
+        "title": {
+            "description": "The site's name, shown in the header and every page title.",
+            "type": "string"
+        }
+    },
+    "required": [
+        "dgo_version",
+        "title",
+        "prefixes"
+    ],
+    "title": "dgo_atlas_config",
+    "type": "object",
+    "version": "0.1.0"
+}
+

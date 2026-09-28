@@ -6,11 +6,11 @@ import shutil
 import pytest
 import yaml
 
-from dgo_site import config
-from dgo_site.build import build
-from dgo_site.config import ConfigError
-from dgo_site.resources import PACKAGE, STATIC, TEMPLATES
-from dgo_site.text import Text, TextError, defaults
+from dgo_atlas import config
+from dgo_atlas.build import build
+from dgo_atlas.config import ConfigError
+from dgo_atlas.resources import PACKAGE, STATIC, TEMPLATES
+from dgo_atlas.text import Text, TextError, defaults
 
 from .conftest import FIXTURES
 
@@ -47,7 +47,7 @@ def test_unknown_key_suggests_the_closest():
 
 def _project(tmp_path, *, text=None, content=None):
     root = tmp_path / "project"
-    shutil.copytree(FIXTURES / "variant", root, ignore=shutil.ignore_patterns(".dgo-site", "site"))
+    shutil.copytree(FIXTURES / "variant", root, ignore=shutil.ignore_patterns(".dgo-atlas", "site"))
     if text is not None:
         cfg = yaml.safe_load((root / config.CONFIG_NAME).read_text())
         cfg["text"] = text

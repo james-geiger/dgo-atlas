@@ -1,0 +1,336 @@
+id: https://w3id.org/dgo-atlas/viewmodel
+name: dgo_atlas_viewmodel
+title: DGO Atlas view model
+description: >-
+  The shape of the pages the site renders. The derivation turns validated
+  governance data into one Site document, which is validated against this
+  schema before anything is rendered. Unlike governance data, it holds derived
+  facts: a term's state, its domain, its governing councils, narrower terms.
+  Every page carries the IRI of what it is about.
+version: 0.1.0
+license: MIT
+prefixes:
+  linkml: https://w3id.org/linkml/
+  dgoatlas: https://w3id.org/dgo-atlas/
+  dgo: https://w3id.org/dgo/
+default_prefix: dgoatlas
+default_range: string
+imports:
+  - linkml:types
+
+classes:
+
+  Site:
+    tree_root: true
+    description: Every page of one site.
+    slots: [glossaries, domains, subject_areas, terms, councils, agents, processes]
+
+  Page:
+    abstract: true
+    description: Anything with its own page (or anchor) on the site.
+    slots: [about, iri, url, label]
+
+  Ref:
+    description: A link to another page.
+    slots: [about, url, label, state, kind]
+
+  GlossaryPage:
+    is_a: Page
+    slots: [domains, term_count]
+    slot_usage:
+      domains: { range: Ref, inlined: true, inlined_as_list: true }
+
+  DomainPage:
+    is_a: Page
+    slots: [glossary, subject_areas, term_count, accent]
+    slot_usage:
+      subject_areas: { range: Ref, inlined: true, inlined_as_list: true }
+
+  SubjectAreaPage:
+    is_a: Page
+    slots: [glossary, domain, terms, accent]
+    slot_usage:
+      domain: { required: true }
+      terms: { range: Ref, inlined: true, inlined_as_list: true }
+
+  TermPage:
+    is_a: Page
+    description: One glossary term with every fact a reader needs.
+    slots:
+      - name
+      - alt_labels
+      - definition
+      - definition_source
+      - semantic_type
+      - state
+      - glossary
+      - subject_area
+      - domain
+      - responsibilities
+      - governing_councils
+      - pending_changes
+      - history
+      - successor
+      - predecessors
+      - broader
+      - ancestors
+      - narrower
+      - related
+      - value_of
+      - values
+      - source_file
+    slot_usage:
+      glossary: { required: true }
+      subject_area: { required: true }
+      domain: { required: true }
+      state: { required: true }
+
+  SourceRef:
+    description: Where a definition was drawn from.
+    slots: [iri, label]
+
+  SemanticType:
+    description: >-
+      The external class a term denotes, with the label read from that
+      class. Only about and iri are known when the lookup fails.
+    slots: [about, iri, label, ontology]
+    slot_usage:
+      label: { required: false }
+
+  Responsibility:
+    description: A governance role held with respect to a term, and who bears it.
+    slots: [role, role_label, role_iri, term, bearer]
+
+  Change:
+    description: A term lifecycle process (creation, modification or deprecation).
+    slots: [about, label, process_kind, process_label, outcome]
+
+  HistoryEntry:
+    description: One status boundary of one of the term's lifecycle processes.
+    slots: [occurred_on, process, process_kind, process_label, boundary_kind, boundary_label]
+    slot_usage:
+      process: { range: Change, inlined: true }
+
+  CouncilPage:
+    is_a: Page
+    slots: [participates_in, process_chain, members, responsibilities, governed_terms, governed_areas]
+    slot_usage:
+      responsibilities: { range: Responsibility, inlined: true, inlined_as_list: true }
+
+  GovernedArea:
+    description: >-
+      A subject area holding terms a council governs or holds a role on, so
+      the council page can point to the area instead of re-listing its terms.
+    slots: [subject_area, domain, term_count, roles]
+    slot_usage:
+      subject_area: { required: true }
+      domain: { required: true }
+      term_count:
+        description: How many of the area's terms fall to this council.
+        required: true
+
+  RoleKind:
+    description: A kind of role, without its bearer or term.
+    slots: [role, role_label, role_iri]
+
+  Seat:
+    description: A council member and the council roles they hold on it.
+    slots: [member, council, council_roles]
+
+  CouncilRoleHeld:
+    slots: [role, role_label, role_iri]
+
+  AgentPage:
+    is_a: Page
+    description: A person or organization.
+    slots: [kind, email, job_title, memberships, organization_members, member_of, responsibilities]
+    slot_usage:
+      memberships: { range: Seat, inlined: true, inlined_as_list: true }
+
+  ProcessPage:
+    is_a: Page
+    description: A data governance process (not a term lifecycle process).
+    slots: [parent, children, councils]
+    slot_usage:
+      councils: { range: Ref, inlined: true, inlined_as_list: true }
+
+slots:
+  about:
+    description: The CURIE of the governed object this page or link is about.
+    range: uriorcurie
+    required: true
+  iri:
+    description: The expanded IRI of the governed object (or the source).
+    range: uri
+    required: true
+  url:
+    description: Site-relative path of the page, e.g. terms/clinical-trial.html.
+  label:
+    description: The display label.
+    required: true
+  name:
+    description: The term's `label`, when it differs from the display label.
+  kind:
+    range: AgentKind
+  state:
+    range: TermState
+  accent:
+    description: A CSS colour for this page's cards, from the site config.
+
+  glossaries: { range: GlossaryPage, multivalued: true, inlined_as_list: true }
+  domains: { range: DomainPage, multivalued: true, inlined_as_list: true }
+  subject_areas: { range: SubjectAreaPage, multivalued: true, inlined_as_list: true }
+  terms: { range: TermPage, multivalued: true, inlined_as_list: true }
+  councils: { range: CouncilPage, multivalued: true, inlined_as_list: true }
+  agents: { range: AgentPage, multivalued: true, inlined_as_list: true }
+  processes: { range: ProcessPage, multivalued: true, inlined_as_list: true }
+
+  term_count: { range: integer }
+  glossary: { range: Ref, inlined: true }
+  domain: { range: Ref, inlined: true }
+  subject_area: { range: Ref, inlined: true }
+  alt_labels: { multivalued: true }
+  definition: { required: true }
+  definition_source: { range: SourceRef, inlined: true }
+  semantic_type:
+    description: The external class the term denotes.
+    range: SemanticType
+    inlined: true
+  ontology:
+    description: The short name of the ontology that defines a class, e.g. BFO.
+  responsibilities: { range: Responsibility, multivalued: true, inlined_as_list: true }
+  governing_councils: { range: Ref, multivalued: true, inlined_as_list: true }
+  pending_changes: { range: Change, multivalued: true, inlined_as_list: true }
+  history: { range: HistoryEntry, multivalued: true, inlined_as_list: true }
+  successor: { range: Ref, inlined: true }
+  predecessors:
+    description: Terms whose replaced_by is this term.
+    range: Ref
+    multivalued: true
+    inlined_as_list: true
+  broader: { range: Ref, multivalued: true, inlined_as_list: true }
+  ancestors:
+    description: Every term reached by walking broader, nearest first.
+    range: Ref
+    multivalued: true
+    inlined_as_list: true
+  narrower:
+    description: Terms whose broader includes this term.
+    range: Ref
+    multivalued: true
+    inlined_as_list: true
+  related:
+    description: Related terms, read in both directions.
+    range: Ref
+    multivalued: true
+    inlined_as_list: true
+  value_of: { range: Ref, inlined: true }
+  values:
+    description: Terms whose value_of is this term.
+    range: Ref
+    multivalued: true
+    inlined_as_list: true
+  source_file:
+    description: The governance file the object is defined in, relative to the repository.
+
+  role:
+    description: Slug of the role kind, e.g. owner or chair.
+    required: true
+  role_label:
+    description: DGO's name for the role kind, e.g. subject matter expert.
+    required: true
+  role_iri:
+    description: The DGO class IRI of the role kind.
+    range: uri
+    required: true
+  term: { range: Ref, inlined: true }
+  bearer: { range: Ref, inlined: true, required: true }
+
+  process_kind: { range: ProcessKind, required: true }
+  process_label:
+    description: DGO's name for the process kind, e.g. term modification.
+    required: true
+  outcome: { range: Outcome, required: true }
+  occurred_on: { range: date, required: true }
+  process: { required: true }
+  boundary_kind: { range: BoundaryKind, required: true }
+  boundary_label:
+    description: DGO's name for the boundary kind, e.g. submitted for review.
+    required: true
+
+  participates_in: { range: Ref, inlined: true }
+  process_chain:
+    description: The process the council participates in and every process it is part of, innermost first.
+    range: Ref
+    multivalued: true
+    inlined_as_list: true
+  members: { range: Seat, multivalued: true, inlined_as_list: true }
+  member: { range: Ref, inlined: true, required: true }
+  council: { range: Ref, inlined: true, required: true }
+  council_roles: { range: CouncilRoleHeld, multivalued: true, inlined_as_list: true }
+  governed_terms:
+    description: Terms whose lifecycle processes fall under this council.
+    range: Ref
+    multivalued: true
+    inlined_as_list: true
+  governed_areas:
+    description: Subject areas of the council's governed terms and the terms it holds roles on, by domain.
+    range: GovernedArea
+    multivalued: true
+    inlined_as_list: true
+  roles:
+    description: The kinds of role the council holds on terms in this area.
+    range: RoleKind
+    multivalued: true
+    inlined_as_list: true
+  memberships: { multivalued: true }
+  organization_members:
+    description: The people and organizations that are members of an organization.
+    range: Ref
+    multivalued: true
+    inlined_as_list: true
+  member_of:
+    description: The organizations a person or organization is a member of.
+    range: Ref
+    multivalued: true
+    inlined_as_list: true
+  email: {}
+  job_title: {}
+
+  parent: { range: Ref, inlined: true }
+  children: { range: Ref, multivalued: true, inlined_as_list: true }
+
+enums:
+  TermState:
+    description: >-
+      A published term's state (provisional rule; see derive.term_state). Terms
+      with no recorded creation, or a rejected one, are not published, so they
+      have no state here.
+    permissible_values:
+      approved:
+        description: Its creation reached an approved boundary.
+      proposed:
+        description: Its creation is still open.
+      deprecated:
+        description: A deprecation of it reached an approved boundary.
+  Outcome:
+    permissible_values:
+      open: {}
+      approved: {}
+      rejected: {}
+  ProcessKind:
+    permissible_values:
+      term_creation: { meaning: dgo:DGO_00000021 }
+      term_modification: { meaning: dgo:DGO_00000022 }
+      term_deprecation: { meaning: dgo:DGO_00000031 }
+  BoundaryKind:
+    permissible_values:
+      drafted: { meaning: dgo:DGO_00000024 }
+      submitted_for_review: { meaning: dgo:DGO_00000025 }
+      approved: { meaning: dgo:DGO_00000026 }
+      rejected: { meaning: dgo:DGO_00000027 }
+  AgentKind:
+    permissible_values:
+      person: { meaning: dgo:DGO_00000003 }
+      organization: { meaning: dgo:DGO_00000004 }
+      council: { meaning: dgo:DGO_00000002 }

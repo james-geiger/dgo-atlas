@@ -9,9 +9,9 @@ as unrecorded and left out.
 
 from linkml.validator import validate as linkml_validate
 
-from dgo_site.derive import Deriver, related
-from dgo_site.resources import VIEWMODEL
-from dgo_site.semantic import ClassInfo
+from dgo_atlas.derive import Deriver, related
+from dgo_atlas.resources import VIEWMODEL
+from dgo_atlas.semantic import ClassInfo
 
 from .conftest import EX
 
@@ -105,7 +105,7 @@ def agent(site, label):
 
 
 def test_organization_members(variant):
-    """has_member on organizations (DGO v0.1.1): members listed, and read back as member_of."""
+    """has_member on organizations (DGO 0.1.1): members listed, and read back as member_of."""
     _, site = variant
     assert [m.label for m in agent(site, "Office of Research").organization_members] == [
         "Clinical Trials Office", "Sponsored Programs Office"]

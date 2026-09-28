@@ -4,7 +4,7 @@ import json
 
 import pytest
 
-from dgo_site import semantic
+from dgo_atlas import semantic
 
 BFO_PROCESS = "http://purl.obolibrary.org/obo/BFO_0000015"
 
