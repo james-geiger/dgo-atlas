@@ -216,3 +216,10 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# dgo-site
+tests/fixtures/*/site/
+tests/fixtures/*/.dgo-site/
+
+# local preview build
+/.preview/

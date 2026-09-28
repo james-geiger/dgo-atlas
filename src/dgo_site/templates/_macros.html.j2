@@ -1,0 +1,46 @@
+{#- Small pieces shared across pages. -#}
+
+{% macro state_badge(state, status=False) -%}
+<span class="badge badge--{{ state | enum }}{% if status %} badge--status{% endif %}">
+  {%- if status %}<span class="badge__dot" aria-hidden="true"></span>{% endif %}{{ state | state_label }}</span>
+{%- endmacro %}
+
+{% macro bearer(ref, rel, lookup) -%}
+{%- set page = lookup.get(ref.about) -%}
+<div class="person__name"><a href="{{ rel }}{{ ref.url }}">{{ ref.label }}</a></div>
+{%- if page and page.email is defined and page.email %}
+<a href="mailto:{{ page.email }}">{{ page.email }}</a>
+{%- endif %}
+{%- endmacro %}
+
+{% macro term_rows(refs, rel, empty) -%}
+<div class="term-table">
+  <div class="term-row term-row--head" aria-hidden="true">
+    <div>{{ t("area.column_term") }}</div><div></div><div>{{ t("area.column_state") }}</div><div></div>
+  </div>
+  {%- for t in refs %}
+  <a class="term-row" href="{{ rel }}{{ t.url }}">
+    <span class="term-row__name{% if (t.state | enum) == 'deprecated' %} term-row__name--deprecated{% endif %}">{{ t.label }}</span>
+    <span class="term-row__sub"></span>
+    <span>{{ state_badge(t.state) }}</span>
+    <span class="term-row__chev" aria-hidden="true">&rsaquo;</span>
+  </a>
+  {%- else %}
+  <div class="empty-state">{{ empty }}</div>
+  {%- endfor %}
+</div>
+{%- endmacro %}
+
+{% macro link_panel(title, refs, rel, show_state=True) -%}
+{%- if refs %}
+<div class="panel">
+  <div class="panel__label">{{ title }}</div>
+  {%- for r in refs %}
+  <a class="panel-link" href="{{ rel }}{{ r.url }}">
+    <div class="panel-link__name">{{ r.label }}</div>
+    {%- if show_state and r.state %}<div class="panel-link__rel">{{ r.state | state_label }}</div>{% endif %}
+  </a>
+  {%- endfor %}
+</div>
+{%- endif %}
+{%- endmacro %}

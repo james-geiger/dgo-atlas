@@ -1,0 +1,27 @@
+# Handoff §5.3 variant: two more modifications of "clinical trial", in their own
+# file to exercise the merge. One is still open; one was drafted and rejected
+# on the same day.
+
+term_modifications:
+  - id: ex:clinical-trial-modification-2
+    label: Rewording of the definition of "clinical trial"
+    has_output: ex:clinical-trial
+    part_of: ex:research-dg
+  - id: ex:clinical-trial-modification-3
+    label: Narrowing of "clinical trial" to drug studies
+    has_output: ex:clinical-trial
+    part_of: ex:research-dg
+
+term_status_boundaries:
+  - type: dgo:DGO_00000024           # drafted
+    part_of: ex:clinical-trial-modification-2
+    occurred_on: "2026-11-01"
+  - type: dgo:DGO_00000025           # submitted for review
+    part_of: ex:clinical-trial-modification-2
+    occurred_on: "2026-11-02"
+  - type: dgo:DGO_00000027           # rejected (listed first to test the same-day ordering)
+    part_of: ex:clinical-trial-modification-3
+    occurred_on: "2026-11-03"
+  - type: dgo:DGO_00000024           # drafted
+    part_of: ex:clinical-trial-modification-3
+    occurred_on: "2026-11-03"

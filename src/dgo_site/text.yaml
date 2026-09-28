@@ -1,0 +1,274 @@
+# Every piece of wording the site generates, with its default.
+#
+# Override any entry from dgo-site.yaml by its dotted key:
+#
+#   text:
+#     term.history: Change log
+#     home.browse_terms: Find a definition
+#
+# `dgo-site text` lists every key with its current value. {placeholders} are
+# filled in by the site; keep them in an override. Counts have a `one` and an
+# `other` form. The headers (eyebrow, title, lede) of the generated index pages
+# can also be set, with intro prose, from a Markdown file at the page's path
+# in the content directory (e.g. content/governance.md).
+
+site:
+  skip_link: Skip to content
+  menu: Menu
+  search_placeholder: Search terms, people, councils
+  search_label: Search the glossary
+  search_results: Search results
+  theme_toggle: Switch colour theme
+  built_on: Built {date}
+  sections: Site sections
+  report_title: Something wrong?
+  report_body: If a definition doesn't match what you see in the data, tell the people responsible for it.
+  report_link: Report a discrepancy
+  footer_credit: Built with dgo-site {version} on the {ontology} {dgo_version}
+  ontology_name: Data Governance Ontology
+
+nav:
+  start_here: Start here
+  home: Home
+  glossary: Glossary
+  all_terms: All terms
+  governance: Governance
+  directory: People & organizations
+  governance_overview: How governance is organized
+  how_to_read: How to read a term
+
+breadcrumb:
+  terms: Terms
+  governance: Governance
+  directory: People & organizations
+
+count:
+  term: {one: "{n} term", other: "{n} terms"}
+  subject_area: {one: "{n} subject area", other: "{n} subject areas"}
+  domain: {one: "{n} domain", other: "{n} domains"}
+  member: {one: "{n} member", other: "{n} members"}
+
+state:
+  approved:
+    label: Approved
+    description: Its creation was approved by the responsible council. Build on it.
+    definition: Approved definition
+  proposed:
+    label: Proposed
+    description: "Its creation is still under way: drafted or submitted for review, not yet decided."
+    definition: Proposed definition
+  deprecated:
+    label: Deprecated
+    description: A deprecation of it was approved. Use its successor, if it names one.
+    definition: Definition (deprecated)
+
+home:
+  browse_terms: Browse the terms
+  how_to_read: How to read a term
+  stat_approved: Approved terms
+  stat_subject_areas: Subject areas
+  stat_councils: Governance councils
+  stat_under_review: Terms with changes under review
+  domains: Start with your domain
+  recent: Recent changes
+  recent_empty: No lifecycle processes are recorded yet.
+  contacts: Who to contact
+  contacts_empty: No responsibilities are recorded yet.
+
+terms_index:
+  eyebrow: Glossary
+  title: All terms
+  lede: ""
+  description: Every governed business term, with its state and subject area.
+  filter_all: All
+  filter_attention: Under review
+  column_term: Term
+  column_subject_area: Subject area
+  column_state: State
+  empty: No terms match that filter.
+  pages: Term index pages
+  per_page: Per page
+  previous: Previous
+  next: Next
+
+term:
+  back: All terms
+  recorded_as: Recorded as “{name}”
+  also_called: Also called {names}
+  kind_title: What kind of thing this is, in the Data Governance Ontology
+  drawn_from: Drawn from {source}
+  deprecated: Deprecated
+  deprecated_use: Use {successor} instead.
+  deprecated_body: This term is kept for the record and for reconciling older reports.
+  change_under_review: Change under review
+  change_body: The definition above stays in force until the change is approved.
+  replaces: Replaces {terms}.
+  history: History
+  history_empty: No lifecycle processes are recorded for this term.
+  responsibility: Responsibility
+  responsibility_empty: No responsibilities are recorded for this term.
+  suggest_change: Suggest a change
+  governed_by: Governed by
+  filed_under: Filed under
+  glossary: Glossary
+  domain: Domain
+  subject_area: Subject area
+  broader: Broader terms
+  all_broader: All broader terms
+  narrower: Narrower terms
+  value_of: Value of
+  values: Values
+  related: Related terms
+  replaced_by: Replaced by
+  identifier: Identifier
+  source: Source
+  term_id: Term ID
+  iri: IRI
+  copy_iri: Copy IRI
+  class: Class
+  view_source: View source
+
+glossary:
+  eyebrow: Business glossary
+  empty: No domains are part of this glossary yet.
+
+domain:
+  eyebrow: Domain
+  part_of: Part of {glossary}
+  subject_areas: Subject areas
+  empty: No subject areas are part of this domain yet.
+
+area:
+  eyebrow: Subject area
+  in_domain: In {domain}
+  terms: Terms
+  column_term: Term
+  column_state: State
+  empty: No terms are classified under this subject area yet.
+  by_state: By state
+
+council:
+  takes_part_in: Takes part in {process}.
+  members: Members
+  members_empty: No members are recorded for this council.
+  governs: Terms it governs
+  governs_empty: No term lifecycle process falls under this council yet.
+  processes: Governance processes
+  identifier: Identifier
+  id: ID
+  iri: IRI
+
+agent:
+  council_seats: Council seats
+  column_council: Council
+  column_seat: Seat
+  column_takes_part_in: Takes part in
+  member: Member
+  empty: No roles are recorded for this {kind}.
+  identifier: Identifier
+  id: ID
+  iri: IRI
+
+responsibilities:
+  heading: Responsible for
+  column_term: Term
+  column_role: Role
+  column_state: State
+  no_term: Not tied to a term
+
+directory:
+  eyebrow: Governance
+  title: People & organizations
+  lede: Everyone who holds a governance role or a council seat. Open one to see what they are responsible for.
+  column_name: Name
+  column_roles: Roles
+  column_seats: Council seats
+  empty: No people or organizations are recorded yet.
+
+governance:
+  eyebrow: Governance
+  title: How governance is organized
+  lede: >-
+    Data governance is carried out in processes, each part of a broader one.
+    Councils take part in a process, and govern every term created, changed or
+    deprecated within it.
+  processes: Governance processes
+  processes_empty: No governance processes are recorded yet.
+  councils: Councils
+  councils_empty: No councils are recorded yet.
+
+how_to_read:
+  eyebrow: Start here
+  title: How to read a term
+  lede: Every term page is built from the same facts. This page says what each one means.
+  description: What each part of a term page means.
+  ontology_version: Data Governance Ontology {dgo_version}
+  on_this_page: On this page
+  state: What the state means
+  state_intro: >-
+    A term has no status field. Its state is worked out from its lifecycle:
+    the dated steps of its creation, modifications and deprecation.
+  state_outro: >-
+    A modification never changes the state. While one is open the page shows
+    it as a change under review; once approved, the term already reads as
+    changed.
+  lifecycle: Lifecycle
+  lifecycle_steps: "Each process moves through dated steps:"
+  roles: Who is responsible
+  roles_intro: >-
+    A role is borne by a person, an organization or a council. The role isn't
+    the person, and a term's page lists who currently holds each role.
+  council_roles: Council seats
+  fields: Every field on a term
+  required: required
+  no_description: No description in DGO.
+
+# Labels for glossary-term fields on "How to read a term".
+field:
+  pref_label: Name
+  label: Recorded as
+  alt_labels: Also called
+  definition: Definition
+  definition_source: Definition source
+  part_of: Glossary
+  in_subject_area: Subject area
+  responsibilities: Responsibility
+  broader: Broader terms
+  related: Related terms
+  value_of: Value of
+  replaced_by: Replaced by
+  id: Term ID
+
+search:
+  owner: "Owner: {name}"
+  subject_area: Subject area
+  domain: Domain
+  glossary: Glossary
+  council: Council
+  guide: Guide
+
+content:
+  on_this_page: On this page
+
+not_found:
+  title: Page not found
+  eyebrow: Not found
+  heading: That page isn't here
+  lede: >-
+    The link may be out of date. Terms are never deleted: a deprecated term
+    keeps its page and points at whatever replaced it.
+  browse_terms: Browse the terms
+  home: Home
+
+# Wording the site's JavaScript writes into the page.
+js:
+  theme_dark: ☾ Dark
+  theme_light: ☀ Light
+  search_empty: No matches for “{query}”
+  count_none: No terms
+  count_one: "{n} term"
+  count_other: "{n} terms"
+  count_range: Showing {start}–{end} of {total} terms
+  page_status: Page {page} of {pages}
+  copied: Copied
+  copy_fallback: Press Ctrl+C to copy

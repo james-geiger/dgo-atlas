@@ -1,0 +1,61 @@
+# Site configuration for dgo-site. Governance data lives in governance/;
+# this file only shapes the site. Editors that read .vscode/settings.json
+# validate it against .dgo-site/config.schema.json as you type.
+
+# The Data Governance Ontology release your data is written against. Its
+# schema is imported from
+# https://raw.githubusercontent.com/james-geiger/dgo/refs/tags/<version>/dist/dgo.yaml
+# Change it deliberately: a new release may change what your data must say.
+dgo_version: "0.1.0"
+# dgo_source: vendor/dgo.yaml   # a local copy or mirror instead, e.g. for offline builds
+
+title: Data Governance
+organization: Example Organization
+description: The shared, authoritative definitions of the data we report on.
+contact_email: data-governance@example.org
+
+# The namespace for your identifiers. Every id in governance/ is a CURIE
+# using a prefix declared here (e.g. `org:clinical-trial`). Choose an IRI
+# base you control and will keep stable, such as a w3id.org redirect.
+prefixes:
+  org: https://data.example.org/governance/
+
+paths:
+  data: governance     # every .yaml file under here is governance data
+  content: content     # Markdown pages; content/index.md is the landing page
+  output: site         # built site; emptied on every build
+
+# "/" for a custom domain; "/<repository>/" for a GitHub Pages project site.
+base_path: /
+
+# Set false to hide the Identifier panel (id, IRI, DGO class) on term,
+# council and people pages, if readers don't need the IRIs.
+show_identifiers: true
+
+# Uncomment to add "View source" links and a "Suggest a change" button.
+# repository:
+#   url: https://github.com/example/data-governance
+#   branch: main
+# suggest_change_url: https://github.com/example/data-governance/issues/new?labels=terms&title=Change+request&body=Term%3A+
+
+brand:
+  mark: DG
+  # accent: "#6B3FA0"          # links and buttons; any CSS colour
+  # fonts_url: https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap
+  # body_font: Inter, system-ui, sans-serif
+
+# Per-page settings, keyed by the id of what the page is about.
+pages:
+  org:research:
+    accent: "#2E7D6B"
+
+# Change any wording on the site by its key. `dgo-site text` lists every key
+# and its default; keep {placeholders} in your version. The header and intro
+# of the generated index pages can also be set from a Markdown file at the
+# page's path: content/governance.md, content/directory.md,
+# content/terms/index.md or content/how-to-read-a-term.md.
+# text:
+#   term.history: Change log
+#   home.browse_terms: Find a definition
+#   count.term.one: "{n} definition"
+#   count.term.other: "{n} definitions"

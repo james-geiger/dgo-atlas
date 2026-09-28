@@ -1,0 +1,10 @@
+{#- The header brand. Expects `home`, the href of the landing page. -#}
+<a class="brand" href="{{ home }}">
+  <span class="brand__mark" aria-hidden="true">{{ brand.mark or (site.title | initials) }}</span>
+  <span class="brand__text">
+    <span class="brand__name">{{ site.title }}</span>
+    {%- if site.organization %}
+    <span class="brand__org">{{ site.organization }}</span>
+    {%- endif %}
+  </span>
+</a>

@@ -1,0 +1,41 @@
+# Who governs: governance processes, councils, and the people and
+# organizations who sit on them or hold roles for terms.
+#
+# `type` values are DGO class IRIs. Keep the readable name in a comment.
+
+processes:
+  - id: org:data-governance
+    label: Data governance at Example Organization
+  - id: org:research-data-governance
+    label: Research data governance
+    part_of: org:data-governance
+
+councils:
+  - id: org:research-council
+    label: Research Data Governance Council
+    participates_in: org:research-data-governance   # governs terms created within this process
+    has_member:
+      - org:alex-rivera
+      - org:sam-chen
+
+people:
+  - id: org:alex-rivera
+    label: Alex Rivera
+    title: Director of Research Analytics
+    email: alex.rivera@example.org
+  - id: org:sam-chen
+    label: Sam Chen
+    title: Clinical Research Manager
+
+organizations:
+  - id: org:research-office
+    label: Office of Research
+    email: research@example.org
+
+council_roles:
+  - type: dgo:DGO_00000006     # chair
+    role_of: org:alex-rivera
+    realized_in: org:research-data-governance
+  - type: dgo:DGO_00000009     # documentation steward
+    role_of: org:sam-chen
+    realized_in: org:research-data-governance

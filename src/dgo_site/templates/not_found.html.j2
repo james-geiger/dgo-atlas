@@ -1,0 +1,38 @@
+{#- Standalone 404, served by GitHub Pages for any unmatched path.
+
+    It does not extend base.html.j2: every other page computes relative asset
+    paths from its own depth, but a 404 is served at any depth. So paths here
+    start from `base_path`, which must match where the site is served. -#}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ t("not_found.title") }} · {{ site.title }}</title>
+{% include "_head.html.j2" %}
+<link rel="stylesheet" href="{{ base_path }}assets/site.css?v={{ asset_version }}">
+{% include "_brand.html.j2" %}
+</head>
+<body>
+<header class="header">
+  {% set home = base_path ~ "index.html" %}
+  {% include "_brand_link.html.j2" %}
+</header>
+
+<div class="layout">
+  <main class="main" id="main" style="flex-basis:100%">
+    <div style="max-width:680px">
+      <div class="eyebrow">{{ t("not_found.eyebrow") }}</div>
+      <h1 class="page-title">{{ t("not_found.heading") }}</h1>
+      <p class="lede">{{ t("not_found.lede") }}</p>
+      <div class="button-row">
+        <a class="btn btn--primary" href="{{ base_path }}terms/index.html">{{ t("not_found.browse_terms") }}</a>
+        <a class="btn btn--secondary" href="{{ base_path }}index.html">{{ t("not_found.home") }}</a>
+      </div>
+    </div>
+  </main>
+</div>
+
+{% include "_footer.html.j2" %}
+</body>
+</html>

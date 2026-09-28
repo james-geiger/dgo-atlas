@@ -1,0 +1,12 @@
+[project]
+name = "data-governance"
+version = "0"
+description = "Governance data and site configuration, built with dgo-site."
+requires-python = ">=3.10"
+dependencies = [
+    # Pin a release: it fixes both the middleware and the DGO release it carries.
+    "dgo-site @ git+https://github.com/james-geiger/dgo-site@v0.1.0",
+]
+
+[tool.uv]
+package = false

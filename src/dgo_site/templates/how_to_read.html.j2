@@ -1,0 +1,74 @@
+{% extends "base.html.j2" %}
+{#- What each part of a term page means. Field descriptions and
+    kind names come from DGO itself, so this page cannot drift from it. -#}
+
+{% macro kinds(list) -%}
+<div class="fact-box">
+  {%- for k in list %}
+  <div class="fact-box__lead">
+    <span class="badge badge--{{ k.slug }} badge--kind">{{ k.name }}</span>
+    <p style="margin:8px 0 0;font-size:14.5px;color:var(--ink-2)">{{ k.description }}</p>
+    <p style="margin:4px 0 0"><code class="term-code">{{ k.curie }}</code></p>
+  </div>
+  {%- endfor %}
+</div>
+{%- endmacro %}
+
+{% block content %}
+<div class="split">
+  <article class="split__body">
+    {% include "_page_head.html.j2" %}
+
+    <div class="meta-row">
+      <span>{{ t("how_to_read.ontology_version", dgo_version=dgo_version) }}</span>
+    </div>
+
+    <h2 class="subhead" id="state">{{ t("how_to_read.state") }}</h2>
+    <p style="color:var(--ink-2)">{{ t("how_to_read.state_intro") }}</p>
+    <div class="fact-box">
+      {%- for s in states %}
+      <div class="fact-box__lead">
+        <span class="badge badge--{{ s.name }}">{{ s.label }}</span>
+        <p style="margin:8px 0 0;font-size:14.5px;color:var(--ink-2)">{{ s.description }}</p>
+      </div>
+      {%- endfor %}
+    </div>
+    <p style="color:var(--ink-2)">{{ t("how_to_read.state_outro") }}</p>
+
+    <h2 class="subhead" id="lifecycle">{{ t("how_to_read.lifecycle") }}</h2>
+    {{ kinds(processes) }}
+    <p style="color:var(--ink-2)">{{ t("how_to_read.lifecycle_steps") }}</p>
+    {{ kinds(boundaries) }}
+
+    <h2 class="subhead" id="roles">{{ t("how_to_read.roles") }}</h2>
+    <p style="color:var(--ink-2)">{{ t("how_to_read.roles_intro") }}</p>
+    {{ kinds(roles) }}
+
+    <h2 class="subhead" id="council-roles">{{ t("how_to_read.council_roles") }}</h2>
+    {{ kinds(council_roles) }}
+
+    <h2 class="subhead" id="fields">{{ t("how_to_read.fields") }}</h2>
+    <div class="fact-box">
+      {%- for f in fields %}
+      <div class="fact-box__lead">
+        <div class="fact__k">{{ f.label }}{% if f.required %} &middot; {{ t("how_to_read.required") }}{% endif %}</div>
+        <p style="margin:4px 0 0;font-size:14.5px;color:var(--ink-2)">{{ f.description or t("how_to_read.no_description") }}</p>
+        <p style="margin:6px 0 0"><code class="term-code">{{ f.name }}</code>{% if f.uri %} &middot; <code class="term-code">{{ f.uri }}</code>{% endif %}</p>
+      </div>
+      {%- endfor %}
+    </div>
+
+  </article>
+
+  <aside class="split__aside">
+    <div class="toc-rail">
+      <div class="toc-rail__label">{{ t("how_to_read.on_this_page") }}</div>
+      <a href="#state">{{ t("how_to_read.state") }}</a>
+      <a href="#lifecycle">{{ t("how_to_read.lifecycle") }}</a>
+      <a href="#roles">{{ t("how_to_read.roles") }}</a>
+      <a href="#council-roles">{{ t("how_to_read.council_roles") }}</a>
+      <a href="#fields">{{ t("how_to_read.fields") }}</a>
+    </div>
+  </aside>
+</div>
+{% endblock %}

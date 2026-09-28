@@ -1,0 +1,41 @@
+# One file per term, with the processes that created or changed it, keeps
+# each pull request about one term.
+
+glossary_terms:
+  - id: org:clinical-trial
+    label: clinical trial
+    pref_label: Clinical Trial          # shown to readers when it differs from label
+    alt_labels:
+      - interventional study
+    definition: >-
+      A research study in which one or more human participants are
+      prospectively assigned to one or more interventions to evaluate their
+      effects on health-related outcomes.
+    definition_source: https://grants.nih.gov/policy/clinical-trials/definition.htm
+    part_of: org:glossary
+    in_subject_area: org:clinical-research
+    broader:
+      - org:clinical-study
+    responsibilities:                   # who holds each role now
+      - type: dgo:DGO_00000012          # owner
+        role_of: org:research-office
+      - type: dgo:DGO_00000013          # steward
+        role_of: org:research-council
+
+term_creations:
+  - id: org:clinical-trial-creation
+    label: Creation of "clinical trial"
+    has_output: org:clinical-trial
+    part_of: org:research-data-governance
+
+# Quote every date, or it is read as a date and rejected.
+term_status_boundaries:
+  - type: dgo:DGO_00000024              # drafted
+    part_of: org:clinical-trial-creation
+    occurred_on: "2026-09-01"
+  - type: dgo:DGO_00000025              # submitted for review
+    part_of: org:clinical-trial-creation
+    occurred_on: "2026-09-08"
+  - type: dgo:DGO_00000026              # approved
+    part_of: org:clinical-trial-creation
+    occurred_on: "2026-09-15"

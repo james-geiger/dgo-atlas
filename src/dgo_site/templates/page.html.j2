@@ -1,0 +1,37 @@
+{% extends "base.html.j2" %}
+{#- Authored Markdown page: governance narrative, standards, how-to guides. -#}
+
+{% block content %}
+<div class="split">
+  <article class="split__body">
+    {%- if page.eyebrow or page.badge %}
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap">
+      {%- if page.eyebrow %}<span class="eyebrow" style="margin:0">{{ page.eyebrow }}</span>{% endif %}
+      {%- if page.badge %}<span class="badge badge--kind">{{ page.badge }}</span>{% endif %}
+    </div>
+    {%- endif %}
+
+    <h1 class="page-title">{{ page.title }}</h1>
+    {%- if page.lede %}<p class="lede">{{ page.lede }}</p>{% endif %}
+
+    {%- if page.meta %}
+    <div class="meta-row">
+      {%- for fact in page.meta %}<span>{{ fact }}</span>{% endfor %}
+    </div>
+    {%- endif %}
+
+    <div class="prose">{{ page.html | safe }}</div>
+  </article>
+
+  {%- if page.toc %}
+  <aside class="split__aside">
+    <div class="toc-rail">
+      <div class="toc-rail__label">{{ t("content.on_this_page") }}</div>
+      {%- for entry in page.toc %}
+      <a href="#{{ entry.id }}">{{ entry.label }}</a>
+      {%- endfor %}
+    </div>
+  </aside>
+  {%- endif %}
+</div>
+{% endblock %}

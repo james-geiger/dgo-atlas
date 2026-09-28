@@ -1,0 +1,89 @@
+{% extends "base.html.j2" %}
+{% from "_macros.html.j2" import state_badge %}
+{#- Landing page. The hero and prose come from the implementer's content/index.md
+    (or the site config); the counts, domain cards, recent changes and contacts
+    are derived, so they cannot drift from the governance data. -#}
+
+{% block content %}
+<div class="hero">
+  {%- if page and page.eyebrow %}<div class="eyebrow">{{ page.eyebrow }}</div>{% endif %}
+  <h1 class="page-title page-title--hero">{{ hero_title }}</h1>
+  {%- if hero_lede %}<p class="lede">{{ hero_lede }}</p>{% endif %}
+  <div class="button-row">
+    <a class="btn btn--primary" href="{{ rel }}terms/index.html">{{ t("home.browse_terms") }}</a>
+    <a class="btn btn--secondary" href="{{ rel }}how-to-read-a-term.html">{{ t("home.how_to_read") }}</a>
+  </div>
+</div>
+
+<div class="stat-grid">
+  {%- for stat in stats %}
+  <div class="stat">
+    <div class="stat__n">{{ stat.n }}</div>
+    <div class="stat__label">{{ stat.label }}</div>
+  </div>
+  {%- endfor %}
+</div>
+
+{%- if page and page.html %}
+<div class="prose" style="margin-bottom:52px">{{ page.html | safe }}</div>
+{%- endif %}
+
+{%- if domains %}
+<h2 class="section-head">{{ t("home.domains") }}</h2>
+<div class="rule"></div>
+<div class="area-grid">
+  {%- for d in domains %}
+  <a class="area-card" href="{{ rel }}{{ d.url }}">
+    <div class="area-card__bar" style="background:{{ card_accents[d.about] }}"></div>
+    <div class="area-card__name">{{ d.label }}</div>
+    <p>{% for a in d.subject_areas or [] %}{{ a.label }}{% if not loop.last %} &middot; {% endif %}{% endfor %}</p>
+    <div class="area-card__meta">
+      <span>{{ count("term", d.term_count) }}</span>
+      <span>{{ count("subject_area", (d.subject_areas or []) | length) }}</span>
+    </div>
+  </a>
+  {%- endfor %}
+</div>
+{%- endif %}
+
+<div class="two-col">
+  <div>
+    <h2 class="section-head">{{ t("home.recent") }}</h2>
+    <div class="rule"></div>
+    {%- for item in recent %}
+    <div class="timeline-row">
+      <div class="timeline-row__date">{{ item.entry.occurred_on }}</div>
+      <div>
+        <a class="timeline-row__title" href="{{ rel }}{{ item.term.url }}">{{ item.entry.process.label }}</a>
+        <div class="timeline-row__meta">
+          <span class="badge badge--kind">{{ item.entry.boundary_label }}</span>
+          <span>{{ item.term.label }} &middot; {{ item.term.subject_area.label }}</span>
+        </div>
+      </div>
+    </div>
+    {%- else %}
+    <p class="history__empty">{{ t("home.recent_empty") }}</p>
+    {%- endfor %}
+  </div>
+
+  <div>
+    <h2 class="section-head">{{ t("home.contacts") }}</h2>
+    <div class="rule"></div>
+    {%- for c in contacts %}
+    {%- set p = lookup.get(c.bearer.about) %}
+    <div class="contact">
+      <div class="avatar" style="background:var(--slate)" aria-hidden="true">{{ c.bearer.label | initials }}</div>
+      <div style="min-width:0">
+        <div class="contact__name"><a href="{{ rel }}{{ c.bearer.url }}">{{ c.bearer.label }}</a></div>
+        <div class="contact__role">{{ c.roles | join(", ") }}</div>
+        {%- if p and p.email is defined and p.email %}
+        <a href="mailto:{{ p.email }}">{{ p.email }}</a>
+        {%- endif %}
+      </div>
+    </div>
+    {%- else %}
+    <p class="history__empty">{{ t("home.contacts_empty") }}</p>
+    {%- endfor %}
+  </div>
+</div>
+{% endblock %}

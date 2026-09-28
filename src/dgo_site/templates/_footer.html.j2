@@ -1,0 +1,11 @@
+<footer class="footer">
+  <div class="footer__inner">
+    <span>{% if site.organization %}{{ site.organization }} &middot; {% endif %}{{ site.title }}</span>
+    <div class="footer__spacer"></div>
+    {%- if contact_email %}
+    <a href="mailto:{{ contact_email }}">{{ contact_email }}</a>
+    {%- endif %}
+    {%- set ontology %}<a href="https://github.com/james-geiger/dgo" rel="noopener">{{ t("site.ontology_name") }}</a>{% endset %}
+    <span>{{ t("site.footer_credit", version=middleware_version, ontology=ontology, dgo_version=dgo_version) }}</span>
+  </div>
+</footer>

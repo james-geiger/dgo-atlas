@@ -1,0 +1,54 @@
+{% extends "base.html.j2" %}
+{% from "_macros.html.j2" import state_badge %}
+{#- Every term. Filtering and paging are progressive: with JavaScript off every
+    term is still listed and every row is a link. -#}
+
+{% block content %}
+<div style="max-width:980px">
+  {% include "_page_head.html.j2" %}
+
+  <div class="filter-bar" data-filter-bar>
+    <button class="pill" type="button" data-filter="all" aria-pressed="true">{{ t("terms_index.filter_all") }}</button>
+    {%- for d in domains %}
+    <button class="pill" type="button" data-filter="domain:{{ d.about }}" aria-pressed="false">{{ d.label }}</button>
+    {%- endfor %}
+    <button class="pill" type="button" data-filter="attention" aria-pressed="false">{{ t("terms_index.filter_attention") }}</button>
+    <span class="filter-bar__count" data-term-count>{{ count("term", terms | length) }}</span>
+  </div>
+
+  <div class="term-table">
+    <div class="term-row term-row--head" aria-hidden="true">
+      <div>{{ t("terms_index.column_term") }}</div><div>{{ t("terms_index.column_subject_area") }}</div><div>{{ t("terms_index.column_state") }}</div><div></div>
+    </div>
+    {%- for t in terms %}
+    <a class="term-row"
+       href="{{ rel }}{{ t.url }}"
+       data-domain="{{ t.domain.about }}"
+       {%- if (t.state | enum) == "proposed" or t.pending_changes %} data-attention{% endif %}>
+      <span class="term-row__name{% if (t.state | enum) == 'deprecated' %} term-row__name--deprecated{% endif %}">{{ t.label }}</span>
+      <span class="term-row__sub">{{ t.subject_area.label }}</span>
+      <span>{{ state_badge(t.state) }}</span>
+      <span class="term-row__chev" aria-hidden="true">&rsaquo;</span>
+    </a>
+    {%- endfor %}
+    <div class="empty-state" data-empty hidden>{{ t("terms_index.empty") }}</div>
+  </div>
+
+  <nav class="pager" data-pager aria-label="{{ t("terms_index.pages") }}" hidden>
+    <div class="pager__size">
+      <label for="page-size">{{ t("terms_index.per_page") }}</label>
+      <select id="page-size" data-page-size>
+        <option value="10">10</option>
+        <option value="25" selected>25</option>
+        <option value="50">50</option>
+        <option value="100">100</option>
+      </select>
+    </div>
+    <div class="pager__nav" data-pager-nav hidden>
+      <button class="pager__btn" type="button" data-pager-prev>&lsaquo; {{ t("terms_index.previous") }}</button>
+      <span class="pager__status" data-pager-status aria-live="polite"></span>
+      <button class="pager__btn" type="button" data-pager-next>{{ t("terms_index.next") }} &rsaquo;</button>
+    </div>
+  </nav>
+</div>
+{% endblock %}

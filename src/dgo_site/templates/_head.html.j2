@@ -1,0 +1,13 @@
+{#- Fonts and the pre-paint theme script, shared by base and the 404 page. -#}
+{%- if fonts_url %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="{{ fonts_url }}" rel="stylesheet">
+{%- endif %}
+<script>
+/* Applied before first paint so a dark-mode reader never sees a white flash. */
+try {
+  var t = localStorage.getItem("dgo-site-theme");
+  if (t) document.documentElement.setAttribute("data-theme", t);
+} catch (e) {}
+</script>

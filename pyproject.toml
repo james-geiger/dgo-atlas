@@ -1,0 +1,35 @@
+[project]
+name = "dgo-site"
+version = "0.1.0"
+description = "Govern a business glossary with the Data Governance Ontology (DGO) and publish it as a static site."
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.10"
+dependencies = [
+    "linkml==1.11.1",
+    "linkml-runtime>=1.8",
+    "pydantic>=2.0",
+    "Jinja2>=3.1",
+    "PyYAML>=6.0",
+    "markdown-it-py>=3.0",
+    "typer>=0.27.2",
+    "rich>=15.0.0",
+]
+
+[project.scripts]
+dgo-site = "dgo_site.cli:main"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/dgo_site"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

@@ -1,0 +1,118 @@
+{#- Page shell: header, sidebar nav, breadcrumb, footer.
+
+    Every href goes through `rel`, the relative path back to the site root for this page, so
+    the site works under a GitHub Pages project subpath and from file:// when a
+    reviewer opens a downloaded build artifact. -#}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}{{ page_title }}{% endblock %}{% if page_title != site.title %} · {{ site.title }}{% endif %}</title>
+{%- if page_description %}
+<meta name="description" content="{{ page_description }}">
+{%- endif %}
+{% include "_head.html.j2" %}
+<link rel="stylesheet" href="{{ rel }}assets/site.css?v={{ asset_version }}">
+{% include "_brand.html.j2" %}
+</head>
+<body>
+<a class="skip-link" href="#main">{{ t("site.skip_link") }}</a>
+
+<header class="header">
+  <button class="nav-toggle" id="nav-toggle" type="button"
+          aria-controls="sitenav" aria-expanded="false" aria-label="{{ t("site.menu") }}">
+    <span class="nav-toggle__bars" aria-hidden="true"></span>
+  </button>
+  {% set home = rel ~ "index.html" %}
+  {% include "_brand_link.html.j2" %}
+
+  <div class="search" role="search">
+    <span class="search__icon" aria-hidden="true">&#8981;</span>
+    <input
+      class="search__input"
+      type="search"
+      id="site-search"
+      autocomplete="off"
+      placeholder="{{ t("site.search_placeholder") }}"
+      aria-label="{{ t("site.search_label") }}"
+      aria-expanded="false"
+      aria-controls="search-results">
+    <span class="search__key" aria-hidden="true">/</span>
+    <div class="search__results" id="search-results" role="listbox" aria-label="{{ t("site.search_results") }}"></div>
+  </div>
+
+  <div class="header__meta">
+    <button class="theme-toggle" type="button" id="theme-toggle" aria-label="{{ t("site.theme_toggle") }}">
+      <span data-theme-label>{{ t("js.theme_dark") }}</span>
+    </button>
+    <span>{{ t("site.built_on", date=built_on) }}</span>
+  </div>
+</header>
+
+<div class="layout">
+  <nav class="sidebar" id="sitenav" aria-label="{{ t("site.sections") }}">
+    {%- for group in nav %}
+    <div class="nav-group">
+      <div class="nav-group__label">{{ group.label }}</div>
+      {%- for item in group.items %}
+      <a class="nav-item" href="{{ rel }}{{ item.url }}"{% if item.url == current_url %} aria-current="page"{% endif %}>{{ item.label }}</a>
+      {%- endfor %}
+    </div>
+    {%- endfor %}
+    {%- if contact_email %}
+    <div class="sidebar-note">
+      <div class="sidebar-note__title">{{ t("site.report_title") }}</div>
+      <p>{{ t("site.report_body") }}</p>
+      <a href="mailto:{{ contact_email }}">{{ t("site.report_link") }} &rarr;</a>
+    </div>
+    {%- endif %}
+  </nav>
+
+  <main class="main" id="main">
+    {%- if breadcrumb %}
+    <div class="breadcrumb">
+      <a href="{{ rel }}index.html">{{ site.title }}</a>
+      {%- for crumb in breadcrumb %}
+      <span aria-hidden="true">/</span>
+      {%- if crumb.url %}
+      <a href="{{ rel }}{{ crumb.url }}">{{ crumb.label }}</a>
+      {%- else %}
+      <span class="breadcrumb__current">{{ crumb.label }}</span>
+      {%- endif %}
+      {%- endfor %}
+    </div>
+    {%- endif %}
+
+    {% block content %}{% endblock %}
+  </main>
+</div>
+
+{% include "_footer.html.j2" %}
+
+<script>window.DGO_SITE_BASE = {{ rel | tojson }}; window.DGO_SITE_TEXT = {{ js_text | tojson }};</script>
+<script>
+/* Mobile nav: collapsed by default (CSS); this toggles it open. Closes on
+   Escape so keyboard users are not trapped. */
+(function () {
+  var btn = document.getElementById("nav-toggle");
+  if (!btn) return;
+  function setOpen(open) {
+    document.body.classList.toggle("nav-open", open);
+    btn.setAttribute("aria-expanded", open ? "true" : "false");
+  }
+  btn.addEventListener("click", function () {
+    setOpen(!document.body.classList.contains("nav-open"));
+  });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && document.body.classList.contains("nav-open")) {
+      setOpen(false);
+      btn.focus();
+    }
+  });
+})();
+</script>
+<script src="{{ rel }}assets/site.js?v={{ asset_version }}" defer></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

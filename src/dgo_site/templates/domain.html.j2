@@ -1,0 +1,26 @@
+{% extends "base.html.j2" %}
+{#- One domain and its subject areas. -#}
+
+{% block content %}
+<div style="max-width:980px">
+  <div class="eyebrow">{{ t("domain.eyebrow") }}</div>
+  <h1 class="page-title">{{ domain.label }}</h1>
+  <div class="meta-row">
+    <span>{{ count("term", domain.term_count) }}</span>
+    {%- if domain.glossary %}{% set glossary %}<a href="{{ rel }}{{ domain.glossary.url }}">{{ domain.glossary.label }}</a>{% endset %}<span>{{ t("domain.part_of", glossary=glossary) }}</span>{% endif %}
+  </div>
+
+  <h2 class="subhead">{{ t("domain.subject_areas") }}</h2>
+  <div class="area-grid">
+    {%- for a in areas %}
+    <a class="area-card" href="{{ rel }}{{ a.url }}">
+      <div class="area-card__bar" style="background:{{ card_accents[a.about] }}"></div>
+      <div class="area-card__name">{{ a.label }}</div>
+      <div class="area-card__meta"><span>{{ count("term", (a.terms or []) | length) }}</span></div>
+    </a>
+    {%- else %}
+    <div class="empty-state">{{ t("domain.empty") }}</div>
+    {%- endfor %}
+  </div>
+</div>
+{% endblock %}

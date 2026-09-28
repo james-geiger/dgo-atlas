@@ -1,0 +1,55 @@
+# Site configuration for the variant fixture: handoff Appendix C plus the §5.3
+# variant, with every option set so the preview shows what each one does.
+# Governance data lives in governance/; this file only shapes the site.
+
+# The Data Governance Ontology release to use. Its schema is imported from
+# https://raw.githubusercontent.com/james-geiger/dgo/refs/tags/<version>/dist/dgo.yaml
+dgo_version: "0.1.0"
+# dgo_source: path/to/dgo.yaml   # a local copy or mirror instead, e.g. for offline builds
+
+title: Research Data Governance
+organization: Northfield University
+description: The shared, authoritative definitions of research data.
+contact_email: governance@example.org
+
+# Every id in governance/ is a CURIE with a prefix declared here.
+prefixes:
+  ex: https://w3id.org/dgo/data/    # the fixture's namespace only; never a scaffold default
+
+paths:
+  data: governance     # every .yaml file under here is governance data
+  content: content     # Markdown pages; content/index.md is the landing page
+  output: site         # built site; emptied on every build
+
+# "/" for a custom domain; "/<repository>/" for a GitHub Pages project site.
+base_path: /
+
+# The Identifier panel (id, IRI, DGO class) on term, council and people pages.
+show_identifiers: true
+
+# Adds "View source" links on term pages.
+repository:
+  url: https://github.com/example/data-governance
+  branch: main
+
+# Adds a "Suggest a change" button; the term's id is appended, URL-encoded.
+suggest_change_url: https://github.com/example/data-governance/issues/new?labels=terms&title=Change+request&body=Term%3A+
+
+brand:
+  mark: RD
+  accent: "#6B3FA0"
+  # fonts_url, display_font, body_font and serif_font are also available.
+
+# Any wording on the site, by key; `dgo-site text` lists every key and default.
+# Headers of the generated index pages can also be set from content/, e.g.
+# content/governance.md.
+# text:
+#   term.history: Change log
+#   home.browse_terms: Find a definition
+
+# Per-page settings, keyed by the id of what the page is about.
+pages:
+  ex:research:
+    accent: "#2E7D6B"
+  ex:sponsored-programs:
+    accent: "#34568B"

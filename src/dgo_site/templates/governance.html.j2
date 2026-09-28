@@ -1,0 +1,49 @@
+{% extends "base.html.j2" %}
+{#- The data governance processes, nested by part_of, and the councils that
+    take part in each. A term is governed by the councils of the process its
+    lifecycle processes are part of, at any depth. -#}
+
+{% macro tree(nodes) -%}
+<ul class="process-tree">
+  {%- for p in nodes %}
+  <li id="{{ p.url.split('#')[1] }}">
+    <div class="process-tree__name">{{ p.label }}</div>
+    {%- if p.councils %}
+    <div class="process-tree__councils">
+      {%- for c in p.councils %}<a href="{{ rel }}{{ c.url }}">{{ c.label }}</a>{% if not loop.last %} &middot; {% endif %}{% endfor %}
+    </div>
+    {%- endif %}
+    {%- if children[p.about] %}{{ tree(children[p.about]) }}{% endif %}
+  </li>
+  {%- endfor %}
+</ul>
+{%- endmacro %}
+
+{% block content %}
+<div style="max-width:880px">
+  {% include "_page_head.html.j2" %}
+
+  <h2 class="subhead">{{ t("governance.processes") }}</h2>
+  {%- if roots %}
+  {{ tree(roots) }}
+  {%- else %}
+  <div class="empty-state">{{ t("governance.processes_empty") }}</div>
+  {%- endif %}
+
+  <h2 class="subhead">{{ t("governance.councils") }}</h2>
+  <div class="area-grid">
+    {%- for c in councils %}
+    <a class="area-card" href="{{ rel }}{{ c.url }}">
+      <div class="area-card__bar" style="background:var(--slate)"></div>
+      <div class="area-card__name">{{ c.label }}</div>
+      <div class="area-card__meta">
+        <span>{{ count("member", (c.members or []) | length) }}</span>
+        <span>{{ count("term", (c.governed_terms or []) | length) }}</span>
+      </div>
+    </a>
+    {%- else %}
+    <div class="empty-state">{{ t("governance.councils_empty") }}</div>
+    {%- endfor %}
+  </div>
+</div>
+{% endblock %}

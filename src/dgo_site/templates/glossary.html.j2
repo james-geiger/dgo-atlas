@@ -1,0 +1,26 @@
+{% extends "base.html.j2" %}
+{#- One business glossary and the domains in it. -#}
+
+{% block content %}
+<div style="max-width:980px">
+  <div class="eyebrow">{{ t("glossary.eyebrow") }}</div>
+  <h1 class="page-title">{{ glossary.label }}</h1>
+  <div class="meta-row">
+    <span>{{ count("term", glossary.term_count) }}</span>
+    <span>{{ count("domain", domains | length) }}</span>
+  </div>
+
+  <div class="area-grid">
+    {%- for d in domains %}
+    <a class="area-card" href="{{ rel }}{{ d.url }}">
+      <div class="area-card__bar" style="background:{{ card_accents[d.about] }}"></div>
+      <div class="area-card__name">{{ d.label }}</div>
+      <p>{% for a in d.subject_areas or [] %}{{ a.label }}{% if not loop.last %} &middot; {% endif %}{% endfor %}</p>
+      <div class="area-card__meta"><span>{{ count("term", d.term_count) }}</span></div>
+    </a>
+    {%- else %}
+    <div class="empty-state">{{ t("glossary.empty") }}</div>
+    {%- endfor %}
+  </div>
+</div>
+{% endblock %}

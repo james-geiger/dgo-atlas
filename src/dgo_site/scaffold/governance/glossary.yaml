@@ -1,0 +1,21 @@
+# Where terms are filed: glossary -> domain -> subject area. A term is part of
+# the glossary and classified in one subject area; its domain follows from that.
+
+business_glossaries:
+  - id: org:glossary
+    label: Example Organization Business Glossary
+
+domains:
+  - id: org:research
+    label: Research
+    part_of: org:glossary
+
+subject_areas:
+  - id: org:clinical-research
+    label: Clinical Research
+    part_of: org:research
+
+# Sources definitions are drawn from. The id is the source's own IRI.
+definition_sources:
+  - id: https://grants.nih.gov/policy/clinical-trials/definition.htm
+    label: NIH definition of a clinical trial

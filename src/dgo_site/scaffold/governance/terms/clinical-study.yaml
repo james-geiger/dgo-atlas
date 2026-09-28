@@ -1,0 +1,20 @@
+glossary_terms:
+  - id: org:clinical-study
+    label: clinical study
+    definition: A research study involving human participants.
+    part_of: org:glossary
+    in_subject_area: org:clinical-research
+    responsibilities:
+      - type: dgo:DGO_00000015          # subject matter expert
+        role_of: org:sam-chen
+
+term_creations:
+  - id: org:clinical-study-creation
+    label: Creation of "clinical study"
+    has_output: org:clinical-study
+    part_of: org:research-data-governance
+
+term_status_boundaries:
+  - type: dgo:DGO_00000024              # drafted: the term shows as proposed until it is approved
+    part_of: org:clinical-study-creation
+    occurred_on: "2026-09-20"

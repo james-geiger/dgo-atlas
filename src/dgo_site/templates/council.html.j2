@@ -1,0 +1,54 @@
+{% extends "base.html.j2" %}
+{% from "_macros.html.j2" import term_rows, link_panel %}
+{#- One data governance council: its members and their seats, the governance
+    process it takes part in, and the terms that process governs. -#}
+
+{% block content %}
+<div class="split">
+  <article class="split__body split__body--wide">
+    <div class="eyebrow">{{ council_kind.name }}</div>
+    <h1 class="page-title">{{ council.label }}</h1>
+    {%- if council.participates_in %}
+    {%- set process %}<a href="{{ rel }}{{ council.participates_in.url }}">{{ council.participates_in.label }}</a>{% endset %}
+    <p class="lede">{{ t("council.takes_part_in", process=process) }}</p>
+    {%- endif %}
+
+    <h2 class="subhead">{{ t("council.members") }}</h2>
+    {%- for seat in council.members or [] %}
+    {%- set p = lookup.get(seat.member.about) %}
+    <div class="contact">
+      <div class="avatar" style="background:var(--slate)" aria-hidden="true">{{ seat.member.label | initials }}</div>
+      <div style="min-width:0">
+        <div class="contact__name"><a href="{{ rel }}{{ seat.member.url }}">{{ seat.member.label }}</a></div>
+        {%- if seat.council_roles %}
+        <div class="contact__role">
+          {%- for r in seat.council_roles %}<span class="badge badge--council-role">{{ r.role_label }}</span> {% endfor %}
+        </div>
+        {%- endif %}
+        {%- if p and p.job_title is defined and p.job_title %}<div class="contact__role">{{ p.job_title }}</div>{% endif %}
+        {%- if p and p.email is defined and p.email %}<a href="mailto:{{ p.email }}">{{ p.email }}</a>{% endif %}
+      </div>
+    </div>
+    {%- else %}
+    <div class="empty-state">{{ t("council.members_empty") }}</div>
+    {%- endfor %}
+
+    {% set holder = council %}
+    {% include "_responsibilities.html.j2" %}
+
+    <h2 class="subhead">{{ t("council.governs") }}</h2>
+    {{ term_rows(council.governed_terms or [], rel, t("council.governs_empty")) }}
+  </article>
+
+  <aside class="split__aside">
+    {{ link_panel(t("council.processes"), council.process_chain, rel, show_state=False) }}
+    {%- if show_identifiers %}
+    <div class="panel">
+      <div class="panel__label">{{ t("council.identifier") }}</div>
+      <div class="ref-row"><span class="ref-row__k">{{ t("council.id") }}</span><code class="ref-row__v">{{ council.about }}</code></div>
+      <div class="ref-row"><span class="ref-row__k">{{ t("council.iri") }}</span><code class="ref-row__v">{{ council.iri }}</code></div>
+    </div>
+    {%- endif %}
+  </aside>
+</div>
+{% endblock %}

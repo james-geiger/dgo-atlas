@@ -1,0 +1,9 @@
+{#- Header of a generated index page: eyebrow, title and lede from the text
+    catalog, or from content/<page>.md, whose body follows as intro prose.
+    Expects `head` (Renderer.header). -#}
+{%- if head.eyebrow %}<div class="eyebrow">{{ head.eyebrow }}</div>{% endif %}
+<h1 class="page-title">{{ head.title }}</h1>
+{%- if head.lede %}<p class="lede">{{ head.lede }}</p>{% endif %}
+{%- if head.html %}
+<div class="prose">{{ head.html }}</div>
+{%- endif %}

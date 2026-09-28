@@ -1,0 +1,31 @@
+{% extends "base.html.j2" %}
+{% from "_macros.html.j2" import term_rows %}
+{#- One subject area and every term classified under it. -#}
+
+{% block content %}
+<div class="split">
+  <article class="split__body split__body--wide">
+    <div class="eyebrow">{{ t("area.eyebrow") }}</div>
+    <h1 class="page-title">{{ area.label }}</h1>
+    <div class="meta-row">
+      <span>{{ count("term", (area.terms or []) | length) }}</span>
+      {%- set domain %}<a href="{{ rel }}{{ area.domain.url }}">{{ area.domain.label }}</a>{% endset %}
+      <span>{{ t("area.in_domain", domain=domain) }}</span>
+    </div>
+
+    <h2 class="subhead">{{ t("area.terms") }}</h2>
+    {{ term_rows(area.terms or [], rel, t("area.empty")) }}
+  </article>
+
+  <aside class="split__aside">
+    {%- if state_counts %}
+    <div class="panel">
+      <div class="panel__label">{{ t("area.by_state") }}</div>
+      {%- for label, count in state_counts %}
+      <div class="kv"><span class="kv__k">{{ label }}</span><span class="kv__v">{{ count }}</span></div>
+      {%- endfor %}
+    </div>
+    {%- endif %}
+  </aside>
+</div>
+{% endblock %}
