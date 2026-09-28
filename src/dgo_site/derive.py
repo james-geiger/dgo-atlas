@@ -263,6 +263,23 @@ class Deriver:
         seats.sort(key=lambda s: (not s.council_roles, s.member.label.casefold()))
         return seats
 
+    def governed_areas(self, term_pages, governed: set[str], held) -> list[vm.GovernedArea]:
+        """The subject areas of a council's terms (governed or held a role on), with the
+        roles it holds there, so its page links to each area once instead of listing terms."""
+        mine = governed | {r.term.about for r in held if r.term}
+        areas = {}  # area id -> (page of the first term seen, term count, roles by slug)
+        for page in term_pages:
+            if page.about not in mine:
+                continue
+            first, n, roles = areas.get(page.subject_area.about, (page, 0, {}))
+            for r in held:
+                if r.term and r.term.about == page.about:
+                    roles.setdefault(r.role, vm.RoleKind(role=r.role, role_label=r.role_label, role_iri=r.role_iri))
+            areas[page.subject_area.about] = (first, n + 1, roles)
+        out = [vm.GovernedArea(subject_area=p.subject_area, domain=p.domain, term_count=n, roles=list(roles.values()))
+               for p, n, roles in areas.values()]
+        return sorted(out, key=lambda a: (a.domain.label.casefold(), a.subject_area.label.casefold()))
+
     # ------------------------------------------------------------ pages
 
     def term_page(self, term) -> vm.TermPage:
@@ -357,7 +374,8 @@ class Deriver:
                 process_chain=self.refs(self.process_chain(c.participates_in), sort=False),
                 members=self.seats(c),
                 responsibilities=held.get(c.id, []),
-                governed_terms=self.refs(governed[c.id])))
+                governed_terms=self.refs(governed[c.id]),
+                governed_areas=self.governed_areas(term_pages, governed[c.id], held.get(c.id, []))))
         agents = []
         # Organization membership (has_member on organizations, from DGO v0.1.1).
         org_members = {o.id: list(getattr(o, "has_member", None) or []) for o in rec.organizations or []}

@@ -42,16 +42,62 @@ def test_yaml_boolean(broken):
     assert "people[0] (ex:morgan-ellis).label" in one(report, "boolean")
 
 
-def test_readable_type_is_rejected_with_the_iri_to_use(broken):
+def test_type_by_class_name_is_rewritten_to_the_curie(broken):
+    """`type: approved` is DGO's class name; later stages, the site and exports see only the CURIE."""
+    report = broken(("type: dgo:DGO_00000026           # approved\n    part_of: ex:clinical-trial-creation",
+                     "type: approved\n    part_of: ex:clinical-trial-creation"),
+                    ("type: dgo:DGO_00000025           # submitted for review",
+                     "type: submitted for review"),
+                    ("type: dgo:DGO_00000012       # owner\n        role_of: ex:cto",
+                     "type: owner\n        role_of: ex:cto"))
+    assert report.ok, messages(report)
+    created = [b["type"] for b in report.dataset.merged["term_status_boundaries"]
+               if b["part_of"] == "ex:clinical-trial-creation"]
+    assert created == ["dgo:DGO_00000024", "dgo:DGO_00000025", "dgo:DGO_00000026"]
+    (trial,) = [t for t in report.dataset.merged["glossary_terms"] if t["id"] == "ex:clinical-trial"]
+    assert trial["responsibilities"][0]["type"] == "dgo:DGO_00000012"  # nested roles too
+    loaded = [type(b).__name__ for b in report.record.term_status_boundaries if b.part_of == "ex:clinical-trial-creation"]
+    assert loaded == ["Drafted", "SubmittedForReview", "Approved"]
+
+
+def test_role_types_by_class_name(broken):
+    """Council roles and governance roles, top-level and in responsibilities, by DGO class name."""
+    roles = "\n".join(f"  - type: {name}\n    role_of: ex:morgan-ellis\n    realized_in: ex:research-dg"
+                      for name in ("council role", "compliance steward", "documentation steward",
+                                   "ethics steward", "security steward"))
+    report = broken(("type: dgo:DGO_00000006           # chair", "type: chair"),
+                    ("type: dgo:DGO_00000013       # steward", "type: steward       #"),
+                    extra={"roles.yaml": f"council_roles:\n{roles}\n"
+                                         "governance_roles:\n"
+                                         "  - type: custodian\n    role_of: ex:cto\n"
+                                         "  - type: subject matter expert\n    role_of: ex:jordan-price\n"})
+    assert report.ok, messages(report)
+    council = [type(r).__name__ for r in report.record.council_roles]
+    assert sorted(council) == ["Chair", "ComplianceSteward", "CouncilRole", "DocumentationSteward",
+                               "EthicsSteward", "SecuritySteward"]
+    assert [type(r).__name__ for r in report.record.governance_roles] == ["Custodian", "SubjectMatterExpert"]
+    (trial,) = [t for t in report.record.glossary_terms if t.id == "ex:clinical-trial"]
+    assert [r.type for r in trial.responsibilities] == ["dgo:DGO_00000012", "dgo:DGO_00000013"]
+
+
+def test_class_name_of_another_kind_is_not_rewritten(broken):
+    report = broken(("type: dgo:DGO_00000012       # owner", "type: drafted"))
+    msg = one(report, "`type: drafted` is not a kind of governance role")
+    assert "subject matter expert (dgo:DGO_00000015)" in msg
+
+
+def test_other_readable_forms_get_the_class_name(broken):
     report = broken(("type: dgo:DGO_00000026           # approved\n    part_of: ex:clinical-trial-creation",
                      "type: dgo:Approved\n    part_of: ex:clinical-trial-creation"))
-    assert "use dgo:DGO_00000026 (approved)" in one(report, "dgo:Approved")
+    assert "use approved (or dgo:DGO_00000026)" in one(report, "dgo:Approved")
+    report = broken(("type: dgo:DGO_00000025           # submitted for review", "type: submitted_for_review"))
+    assert "use submitted for review (or dgo:DGO_00000025)" in one(report, "submitted_for_review")
 
 
 def test_unknown_type_lists_the_choices(broken):
     report = broken(("type: dgo:DGO_00000012       # owner", "type: dgo:DGO_00000024       # drafted"))
     msg = one(report, "is not a kind of governance role")
-    assert "dgo:DGO_00000015 (subject matter expert)" in msg
+    assert "subject matter expert (dgo:DGO_00000015)" in msg
 
 
 def test_unknown_field(broken):

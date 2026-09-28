@@ -18,9 +18,9 @@ glossary_terms:
       - org:clinical-study
     semantic_type: bfo:0000015          # what a clinical trial is (BFO "process"); the site shows its label
     responsibilities:                   # who holds each role now
-      - type: dgo:DGO_00000012          # owner
+      - type: owner
         role_of: org:research-office
-      - type: dgo:DGO_00000013          # steward
+      - type: steward
         role_of: org:research-council
 
 term_creations:
@@ -31,12 +31,12 @@ term_creations:
 
 # Quote every date, or it is read as a date and rejected.
 term_status_boundaries:
-  - type: dgo:DGO_00000024              # drafted
+  - type: drafted
     part_of: org:clinical-trial-creation
     occurred_on: "2026-09-01"
-  - type: dgo:DGO_00000025              # submitted for review
+  - type: submitted for review
     part_of: org:clinical-trial-creation
     occurred_on: "2026-09-08"
-  - type: dgo:DGO_00000026              # approved
+  - type: approved
     part_of: org:clinical-trial-creation
     occurred_on: "2026-09-15"

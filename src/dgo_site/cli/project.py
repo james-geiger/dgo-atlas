@@ -10,6 +10,7 @@ import typer
 from ..build import build as build_site
 from ..build import check, load_project, print_report
 from ..config import ConfigError
+from ..convert import convert as convert_data
 from ..console import say
 from ..text import Text
 from .common import ProjectOption, config_problem, open_project, refresh_editor_schemas
@@ -34,6 +35,17 @@ def build(
     loaded = open_project(project)
     refresh_editor_schemas(loaded)
     raise typer.Exit(build_site(loaded, out=out.resolve() if out else None))
+
+
+@app.command(context_settings={"allow_extra_args": True, "ignore_unknown_options": True})
+def convert(ctx: typer.Context, project: ProjectOption = Path(".")) -> None:
+    """Export the governance data with linkml-convert; other options go to it.
+
+    The input, schema (-s), class (-C) and project prefixes (-P) are filled in.
+    For example `-t ttl -o glossary.ttl` writes RDF individuals of DGO's
+    classes, and `-t json` writes JSON. See `linkml-convert --help`.
+    """
+    raise typer.Exit(convert_data(open_project(project), ctx.args))
 
 
 @app.command()

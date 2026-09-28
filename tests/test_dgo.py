@@ -1,5 +1,6 @@
 """DGO is imported by URL at the release a project names (dgo_version)."""
 
+import json
 import urllib.request
 
 import pytest
@@ -31,6 +32,12 @@ def test_model_generated_at_runtime():
 
 def test_json_schema_for_editors():
     assert '"GlossaryTerm"' in dgo.json_schema()
+
+
+def test_editor_schema_accepts_type_by_class_name():
+    defs = json.loads(dgo.json_schema())["$defs"]
+    assert defs["Approved"]["properties"]["type"]["enum"] == ["dgo:DGO_00000026", "approved"]
+    assert defs["SubmittedForReview"]["properties"]["type"]["enum"] == ["dgo:DGO_00000025", "submitted for review"]
 
 
 def test_local_source_override(tmp_path):

@@ -14,6 +14,10 @@ prefixes:
   dgo: https://w3id.org/dgo/
   dgosite: https://w3id.org/dgo-site/
 default_prefix: dgosite
+# DGO declares this too, but LinkML reads default_range (and prefixes) from
+# the root schema only. Without it `label` has no range and linkml-convert
+# cannot write RDF. dgo.use() copies DGO's prefixes in for the same reason.
+default_range: string
 imports:
   - linkml:types
   # Replaced at runtime (dgo.use) with the project's DGO release, e.g.

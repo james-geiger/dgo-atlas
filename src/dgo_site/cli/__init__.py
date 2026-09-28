@@ -8,13 +8,14 @@ shows the whole command surface:
     dgo-site new project [DIR]   start a project from the scaffold
     dgo-site validate            validate the governance data
     dgo-site build               validate, then build the site
+    dgo-site convert [ARGS]      export the data with linkml-convert (JSON, RDF...)
     dgo-site schema              refresh the editor JSON Schemas
     dgo-site text [PREFIX]       list every text key and its wording
     dgo-site linkcheck [SITE]    check a built site's internal links
     dgo-site --version           this package and the DGO releases it is tested with
 
-Commands stay thin: parse options, call the library (build, scaffold, editor,
-linkcheck, text), print through dgo_site.console, and end with
+Commands stay thin: parse options, call the library (build, convert, scaffold,
+editor, linkcheck, text), print through dgo_site.console, and end with
 `raise typer.Exit(code)` when the code can be non-zero.
 """
 

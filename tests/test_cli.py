@@ -1,10 +1,14 @@
 """The command surface: its commands, their exit codes, and the Typer-only rule."""
 
+import json
 import re
 from pathlib import Path
 
+import rdflib
+from rdflib.namespace import RDF, RDFS
 from typer.testing import CliRunner
 
+from dgo_site import dgo
 from dgo_site.cli import app
 
 runner = CliRunner()
@@ -22,7 +26,7 @@ def files_under(root: Path) -> set[Path]:
 def test_help_lists_every_command():
     result = dgo_site("--help")
     assert result.exit_code == 0
-    for command in ("init", "new", "validate", "build", "schema", "text", "linkcheck"):
+    for command in ("init", "new", "validate", "build", "convert", "schema", "text", "linkcheck"):
         assert command in result.stdout, command
     assert "project" in dgo_site("new", "--help").stdout
 
@@ -66,3 +70,19 @@ def test_every_cli_is_typer():
     forbidden = re.compile(r"^\s*(import argparse|from argparse|import click|from click)|sys\.argv", re.MULTILINE)
     offenders = [str(p.relative_to(SRC)) for p in SRC.rglob("*.py") if forbidden.search(p.read_text())]
     assert offenders == [], "use Typer (see CLAUDE.md)"
+
+
+def test_convert_passes_through_to_linkml_convert(tmp_path):
+    variant = Path(__file__).parent / "fixtures" / "variant"
+    ttl = tmp_path / "glossary.ttl"
+    assert dgo_site("convert", "--project", variant, "-t", "ttl", "-o", ttl).exit_code == 0
+    graph = rdflib.Graph().parse(ttl)
+    term = rdflib.URIRef("https://w3id.org/dgo/data/indirect-cost")
+    assert (term, RDF.type, rdflib.URIRef(dgo.kind("glossary term").iri)) in graph
+    assert (term, RDFS.label, rdflib.Literal("indirect cost")) in graph  # prefixes from DGO expand
+
+    result = dgo_site("convert", "--project", variant, "-t", "json")
+    assert result.exit_code == 0
+    assert json.loads(result.stdout)["glossary_terms"]
+
+    assert dgo_site("convert", "--project", variant, "--no-such-option").exit_code == 2

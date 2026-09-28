@@ -113,9 +113,25 @@ classes:
 
   CouncilPage:
     is_a: Page
-    slots: [participates_in, process_chain, members, responsibilities, governed_terms]
+    slots: [participates_in, process_chain, members, responsibilities, governed_terms, governed_areas]
     slot_usage:
       responsibilities: { range: Responsibility, inlined: true, inlined_as_list: true }
+
+  GovernedArea:
+    description: >-
+      A subject area holding terms a council governs or holds a role on, so
+      the council page can point to the area instead of re-listing its terms.
+    slots: [subject_area, domain, term_count, roles]
+    slot_usage:
+      subject_area: { required: true }
+      domain: { required: true }
+      term_count:
+        description: How many of the area's terms fall to this council.
+        required: true
+
+  RoleKind:
+    description: A kind of role, without its bearer or term.
+    slots: [role, role_label, role_iri]
 
   Seat:
     description: A council member and the council roles they hold on it.
@@ -255,6 +271,16 @@ slots:
   governed_terms:
     description: Terms whose lifecycle processes fall under this council.
     range: Ref
+    multivalued: true
+    inlined_as_list: true
+  governed_areas:
+    description: Subject areas of the council's governed terms and the terms it holds roles on, by domain.
+    range: GovernedArea
+    multivalued: true
+    inlined_as_list: true
+  roles:
+    description: The kinds of role the council holds on terms in this area.
+    range: RoleKind
     multivalued: true
     inlined_as_list: true
   memberships: { multivalued: true }

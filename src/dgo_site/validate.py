@@ -2,7 +2,10 @@
 
 Stages, stopping after the first that finds errors:
 
-1. **Read.** Every file must be YAML whose top level is a mapping.
+1. **Read.** Every file must be YAML whose top level is a mapping. A `type`
+   written as a DGO class name (`approved`, `submitted for review`) is
+   rewritten to that class's CURIE, so every later stage, the site and the
+   exports see exactly DGO's value.
 2. **Scalars.** DGO has no boolean, number or date slots, so any such value is
    an authoring slip: an unquoted date, or a YAML boolean such as `on` or
    `no`. (`label` has no range in DGO, so linkml-validate would accept
@@ -120,6 +123,34 @@ def _typed_base(cls: str | None) -> str | None:
     return None
 
 
+# ---------------------------------------------------------------- stage 1
+
+
+def name_types(data: dict) -> None:
+    """Rewrite, in place, each `type` given as a DGO class name to the class's CURIE.
+
+    Only names of the kinds the object's list allows are rewritten; anything
+    else is left for the shape check to report.
+    """
+    for list_name, items in data.items():
+        cls = dgo.list_ranges().get(list_name)
+        for obj in items if cls and isinstance(items, list) else []:
+            _name_type(obj, cls)
+
+
+def _name_type(obj, cls: str) -> None:
+    if not isinstance(obj, dict):
+        return
+    base = _typed_base(cls)
+    value = obj.get("type")
+    if base and isinstance(value, str) and value in dgo.named_types(base):
+        obj["type"] = dgo.named_types(base)[value].curie
+    for slot, child_cls in dgo.inlined_slots(cls).items():
+        children = obj.get(slot)
+        for child in children if isinstance(children, list) else []:
+            _name_type(child, child_cls)
+
+
 # ---------------------------------------------------------------- stage 2
 
 
@@ -149,14 +180,14 @@ _PATH = re.compile(r"\s+in\s+(/\S*)$")
 def _type_hint(obj: dict, base: str) -> str | None:
     value = obj.get("type")
     accepted = dgo.accepted_types(base)
-    choices = ", ".join(f"{k.curie} ({k.name})" for k in dgo.subkinds(base))
+    choices = ", ".join(f"{k.name} ({k.curie})" for k in dgo.subkinds(base))
     if value is None:
         return None
     if value in accepted:
         return f"check its fields against {base}"
     readable = dgo.readable_type(str(value), base)
     if readable:
-        return f"`type: {value}` must be a class IRI; use {readable.curie} ({readable.name})"
+        return f"`type: {value}` is not how DGO names it; use {readable.name} (or {readable.curie})"
     return f"`type: {value}` is not a kind of {base}; use one of {choices}"
 
 
@@ -351,6 +382,8 @@ def validate(data_dir: Path, root: Path, prefixes: dict[str, str]) -> Report:
             report.errors.append(Problem(source.rel, source.error))
     if report.errors:
         return report
+    for source in dataset.files:
+        name_types(source.data)
 
     report.stage = "shape"
     for source in dataset.files:

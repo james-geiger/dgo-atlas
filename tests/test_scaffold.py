@@ -61,9 +61,9 @@ def test_validate_reports_problems(tmp_path):
 
 
 def test_readme_type_table_matches_dgo():
-    rows = re.findall(r"^\| (governance role|council role|status boundary) \| `(dgo:DGO_\d+)` \| ([a-z ]+) \|$",
+    rows = re.findall(r"^\| (governance role|council role|status boundary) \| `([a-z ]+)` \| `(dgo:DGO_\d+)` \|$",
                       (SCAFFOLD / "README.md").read_text(), re.MULTILINE)
-    expected = [(base, k.curie, k.name) for base in ("governance role", "council role", "status boundary")
+    expected = [(base, k.name, k.curie) for base in ("governance role", "council role", "status boundary")
                 for k in dgo.subkinds(base)[1:]]
     assert sorted(rows) == sorted(expected)
 

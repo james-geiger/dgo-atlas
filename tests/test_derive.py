@@ -92,6 +92,9 @@ def test_council_seats(variant):
     ]
     assert [t.label for t in council.governed_terms] == [
         "clinical investigation", "Clinical Trial", "Direct Cost", "Indirect Cost"]
+    assert [(a.subject_area.label, a.term_count, [r.role for r in a.roles or []])
+            for a in council.governed_areas] == [
+        ("Clinical Research", 2, ["steward"]), ("Sponsored Programs", 2, ["steward"])]
     (member,) = [a for a in site.agents if a.label == "Morgan Ellis"]
     assert [s.council.label for s in member.memberships] == [council.label]
     assert member.job_title == "Director, Data Governance"

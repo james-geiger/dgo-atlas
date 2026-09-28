@@ -153,8 +153,17 @@ council:
   takes_part_in: Takes part in {process}.
   members: Members
   members_empty: No members are recorded for this council.
-  governs: Terms it governs
-  governs_empty: No term lifecycle process falls under this council yet.
+  column_name: Name
+  column_title: Title
+  column_email: Email
+  column_role: Role
+  member: Member
+  areas: Subject areas
+  areas_intro: >-
+    The subject areas holding the terms this council governs, with the roles
+    it holds on them. Open an area to see its terms.
+  areas_empty: No term lifecycle process falls under this council yet.
+  general_roles: "Also holds, for no particular term:"
   processes: Governance processes
   identifier: Identifier
   id: ID

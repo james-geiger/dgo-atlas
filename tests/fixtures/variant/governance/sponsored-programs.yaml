@@ -1,7 +1,8 @@
 # Not in the handoff: two terms still going through creation, adapted from a
 # university research glossary. "direct cost" has been submitted for review;
 # "indirect cost" has only been drafted. Both are published as proposed;
-# their history shows how far each has got.
+# their history shows how far each has got. `type` values here are DGO class
+# names; governance.yaml writes the class CURIEs. Both mean the same.
 
 organizations:
   - id: ex:spo
@@ -30,9 +31,9 @@ glossary_terms:
     part_of: ex:business-glossary
     in_subject_area: ex:sponsored-programs
     responsibilities:
-      - type: dgo:DGO_00000012       # owner
+      - type: owner
         role_of: ex:spo
-      - type: dgo:DGO_00000013       # steward
+      - type: steward
         role_of: ex:research-committee
 
   - id: ex:indirect-cost
@@ -49,9 +50,9 @@ glossary_terms:
     related:
       - ex:direct-cost
     responsibilities:
-      - type: dgo:DGO_00000012       # owner
+      - type: owner
         role_of: ex:spo
-      - type: dgo:DGO_00000013       # steward
+      - type: steward
         role_of: ex:research-committee
 
 term_creations:
@@ -65,12 +66,12 @@ term_creations:
     part_of: ex:research-dg
 
 term_status_boundaries:
-  - type: dgo:DGO_00000024           # drafted
+  - type: drafted
     part_of: ex:direct-cost-creation
     occurred_on: "2026-09-10"
-  - type: dgo:DGO_00000025           # submitted for review: "direct cost" is in review
+  - type: submitted for review           # "direct cost" is in review
     part_of: ex:direct-cost-creation
     occurred_on: "2026-09-17"
-  - type: dgo:DGO_00000024           # drafted: "indirect cost" is only drafted
+  - type: drafted           # "indirect cost" is only drafted
     part_of: ex:indirect-cost-creation
     occurred_on: "2026-09-20"

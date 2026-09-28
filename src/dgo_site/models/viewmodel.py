@@ -180,7 +180,7 @@ class GlossaryPage(Page):
                                     'range': 'Ref'}}})
 
     domains: Optional[list[Ref]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Site', 'GlossaryPage']} })
-    term_count: Optional[int] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['GlossaryPage', 'DomainPage']} })
+    term_count: Optional[int] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['GlossaryPage', 'DomainPage', 'GovernedArea']} })
     about: str = Field(default=..., description="""The CURIE of the governed object this page or link is about.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref', 'SemanticType', 'Change']} })
     iri: str = Field(default=..., description="""The expanded IRI of the governed object (or the source).""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'SourceRef', 'SemanticType']} })
     url: Optional[str] = Field(default=None, description="""Site-relative path of the page, e.g. terms/clinical-trial.html.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref']} })
@@ -196,7 +196,7 @@ class DomainPage(Page):
 
     glossary: Optional[Ref] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['DomainPage', 'SubjectAreaPage', 'TermPage']} })
     subject_areas: Optional[list[Ref]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Site', 'DomainPage']} })
-    term_count: Optional[int] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['GlossaryPage', 'DomainPage']} })
+    term_count: Optional[int] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['GlossaryPage', 'DomainPage', 'GovernedArea']} })
     accent: Optional[str] = Field(default=None, description="""A CSS colour for this page's cards, from the site config.""", json_schema_extra = { "linkml_meta": {'domain_of': ['DomainPage', 'SubjectAreaPage']} })
     about: str = Field(default=..., description="""The CURIE of the governed object this page or link is about.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref', 'SemanticType', 'Change']} })
     iri: str = Field(default=..., description="""The expanded IRI of the governed object (or the source).""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'SourceRef', 'SemanticType']} })
@@ -213,7 +213,7 @@ class SubjectAreaPage(Page):
                                   'range': 'Ref'}}})
 
     glossary: Optional[Ref] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['DomainPage', 'SubjectAreaPage', 'TermPage']} })
-    domain: Ref = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['SubjectAreaPage', 'TermPage']} })
+    domain: Ref = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['SubjectAreaPage', 'TermPage', 'GovernedArea']} })
     terms: Optional[list[Ref]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Site', 'SubjectAreaPage']} })
     accent: Optional[str] = Field(default=None, description="""A CSS colour for this page's cards, from the site config.""", json_schema_extra = { "linkml_meta": {'domain_of': ['DomainPage', 'SubjectAreaPage']} })
     about: str = Field(default=..., description="""The CURIE of the governed object this page or link is about.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref', 'SemanticType', 'Change']} })
@@ -239,8 +239,8 @@ class TermPage(Page):
     semantic_type: Optional[SemanticType] = Field(default=None, description="""The external class the term denotes.""", json_schema_extra = { "linkml_meta": {'domain_of': ['TermPage']} })
     state: TermState = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Ref', 'TermPage']} })
     glossary: Ref = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['DomainPage', 'SubjectAreaPage', 'TermPage']} })
-    subject_area: Ref = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['TermPage']} })
-    domain: Ref = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['SubjectAreaPage', 'TermPage']} })
+    subject_area: Ref = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['TermPage', 'GovernedArea']} })
+    domain: Ref = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['SubjectAreaPage', 'TermPage', 'GovernedArea']} })
     responsibilities: Optional[list[Responsibility]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['TermPage', 'CouncilPage', 'AgentPage']} })
     governing_councils: Optional[list[Ref]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['TermPage']} })
     pending_changes: Optional[list[Change]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['TermPage']} })
@@ -289,9 +289,9 @@ class Responsibility(ConfiguredBaseModel):
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://w3id.org/dgo-site/viewmodel'})
 
-    role: str = Field(default=..., description="""Slug of the role kind, e.g. owner or chair.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Responsibility', 'CouncilRoleHeld']} })
-    role_label: str = Field(default=..., description="""DGO's name for the role kind, e.g. subject matter expert.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Responsibility', 'CouncilRoleHeld']} })
-    role_iri: str = Field(default=..., description="""The DGO class IRI of the role kind.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Responsibility', 'CouncilRoleHeld']} })
+    role: str = Field(default=..., description="""Slug of the role kind, e.g. owner or chair.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Responsibility', 'RoleKind', 'CouncilRoleHeld']} })
+    role_label: str = Field(default=..., description="""DGO's name for the role kind, e.g. subject matter expert.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Responsibility', 'RoleKind', 'CouncilRoleHeld']} })
+    role_iri: str = Field(default=..., description="""The DGO class IRI of the role kind.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Responsibility', 'RoleKind', 'CouncilRoleHeld']} })
     term: Optional[Ref] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Responsibility']} })
     bearer: Ref = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Responsibility']} })
 
@@ -338,10 +338,40 @@ class CouncilPage(Page):
     members: Optional[list[Seat]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['CouncilPage']} })
     responsibilities: Optional[list[Responsibility]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['TermPage', 'CouncilPage', 'AgentPage']} })
     governed_terms: Optional[list[Ref]] = Field(default=None, description="""Terms whose lifecycle processes fall under this council.""", json_schema_extra = { "linkml_meta": {'domain_of': ['CouncilPage']} })
+    governed_areas: Optional[list[GovernedArea]] = Field(default=None, description="""Subject areas of the council's governed terms and the terms it holds roles on, by domain.""", json_schema_extra = { "linkml_meta": {'domain_of': ['CouncilPage']} })
     about: str = Field(default=..., description="""The CURIE of the governed object this page or link is about.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref', 'SemanticType', 'Change']} })
     iri: str = Field(default=..., description="""The expanded IRI of the governed object (or the source).""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'SourceRef', 'SemanticType']} })
     url: Optional[str] = Field(default=None, description="""Site-relative path of the page, e.g. terms/clinical-trial.html.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref']} })
     label: str = Field(default=..., description="""The display label.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref', 'SourceRef', 'SemanticType', 'Change']} })
+
+
+class GovernedArea(ConfiguredBaseModel):
+    """
+    A subject area holding terms a council governs or holds a role on, so the council page can point to the area instead of re-listing its terms.
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://w3id.org/dgo-site/viewmodel',
+         'slot_usage': {'domain': {'name': 'domain', 'required': True},
+                        'subject_area': {'name': 'subject_area', 'required': True},
+                        'term_count': {'description': "How many of the area's terms "
+                                                      'fall to this council.',
+                                       'name': 'term_count',
+                                       'required': True}}})
+
+    subject_area: Ref = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['TermPage', 'GovernedArea']} })
+    domain: Ref = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['SubjectAreaPage', 'TermPage', 'GovernedArea']} })
+    term_count: int = Field(default=..., description="""How many of the area's terms fall to this council.""", json_schema_extra = { "linkml_meta": {'domain_of': ['GlossaryPage', 'DomainPage', 'GovernedArea']} })
+    roles: Optional[list[RoleKind]] = Field(default=None, description="""The kinds of role the council holds on terms in this area.""", json_schema_extra = { "linkml_meta": {'domain_of': ['GovernedArea']} })
+
+
+class RoleKind(ConfiguredBaseModel):
+    """
+    A kind of role, without its bearer or term.
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://w3id.org/dgo-site/viewmodel'})
+
+    role: str = Field(default=..., description="""Slug of the role kind, e.g. owner or chair.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Responsibility', 'RoleKind', 'CouncilRoleHeld']} })
+    role_label: str = Field(default=..., description="""DGO's name for the role kind, e.g. subject matter expert.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Responsibility', 'RoleKind', 'CouncilRoleHeld']} })
+    role_iri: str = Field(default=..., description="""The DGO class IRI of the role kind.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Responsibility', 'RoleKind', 'CouncilRoleHeld']} })
 
 
 class Seat(ConfiguredBaseModel):
@@ -358,9 +388,9 @@ class Seat(ConfiguredBaseModel):
 class CouncilRoleHeld(ConfiguredBaseModel):
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://w3id.org/dgo-site/viewmodel'})
 
-    role: str = Field(default=..., description="""Slug of the role kind, e.g. owner or chair.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Responsibility', 'CouncilRoleHeld']} })
-    role_label: str = Field(default=..., description="""DGO's name for the role kind, e.g. subject matter expert.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Responsibility', 'CouncilRoleHeld']} })
-    role_iri: str = Field(default=..., description="""The DGO class IRI of the role kind.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Responsibility', 'CouncilRoleHeld']} })
+    role: str = Field(default=..., description="""Slug of the role kind, e.g. owner or chair.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Responsibility', 'RoleKind', 'CouncilRoleHeld']} })
+    role_label: str = Field(default=..., description="""DGO's name for the role kind, e.g. subject matter expert.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Responsibility', 'RoleKind', 'CouncilRoleHeld']} })
+    role_iri: str = Field(default=..., description="""The DGO class IRI of the role kind.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Responsibility', 'RoleKind', 'CouncilRoleHeld']} })
 
 
 class AgentPage(Page):
@@ -420,6 +450,8 @@ Responsibility.model_rebuild()
 Change.model_rebuild()
 HistoryEntry.model_rebuild()
 CouncilPage.model_rebuild()
+GovernedArea.model_rebuild()
+RoleKind.model_rebuild()
 Seat.model_rebuild()
 CouncilRoleHeld.model_rebuild()
 AgentPage.model_rebuild()

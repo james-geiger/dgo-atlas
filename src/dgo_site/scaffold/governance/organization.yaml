@@ -1,7 +1,7 @@
 # Who governs: governance processes, councils, and the people and
 # organizations who sit on them or hold roles for terms.
 #
-# `type` values are DGO class IRIs. Keep the readable name in a comment.
+# `type` values are DGO class names (owner, chair, approved...), as DGO spells them.
 
 processes:
   - id: org:data-governance
@@ -35,9 +35,9 @@ organizations:
       - org:sam-chen
 
 council_roles:
-  - type: dgo:DGO_00000006     # chair
+  - type: chair
     role_of: org:alex-rivera
     realized_in: org:research-data-governance
-  - type: dgo:DGO_00000009     # documentation steward
+  - type: documentation steward
     role_of: org:sam-chen
     realized_in: org:research-data-governance

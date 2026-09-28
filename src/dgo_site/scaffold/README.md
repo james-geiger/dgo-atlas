@@ -85,31 +85,36 @@ The build enforces all of these.
 
 ## `type` values
 
-Roles and status boundaries have no id; `type` says which kind each is. Use
-the class IRI and keep its name in a comment:
+Roles and status boundaries have no id; `type` says which kind each is. Write
+the DGO class name, exactly as DGO spells it:
 
 ```yaml
-- type: dgo:DGO_00000012   # owner
+- type: owner
   role_of: org:research-office
 ```
 
-| Kind of | `type` | Name |
-| --- | --- | --- |
-| governance role | `dgo:DGO_00000012` | owner |
-| governance role | `dgo:DGO_00000013` | steward |
-| governance role | `dgo:DGO_00000014` | custodian |
-| governance role | `dgo:DGO_00000015` | subject matter expert |
-| council role | `dgo:DGO_00000006` | chair |
-| council role | `dgo:DGO_00000007` | security steward |
-| council role | `dgo:DGO_00000008` | ethics steward |
-| council role | `dgo:DGO_00000009` | documentation steward |
-| council role | `dgo:DGO_00000010` | compliance steward |
-| status boundary | `dgo:DGO_00000024` | drafted |
-| status boundary | `dgo:DGO_00000025` | submitted for review |
-| status boundary | `dgo:DGO_00000026` | approved |
-| status boundary | `dgo:DGO_00000027` | rejected |
+dgo-site reads each name as its DGO class IRI (`owner` is `dgo:DGO_00000012`),
+so the site and `dgo-site convert` exports carry DGO's own value. The IRI is
+accepted in `type` too.
 
-`dgo:Approved` and other readable forms are rejected: use the IRI.
+| Kind of | `type` | DGO class IRI |
+| --- | --- | --- |
+| governance role | `owner` | `dgo:DGO_00000012` |
+| governance role | `steward` | `dgo:DGO_00000013` |
+| governance role | `custodian` | `dgo:DGO_00000014` |
+| governance role | `subject matter expert` | `dgo:DGO_00000015` |
+| council role | `chair` | `dgo:DGO_00000006` |
+| council role | `security steward` | `dgo:DGO_00000007` |
+| council role | `ethics steward` | `dgo:DGO_00000008` |
+| council role | `documentation steward` | `dgo:DGO_00000009` |
+| council role | `compliance steward` | `dgo:DGO_00000010` |
+| status boundary | `drafted` | `dgo:DGO_00000024` |
+| status boundary | `submitted for review` | `dgo:DGO_00000025` |
+| status boundary | `approved` | `dgo:DGO_00000026` |
+| status boundary | `rejected` | `dgo:DGO_00000027` |
+
+Other spellings (`Approved`, `submitted_for_review`, `dgo:Approved`) are
+rejected, with the name to use.
 
 ## How a term's state is worked out
 

@@ -14,6 +14,7 @@ middleware changes.
 
 from __future__ import annotations
 
+import json
 import re
 import tempfile
 import urllib.error
@@ -22,6 +23,7 @@ from dataclasses import dataclass
 from functools import cache
 from pathlib import Path
 
+import yaml
 from linkml_runtime.utils.formatutils import camelcase
 from linkml_runtime.utils.schemaview import SchemaView
 
@@ -126,9 +128,15 @@ def _fetch_check(source: Source) -> None:
 def _template(location: str) -> Path:
     text = TEMPLATE.read_text(encoding="utf-8")
     assert IMPORT_PLACEHOLDER in text
+    template = yaml.safe_load(text.replace(IMPORT_PLACEHOLDER, location))
+    # LinkML expands CURIEs with the root schema's prefixes only, so the
+    # release's prefixes (rdfs, skos, ro...) are declared here too.
+    release = SchemaView(location + ".yaml").schema.prefixes
+    template["prefixes"] = {**{p.prefix_prefix: p.prefix_reference for p in release.values()},
+                            **template["prefixes"]}
     directory = Path(tempfile.mkdtemp(prefix="dgo-site-"))
     path = directory / TEMPLATE.name
-    path.write_text(text.replace(IMPORT_PLACEHOLDER, location), encoding="utf-8")
+    path.write_text(yaml.safe_dump(template, sort_keys=False), encoding="utf-8")
     return path
 
 
@@ -162,8 +170,14 @@ def model():
 def _json_schema(location: str) -> str:
     from linkml.generators.jsonschemagen import JsonSchemaGenerator
 
-    text = JsonSchemaGenerator(str(_template(location)), top_class=ROOT_CLASS).serialize()
-    return text if text.endswith("\n") else text + "\n"
+    schema = json.loads(JsonSchemaGenerator(str(_template(location)), top_class=ROOT_CLASS).serialize())
+    # Editors accept `type` as the class name too, as validate.py does.
+    names = {kind(c).curie: c for c in _view(location).all_classes()}
+    for definition in schema.get("$defs", {}).values():
+        values = (definition.get("properties") or {}).get("type", {}).get("enum")
+        if values:
+            values += [names[v] for v in list(values) if v in names]
+    return json.dumps(schema, indent=4) + "\n"
 
 
 def json_schema() -> str:
@@ -237,8 +251,18 @@ def accepted_types(base: str) -> dict[str, Kind]:
     return out
 
 
+@cache
+def named_types(base: str) -> dict[str, Kind]:
+    """`type` values written as DGO class names under a base (`approved`, `submitted for review`).
+
+    Not DGO values themselves: validate.py rewrites each to its class CURIE as
+    files are read, before anything else sees the data.
+    """
+    return {k.name: k for k in subkinds(base)}
+
+
 def readable_type(value: str, base: str) -> Kind | None:
-    """If `value` names a kind by its readable name (dgo:Approved), which one."""
+    """If `value` names a kind in some other readable form (dgo:Approved, submitted_for_review), which one."""
     local = value.rsplit(":", 1)[-1].rsplit("/", 1)[-1]
     for k in subkinds(base):
         if local in (k.model_class, k.slug, k.name):
@@ -318,4 +342,4 @@ def class_slot_names(class_name: str) -> list[str]:
 
 
 # Caches that read the active release; use() clears them when it changes.
-_CACHED = (kind, kind_of_model, subkinds, accepted_types, list_ranges, reference_slots, inlined_slots)
+_CACHED = (kind, kind_of_model, subkinds, accepted_types, named_types, list_ranges, reference_slots, inlined_slots)
