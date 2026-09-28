@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "preview",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": ["-c", "uv run dgo-site build --project tests/fixtures/variant --out .preview && exec python3 -m http.server \"${PORT:-8765}\" --directory .preview"],
+      "port": 8765,
+      "autoPort": true
+    }
+  ]
+}
