@@ -81,7 +81,7 @@ linkml_meta = LinkMLMeta({'default_prefix': 'dgoatlas',
                                'prefix_reference': 'https://w3id.org/dgo-atlas/'},
                   'linkml': {'prefix_prefix': 'linkml',
                              'prefix_reference': 'https://w3id.org/linkml/'}},
-     'source_file': '/Users/jamesgeiger/Repositories/dgo-atlas/src/dgo_atlas/schema/config.yaml',
+     'source_file': 'config.yaml',
      'title': 'DGO Atlas site configuration'} )
 
 

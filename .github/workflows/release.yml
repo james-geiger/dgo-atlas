@@ -2,10 +2,11 @@
 # release by hand, start this workflow and choose the release's tag (not a
 # branch) under "Use workflow from".
 #
-# The release tag is the bare version (0.5.0, no "v"). It, `version` in
-# pyproject.toml and `__version__` in the package must all be identical, or
-# nothing is published. tests/test_cli.py checks the last two on every test
-# run; this workflow checks both against the tag.
+# The release tag is the bare version (0.5.0, no "v") and is the only place
+# the version needs to be set. Before testing and building, this workflow
+# writes it into `version` in pyproject.toml, re-locks uv.lock to match and
+# writes it into `__version__`. Those edits exist only in the build; they are
+# not committed back to the repository.
 #
 # PyPI accepts the upload through trusted publishing, so no token is stored.
 # One-time setup on PyPI: add a trusted publisher for project `dgo-atlas`,
@@ -36,14 +37,13 @@ jobs:
 
       - uses: astral-sh/setup-uv@v6
 
-      - name: Check pyproject.toml matches the tag
+      - name: Set the version from the tag
+        # `uv version` rejects a tag that isn't a version, writes pyproject.toml
+        # and re-locks uv.lock.
         run: |
-          tag="$GITHUB_REF_NAME"
-          project="$(uv version --short)"
-          if [ "$project" != "$tag" ]; then
-            echo "::error file=pyproject.toml::version is $project but the tag is $GITHUB_REF_NAME"
-            exit 1
-          fi
+          uv version "$GITHUB_REF_NAME" --no-sync
+          sed -i "s/^__version__ = .*/__version__ = \"$GITHUB_REF_NAME\"/" src/dgo_atlas/__init__.py
+          git diff
 
       - name: Test
         # The tests import DGO from its release URL, so they need network.
@@ -52,11 +52,10 @@ jobs:
       - name: Build
         run: uv build
 
-      - name: Check the built package's __version__ matches the tag
+      - name: Check the built package reports the tag's version
         run: |
-          tag="$GITHUB_REF_NAME"
           reported="$(uvx --isolated --from ./dist/*.whl dgo-atlas --version | head -n 1)"
-          if [ "$reported" != "dgo-atlas $tag" ]; then
+          if [ "$reported" != "dgo-atlas $GITHUB_REF_NAME" ]; then
             echo "::error file=src/dgo_atlas/__init__.py::the built package reports '$reported' but the tag is $GITHUB_REF_NAME"
             exit 1
           fi
