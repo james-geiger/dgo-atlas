@@ -1,6 +1,6 @@
 [project]
 name = "dgo-atlas"
-version = "0.1.1"
+version = "0.5.0"
 description = "Govern a business glossary with the Data Governance Ontology (DGO) and publish it as a static site."
 readme = "README.md"
 license = "MIT"
