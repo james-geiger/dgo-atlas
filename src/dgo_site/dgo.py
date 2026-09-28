@@ -35,7 +35,7 @@ RELEASE_URL = "https://raw.githubusercontent.com/james-geiger/dgo/refs/tags/{ver
 
 # Releases this version of dgo-site has been tested against. Others are used
 # if they have the classes below, with a warning.
-TESTED_VERSIONS = ("0.1.0",)
+TESTED_VERSIONS = ("0.1.0", "v0.1.1")
 
 # The placeholder in schema/template.yaml that the import location replaces.
 IMPORT_PLACEHOLDER = "DGO_IMPORT"

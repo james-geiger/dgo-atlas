@@ -109,6 +109,8 @@ term:
   responsibility_empty: No responsibilities are recorded for this term.
   suggest_change: Suggest a change
   governed_by: Governed by
+  denotes: Denotes
+  denotes_title: What kind of thing the term refers to, as a class in an external ontology
   filed_under: Filed under
   glossary: Glossary
   domain: Domain
@@ -164,6 +166,8 @@ agent:
   column_seat: Seat
   column_takes_part_in: Takes part in
   member: Member
+  members: Members
+  member_of: Member of
   empty: No roles are recorded for this {kind}.
   identifier: Identifier
   id: ID
@@ -230,6 +234,7 @@ field:
   alt_labels: Also called
   definition: Definition
   definition_source: Definition source
+  semantic_type: Denotes
   part_of: Glossary
   in_subject_area: Subject area
   responsibilities: Responsibility

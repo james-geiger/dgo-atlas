@@ -4,7 +4,7 @@
 
 # The Data Governance Ontology release to use. Its schema is imported from
 # https://raw.githubusercontent.com/james-geiger/dgo/refs/tags/<version>/dist/dgo.yaml
-dgo_version: "0.1.0"
+dgo_version: "v0.1.1"
 # dgo_source: path/to/dgo.yaml   # a local copy or mirror instead, e.g. for offline builds
 
 title: Research Data Governance
@@ -15,6 +15,7 @@ contact_email: governance@example.org
 # Every id in governance/ is a CURIE with a prefix declared here.
 prefixes:
   ex: https://w3id.org/dgo/data/    # the fixture's namespace only; never a scaffold default
+  bfo: http://purl.obolibrary.org/obo/BFO_   # for semantic types: bfo:0000015 is BFO's "process"
 
 paths:
   data: governance     # every .yaml file under here is governance data

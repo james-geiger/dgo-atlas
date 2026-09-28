@@ -19,6 +19,16 @@ def one(report, fragment):
     return found[0]
 
 
+def test_semantic_type_needs_a_declared_prefix(broken):
+    report = broken(("semantic_type: bfo:0000015", "semantic_type: obo:BFO_0000015"))
+    assert "semantic_type: obo:BFO_0000015 does not use a declared prefix" in one(report, "semantic_type")
+
+
+def test_semantic_type_as_full_iri(broken):
+    report = broken(("semantic_type: bfo:0000015", "semantic_type: http://purl.obolibrary.org/obo/BFO_0000015"))
+    assert report.ok, messages(report)
+
+
 def test_unquoted_date(broken):
     report = broken(('occurred_on: "2026-09-25"', "occurred_on: 2026-09-25"))
     assert report.stage == "shape"

@@ -37,11 +37,22 @@ people:
     label: Morgan Ellis
     title: Director, Data Governance
     email: morgan.ellis@example.edu
+  - id: ex:jordan-price
+    label: Jordan Price
+    title: Clinical Trials Manager
+    email: jordan.price@example.edu
 
 organizations:
+  - id: ex:office-of-research
+    label: Office of Research
+    has_member:                          # organizations can be members too (DGO v0.1.1)
+      - ex:cto
+      - ex:spo
   - id: ex:cto
     label: Clinical Trials Office
     email: cto@example.org
+    has_member:
+      - ex:jordan-price
 
 council_roles:
   - type: dgo:DGO_00000006           # chair
@@ -76,6 +87,7 @@ glossary_terms:
     in_subject_area: ex:clinical-research   # classification; its domain is one step further
     broader:
       - ex:clinical-study
+    semantic_type: bfo:0000015       # what the term denotes (BFO "process"), not what the term is
     responsibilities:                # current assignments, held with respect to this term
       - type: dgo:DGO_00000012       # owner
         role_of: ex:cto

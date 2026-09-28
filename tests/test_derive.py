@@ -11,6 +11,7 @@ from linkml.validator import validate as linkml_validate
 
 from dgo_site.derive import Deriver, related
 from dgo_site.resources import VIEWMODEL
+from dgo_site.semantic import ClassInfo
 
 from .conftest import EX
 
@@ -93,7 +94,47 @@ def test_council_seats(variant):
         "clinical investigation", "Clinical Trial", "Direct Cost", "Indirect Cost"]
     (member,) = [a for a in site.agents if a.label == "Morgan Ellis"]
     assert [s.council.label for s in member.memberships] == [council.label]
-    assert member.job_title == "Director, Research Analytics and Decision Support"
+    assert member.job_title == "Director, Data Governance"
+
+
+def agent(site, label):
+    return next(a for a in site.agents if a.label == label)
+
+
+def test_organization_members(variant):
+    """has_member on organizations (DGO v0.1.1): members listed, and read back as member_of."""
+    _, site = variant
+    assert [m.label for m in agent(site, "Office of Research").organization_members] == [
+        "Clinical Trials Office", "Sponsored Programs Office"]
+    cto = agent(site, "Clinical Trials Office")
+    assert [m.label for m in cto.organization_members] == ["Jordan Price"]
+    assert [o.label for o in cto.member_of] == ["Office of Research"]
+    assert [o.label for o in agent(site, "Jordan Price").member_of] == ["Clinical Trials Office"]
+    assert not agent(site, "Morgan Ellis").member_of
+
+
+def test_semantic_type_described_by_its_class(variant):
+    deriver, _ = variant
+    looked_up = []
+
+    def describe(iri):
+        looked_up.append(iri)
+        return ClassInfo(iri=iri, label="process", ontology="BFO")
+
+    d = Deriver(deriver.rec, EX, describe=describe)
+    st = term(d.site(), "clinical trial").semantic_type
+    assert looked_up == ["http://purl.obolibrary.org/obo/BFO_0000015"]
+    assert (st.about, st.iri, st.label, st.ontology) == (
+        "bfo:0000015", "http://purl.obolibrary.org/obo/BFO_0000015", "process", "BFO")
+    assert not any("could not be looked up" in n for n in d.notes)
+
+
+def test_semantic_type_that_cannot_be_looked_up_keeps_its_iri(variant):
+    deriver, site = variant  # no describe: nothing is looked up
+    st = term(site, "clinical trial").semantic_type
+    assert (st.about, st.iri, st.label) == ("bfo:0000015", "http://purl.obolibrary.org/obo/BFO_0000015", None)
+    assert "ex:clinical-trial: semantic_type bfo:0000015 could not be looked up, so only its IRI is shown" \
+        in deriver.notes
 
 
 def test_variant_stays_approved_with_one_pending_change(variant):

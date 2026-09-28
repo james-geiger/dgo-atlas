@@ -261,6 +261,10 @@ def _graph_problems(dataset: Dataset, prefixes: dict[str, str]) -> tuple[list[Pr
     for term in terms:
         at = where(term)
         tid = term["id"]
+        semantic_type = term.get("semantic_type")
+        if semantic_type and not _expandable(semantic_type, prefixes):
+            errors.append(Problem(at, f"semantic_type: {semantic_type} does not use a declared prefix; add it "
+                                      "under `prefixes:` in dgo-site.yaml, or write the full IRI"))
         pref, alts = term.get("pref_label"), term.get("alt_labels") or []
         if pref and pref in alts:
             errors.append(Problem(at, f"pref_label {pref!r} must differ from every alt label"))

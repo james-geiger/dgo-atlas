@@ -31,6 +31,8 @@ organizations:
   - id: org:research-office
     label: Office of Research
     email: research@example.org
+    has_member:                   # people or organizations; listed on its page
+      - org:sam-chen
 
 council_roles:
   - type: dgo:DGO_00000006     # chair

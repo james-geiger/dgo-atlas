@@ -13,6 +13,21 @@
 {%- endif %}
 {%- endmacro %}
 
+{#- A member card: avatar, linked name, then anything the caller adds (council
+    seats, for instance), then the job title and email from the member's page. -#}
+{% macro contact(ref, rel, lookup) -%}
+{%- set p = lookup.get(ref.about) %}
+<div class="contact">
+  <div class="avatar" style="background:var(--slate)" aria-hidden="true">{{ ref.label | initials }}</div>
+  <div style="min-width:0">
+    <div class="contact__name"><a href="{{ rel }}{{ ref.url }}">{{ ref.label }}</a></div>
+    {%- if caller is defined %}{{ caller() }}{% endif %}
+    {%- if p and p.job_title is defined and p.job_title %}<div class="contact__role">{{ p.job_title }}</div>{% endif %}
+    {%- if p and p.email is defined and p.email %}<a href="mailto:{{ p.email }}">{{ p.email }}</a>{% endif %}
+  </div>
+</div>
+{%- endmacro %}
+
 {% macro term_rows(refs, rel, empty) -%}
 <div class="term-table">
   <div class="term-row term-row--head" aria-hidden="true">

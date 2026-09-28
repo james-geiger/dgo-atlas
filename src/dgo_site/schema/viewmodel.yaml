@@ -61,6 +61,7 @@ classes:
       - alt_labels
       - definition
       - definition_source
+      - semantic_type
       - state
       - glossary
       - subject_area
@@ -87,6 +88,14 @@ classes:
   SourceRef:
     description: Where a definition was drawn from.
     slots: [iri, label]
+
+  SemanticType:
+    description: >-
+      The external class a term denotes, with the label read from that
+      class. Only about and iri are known when the lookup fails.
+    slots: [about, iri, label, ontology]
+    slot_usage:
+      label: { required: false }
 
   Responsibility:
     description: A governance role held with respect to a term, and who bears it.
@@ -118,7 +127,7 @@ classes:
   AgentPage:
     is_a: Page
     description: A person or organization.
-    slots: [kind, email, job_title, memberships, responsibilities]
+    slots: [kind, email, job_title, memberships, organization_members, member_of, responsibilities]
     slot_usage:
       memberships: { range: Seat, inlined: true, inlined_as_list: true }
 
@@ -167,6 +176,12 @@ slots:
   alt_labels: { multivalued: true }
   definition: { required: true }
   definition_source: { range: SourceRef, inlined: true }
+  semantic_type:
+    description: The external class the term denotes.
+    range: SemanticType
+    inlined: true
+  ontology:
+    description: The short name of the ontology that defines a class, e.g. BFO.
   responsibilities: { range: Responsibility, multivalued: true, inlined_as_list: true }
   governing_councils: { range: Ref, multivalued: true, inlined_as_list: true }
   pending_changes: { range: Change, multivalued: true, inlined_as_list: true }
@@ -243,6 +258,16 @@ slots:
     multivalued: true
     inlined_as_list: true
   memberships: { multivalued: true }
+  organization_members:
+    description: The people and organizations that are members of an organization.
+    range: Ref
+    multivalued: true
+    inlined_as_list: true
+  member_of:
+    description: The organizations a person or organization is a member of.
+    range: Ref
+    multivalued: true
+    inlined_as_list: true
   email: {}
   job_title: {}
 

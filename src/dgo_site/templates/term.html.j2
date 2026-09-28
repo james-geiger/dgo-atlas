@@ -95,6 +95,21 @@
 
     {{ link_panel(t("term.governed_by"), term.governing_councils, rel, show_state=False) }}
 
+    {#- What the term denotes: a class in an external ontology, named by the
+        label read from that class, linked to its IRI. -#}
+    {%- set st = term.semantic_type %}
+    {%- if st %}
+    <div class="panel">
+      <div class="panel__label" title="{{ t("term.denotes_title") }}">{{ t("term.denotes") }}</div>
+      <a class="panel-link" href="{{ st.iri }}" rel="noopener">
+        <div class="panel-link__name">{{ st.label or st.about }}</div>
+        <div class="panel-link__rel">
+          {%- if st.ontology %}{{ st.ontology }} &middot; {% endif %}<code>{{ st.about }}</code>
+        </div>
+      </a>
+    </div>
+    {%- endif %}
+
     <div class="panel">
       <div class="panel__label">{{ t("term.filed_under") }}</div>
       <div class="kv"><span class="kv__k">{{ t("term.glossary") }}</span><span class="kv__v"><a href="{{ rel }}{{ term.glossary.url }}">{{ term.glossary.label }}</a></span></div>

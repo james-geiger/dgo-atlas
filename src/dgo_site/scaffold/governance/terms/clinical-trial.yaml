@@ -16,6 +16,7 @@ glossary_terms:
     in_subject_area: org:clinical-research
     broader:
       - org:clinical-study
+    semantic_type: bfo:0000015          # what a clinical trial is (BFO "process"); the site shows its label
     responsibilities:                   # who holds each role now
       - type: dgo:DGO_00000012          # owner
         role_of: org:research-office

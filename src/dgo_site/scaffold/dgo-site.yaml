@@ -6,7 +6,7 @@
 # schema is imported from
 # https://raw.githubusercontent.com/james-geiger/dgo/refs/tags/<version>/dist/dgo.yaml
 # Change it deliberately: a new release may change what your data must say.
-dgo_version: "0.1.0"
+dgo_version: "v0.1.1"
 # dgo_source: vendor/dgo.yaml   # a local copy or mirror instead, e.g. for offline builds
 
 title: Data Governance
@@ -19,6 +19,8 @@ contact_email: data-governance@example.org
 # base you control and will keep stable, such as a w3id.org redirect.
 prefixes:
   org: https://data.example.org/governance/
+  # Prefixes for the external ontologies your semantic types come from.
+  bfo: http://purl.obolibrary.org/obo/BFO_
 
 paths:
   data: governance     # every .yaml file under here is governance data

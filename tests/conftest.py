@@ -8,8 +8,8 @@ from dgo_site.derive import Deriver
 from dgo_site.validate import validate
 
 FIXTURES = Path(__file__).parent / "fixtures"
-EX = {"ex": "https://w3id.org/dgo/data/"}
-DGO_VERSION = "0.1.0"  # imported from the DGO repository; the tests need network access
+EX = {"ex": "https://w3id.org/dgo/data/", "bfo": "http://purl.obolibrary.org/obo/BFO_"}  # the variant's prefixes
+DGO_VERSION = "v0.1.1"  # imported from the DGO repository; the tests need network access
 
 
 @pytest.fixture(scope="session", autouse=True)

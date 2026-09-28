@@ -2,7 +2,8 @@
 
 1. Load and validate dgo-site.yaml.
 2. Validate the governance data (validate.py): shape, references, rules.
-3. Derive the view model (derive.py) and validate it against
+3. Derive the view model (derive.py), reading each semantic type's label
+   from the class it names (semantic.py), and validate it against
    schema/viewmodel.yaml.
 4. Render the pages.
 5. Check every internal link.
@@ -15,7 +16,7 @@ import time
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from . import __version__, content, derive, dgo, linkcheck, validate
+from . import __version__, content, derive, dgo, linkcheck, semantic, validate
 from .config import ConfigError, Project
 from .console import fail, note, say, warn
 from .models import viewmodel as vm
@@ -83,7 +84,7 @@ def build(project: Project, *, out: Path | None = None) -> int:
         return 1
 
     deriver = derive.Deriver(report.record, project.prefixes, sources=sources_by_id(report),
-                             accents=project.accents)
+                             accents=project.accents, describe=semantic.describe)
     site = deriver.site()
     for message in deriver.notes:
         note(message)

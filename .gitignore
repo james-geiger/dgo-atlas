@@ -223,3 +223,6 @@ tests/fixtures/*/.dgo-site/
 
 # local preview build
 /.preview/
+
+# VS Code Allotrope ASM extension (zontal.vscode-asm-language-features) cache
+.asm_cache

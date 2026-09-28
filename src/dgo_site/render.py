@@ -53,8 +53,10 @@ STATES = ("approved", "proposed", "deprecated")
 
 # Glossary-term slots in the order a reader meets them on a term page. Their
 # labels are `field.<slot>` in the text catalog; descriptions come from DGO.
-TERM_FIELDS = ["pref_label", "label", "alt_labels", "definition", "definition_source", "part_of",
-               "in_subject_area", "responsibilities", "broader", "related", "value_of", "replaced_by", "id"]
+# Slots the release lacks (semantic_type before v0.1.1) are left out.
+TERM_FIELDS = ["pref_label", "label", "alt_labels", "definition", "definition_source", "semantic_type",
+               "part_of", "in_subject_area", "responsibilities", "broader", "related", "value_of",
+               "replaced_by", "id"]
 
 # Generated pages whose header (and intro prose) a content file at the same
 # path may set, with the text-catalog section holding their defaults.

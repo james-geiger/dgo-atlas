@@ -56,6 +56,23 @@ def test_term_page(site):
     assert 'href="https://w3id.org/dgo/DGO_00000019"' in html  # the kind links to its DGO class IRI
 
 
+def test_term_page_shows_what_it_denotes(site):
+    html = read(site, "terms/clinical-trial.html")
+    assert "Denotes" in html
+    assert 'href="http://purl.obolibrary.org/obo/BFO_0000015"' in html
+    assert "<code>bfo:0000015</code>" in html
+
+
+def test_organization_page_lists_members(site):
+    html = read(site, "organizations/office-of-research.html")
+    assert 'href="../organizations/cto.html">Clinical Trials Office</a>' in html
+    assert 'href="../organizations/spo.html">Sponsored Programs Office</a>' in html
+    cto = read(site, "organizations/cto.html")
+    assert 'href="../people/jordan-price.html">Jordan Price</a>' in cto
+    assert "Clinical Trials Manager" in cto
+    assert "Member of" in cto and 'href="../organizations/office-of-research.html"' in cto
+
+
 def test_deprecated_term_points_at_successor(site):
     html = read(site, "terms/clinical-investigation.html")
     assert "Deprecated" in html

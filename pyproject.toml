@@ -1,6 +1,6 @@
 [project]
 name = "dgo-site"
-version = "0.1.0"
+version = "0.1.1"
 description = "Govern a business glossary with the Data Governance Ontology (DGO) and publish it as a static site."
 readme = "README.md"
 license = "MIT"
@@ -14,6 +14,7 @@ dependencies = [
     "markdown-it-py>=3.0",
     "typer>=0.27.2",
     "rich>=15.0.0",
+    "rdflib>=7.0",
 ]
 
 [project.scripts]

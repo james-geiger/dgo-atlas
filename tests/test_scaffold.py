@@ -71,7 +71,7 @@ def test_readme_type_table_matches_dgo():
 def test_version_names_the_tested_dgo_releases():
     result = dgo_site("--version")
     assert result.exit_code == 0
-    assert "Tested with Data Governance Ontology 0.1.0" in result.stdout
+    assert "Tested with Data Governance Ontology 0.1.0, v0.1.1" in result.stdout
 
 
 def test_scaffold_names_a_tested_dgo_release(tmp_path):

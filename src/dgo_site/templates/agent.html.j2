@@ -1,6 +1,7 @@
 {% extends "base.html.j2" %}
-{#- A person or organization: contact details, council seats, and the terms
-    they hold a governance role for. -#}
+{% from "_macros.html.j2" import contact, link_panel %}
+{#- A person or organization: contact details, an organization's members,
+    council seats, and the terms they hold a governance role for. -#}
 
 {% block content %}
 <div class="split">
@@ -11,6 +12,13 @@
       {%- if agent.job_title %}<span>{{ agent.job_title }}</span>{% endif %}
       {%- if agent.email %}<span><a href="mailto:{{ agent.email }}">{{ agent.email }}</a></span>{% endif %}
     </div>
+
+    {%- if agent.organization_members %}
+    <h2 class="subhead">{{ t("agent.members") }}</h2>
+    {%- for member in agent.organization_members %}
+    {{ contact(member, rel, lookup) }}
+    {%- endfor %}
+    {%- endif %}
 
     {%- if agent.memberships %}
     <h2 class="subhead">{{ t("agent.council_seats") }}</h2>
@@ -34,12 +42,13 @@
 
     {% set holder = agent %}
     {% include "_responsibilities.html.j2" %}
-    {%- if not agent.responsibilities and not agent.memberships %}
+    {%- if not (agent.responsibilities or agent.memberships or agent.organization_members or agent.member_of) %}
     <div class="empty-state">{{ t("agent.empty", kind=agent_kind.name) }}</div>
     {%- endif %}
   </article>
 
   <aside class="split__aside">
+    {{ link_panel(t("agent.member_of"), agent.member_of, rel, show_state=False) }}
     {%- if show_identifiers %}
     <div class="panel">
       <div class="panel__label">{{ t("agent.identifier") }}</div>

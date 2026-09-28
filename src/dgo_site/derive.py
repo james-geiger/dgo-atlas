@@ -10,6 +10,10 @@ Only published terms reach the site (see `unpublished_reason`): a term exists
 once a term creation is recorded for it, unless that creation was rejected.
 Links from a published term to an unpublished one are left off, and each
 omission is recorded in `Deriver.notes` for the build to report.
+
+The derivation does no I/O of its own. What a term's semantic type refers to
+is read through `describe` (semantic.describe in a build); without it, a
+semantic type keeps only its IRI.
 """
 
 from __future__ import annotations
@@ -17,8 +21,11 @@ from __future__ import annotations
 import re
 from collections import defaultdict
 
+from collections.abc import Callable
+
 from . import dgo
 from .models import viewmodel as vm
+from .semantic import ClassInfo
 
 
 class _ActiveModel:
@@ -67,11 +74,13 @@ def _slug(value: str) -> str:
 
 class Deriver:
     def __init__(self, rec: m.GovernanceRecord, prefixes: dict[str, str], *,
-                 sources: dict[str, str] | None = None, accents: dict[str, str] | None = None):
+                 sources: dict[str, str] | None = None, accents: dict[str, str] | None = None,
+                 describe: Callable[[str], ClassInfo] | None = None):
         self.rec = rec
         self.ns = Namespaces(prefixes)
         self.sources = sources or {}
         self.accents = accents or {}
+        self.describe = describe or (lambda iri: ClassInfo(iri=iri))
         self.idx = index(rec)
         self.urls: dict[str, str] = {}
         self._assign_urls()
@@ -230,6 +239,16 @@ class Deriver:
                 todo += [b for b in self.idx[t].broader or [] if b in self.published]
         return seen
 
+    def semantic_type(self, term) -> vm.SemanticType | None:
+        """The external class a term denotes (DGO v0.1.1), described by the class itself."""
+        value = getattr(term, "semantic_type", None)
+        if not value:
+            return None
+        info = self.describe(self.ns.expand(value))
+        if not info.found:
+            self.notes.append(f"{term.id}: semantic_type {value} could not be looked up, so only its IRI is shown")
+        return vm.SemanticType(about=value, iri=info.iri, label=info.label, ontology=info.ontology)
+
     def seats(self, council) -> list[vm.Seat]:
         seats = []
         for member in council.has_member or []:
@@ -262,6 +281,7 @@ class Deriver:
             alt_labels=list(term.alt_labels or []),
             definition=term.definition,
             definition_source=source,
+            semantic_type=self.semantic_type(term),
             state=self.states[tid],
             glossary=self.ref(term.part_of),
             subject_area=self.ref(sa.id),
@@ -339,6 +359,8 @@ class Deriver:
                 responsibilities=held.get(c.id, []),
                 governed_terms=self.refs(governed[c.id])))
         agents = []
+        # Organization membership (has_member on organizations, from DGO v0.1.1).
+        org_members = {o.id: list(getattr(o, "has_member", None) or []) for o in rec.organizations or []}
         for kind, items in ((vm.AgentKind.person, rec.people), (vm.AgentKind.organization, rec.organizations)):
             for a in items or []:
                 memberships = [s for c in rec.councils or [] if a.id in (c.has_member or [])
@@ -346,6 +368,8 @@ class Deriver:
                 agents.append(vm.AgentPage(
                     **self.page(a), kind=kind, email=a.email,
                     job_title=getattr(a, "title", None), memberships=memberships,
+                    organization_members=self.refs(org_members.get(a.id, [])),
+                    member_of=self.refs(o for o, members in org_members.items() if a.id in members),
                     responsibilities=held.get(a.id, [])))
         processes = []
         for p in rec.processes or []:
@@ -430,5 +454,6 @@ def term_state(d: Deriver, term_id: str) -> str:
 
 
 def derive(rec: m.GovernanceRecord, prefixes: dict[str, str], *,
-           sources: dict[str, str] | None = None, accents: dict[str, str] | None = None) -> vm.Site:
-    return Deriver(rec, prefixes, sources=sources, accents=accents).site()
+           sources: dict[str, str] | None = None, accents: dict[str, str] | None = None,
+           describe: Callable[[str], ClassInfo] | None = None) -> vm.Site:
+    return Deriver(rec, prefixes, sources=sources, accents=accents, describe=describe).site()
