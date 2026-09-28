@@ -1,7 +1,7 @@
 """dgo-site: govern a business glossary with the Data Governance Ontology and publish it.
 
 The middleware between DGO (imported by URL, at the release each project
-names) and an implementer's repository of governance YAML. See README.md.
+names) and an implementer's repository of governance YAML.
 """
 
 from __future__ import annotations

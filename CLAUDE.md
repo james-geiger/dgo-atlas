@@ -56,7 +56,7 @@ anything else to get a result, dgo-site is missing a feature.
   the upstream change. The user maintains DGO too.
 - **Adding a DGO release:** bump `dgo_version` in `tests/fixtures/variant`,
   run the tests, fix what breaks, then add the release to
-  `dgo.TESTED_VERSIONS`. The README table "Supporting a new DGO release" says
+  `dgo.TESTED_VERSIONS`. The table "Supporting a new DGO release" in `docs/reference.md` says
   where each kind of expected DGO change lands.
 
 ### Implementers
@@ -69,7 +69,7 @@ defaults. dgo-site's defaults use a neutral palette.
 
 ## How a build flows
 
-The README's "How a build works" has the full details. In brief:
+"How a build works" in `docs/reference.md` has the full details. In brief:
 
 | Stage | Module |
 | --- | --- |
@@ -138,7 +138,7 @@ ask whether it belongs as a command in `src/dgo_site/cli/`.
 - Test commands with `typer.testing.CliRunner`.
 
 `python -m dgo_site.generate` is the one separate Typer app, because it
-rewrites files inside the package. See "Writing a command" in README.md.
+rewrites files inside the package. See "Writing a command" in `docs/reference.md`.
 
 ## Development
 
@@ -155,6 +155,7 @@ uv run python -m dgo_site.generate   # after changing schema/viewmodel.yaml, sch
 - **Preview.** The `preview` entry in `.claude/launch.json` builds the variant
   into `.preview/` and serves it. Use it after any change to templates, CSS or
   derivation.
-- **Stale references.** The README and code cite "handoff §5" for the
+- **Stale references.** `docs/reference.md` and the code cite "handoff §5" for the
   original design. That handoff is no longer in the DGO repo, so treat the
-  README and this file as the current reference.
+  reference and this file as current. `README.md` is for newcomers: keep it
+  short (under 250 words, plain language) and put details in the reference.
