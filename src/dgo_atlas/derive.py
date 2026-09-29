@@ -2,7 +2,8 @@
 
 The input is a GovernanceRecord loaded through the generated pydantic model,
 so `type` has already resolved each role and status boundary to its subclass
-and kinds are isinstance checks. The output is a view-model `Site`: every
+and kinds are isinstance checks. A local class counts as its DGO ancestor
+(dgo.dgo_kind): its slug, and the rules, are DGO's; its name and IRI its own. The output is a view-model `Site`: every
 page's facts, derived and denormalised, ready to render. Governance data never
 stores these facts; the view model always does.
 
@@ -94,7 +95,7 @@ class Deriver:
         for b in rec.term_status_boundaries or []:
             self.boundaries_by_process[b.part_of].append(b)
         for bs in self.boundaries_by_process.values():
-            bs.sort(key=lambda b: (str(b.occurred_on), BOUNDARY_ORDER[type(b).__name__]))
+            bs.sort(key=lambda b: (str(b.occurred_on), BOUNDARY_ORDER[dgo.dgo_kind(b).model_class]))
         self.states = {t.id: term_state(self, t.id) for t in self.terms}
         self.notes: list[str] = []
         self.published: set[str] = set()
@@ -175,11 +176,11 @@ class Deriver:
         bs = self.boundaries_by_process.get(proc.id, [])
         if not bs:
             return "open"
-        return {"Approved": "approved", "Rejected": "rejected"}.get(type(bs[-1]).__name__, "open")
+        return {"Approved": "approved", "Rejected": "rejected"}.get(dgo.dgo_kind(bs[-1]).model_class, "open")
 
     def change(self, proc) -> vm.Change:
         kind = dgo.kind_of(proc)
-        return vm.Change(about=proc.id, label=proc.label, process_kind=kind.slug,
+        return vm.Change(about=proc.id, label=proc.label, process_kind=dgo.kind(kind.dgo_ancestor).slug,
                          process_label=kind.name, outcome=self.outcome(proc))
 
     def pending(self, term_id: str) -> list[vm.Change]:
@@ -188,20 +189,20 @@ class Deriver:
 
     def _processes(self, term_id: str):
         return sorted(self.processes_by_term.get(term_id, []),
-                      key=lambda p: (PROCESS_ORDER[type(p).__name__], p.id))
+                      key=lambda p: (PROCESS_ORDER[dgo.dgo_kind(p).model_class], p.id))
 
     def history(self, term_id: str) -> list[vm.HistoryEntry]:
         rows = []
         for proc in self._processes(term_id):
             change = self.change(proc)
             for b in self.boundaries_by_process.get(proc.id, []):
-                kind = dgo.kind_of(b)
-                rows.append(((str(b.occurred_on), BOUNDARY_ORDER[type(b).__name__],
-                              PROCESS_ORDER[type(proc).__name__]),
+                kind, base = dgo.kind_of(b), dgo.dgo_kind(b)
+                rows.append(((str(b.occurred_on), BOUNDARY_ORDER[base.model_class],
+                              PROCESS_ORDER[dgo.dgo_kind(proc).model_class]),
                              vm.HistoryEntry(occurred_on=b.occurred_on, process=change,
                                              process_kind=change.process_kind,
                                              process_label=change.process_label,
-                                             boundary_kind=kind.slug, boundary_label=kind.name)))
+                                             boundary_kind=base.slug, boundary_label=kind.name)))
         return [row for _, row in sorted(rows, key=lambda r: r[0])]
 
     def process_chain(self, gov: str | None) -> list[str]:
@@ -225,7 +226,7 @@ class Deriver:
             if not role.role_of:
                 continue
             kind = dgo.kind_of(role)
-            out.append(vm.Responsibility(role=kind.slug, role_label=kind.name, role_iri=kind.iri,
+            out.append(vm.Responsibility(role=dgo.dgo_kind(role).slug, role_label=kind.name, role_iri=kind.iri,
                                          term=self.ref(term.id), bearer=self.ref(role.role_of)))
         return out
 
@@ -258,7 +259,7 @@ class Deriver:
             roles = []
             for r in held:
                 kind = dgo.kind_of(r)
-                roles.append(vm.CouncilRoleHeld(role=kind.slug, role_label=kind.name, role_iri=kind.iri))
+                roles.append(vm.CouncilRoleHeld(role=dgo.dgo_kind(r).slug, role_label=kind.name, role_iri=kind.iri))
             seats.append(vm.Seat(member=self.ref(member), council=self.ref(council.id), council_roles=roles))
         seats.sort(key=lambda s: (not s.council_roles, s.member.label.casefold()))
         return seats
@@ -267,14 +268,14 @@ class Deriver:
         """The subject areas of a council's terms (governed or held a role on), with the
         roles it holds there, so its page links to each area once instead of listing terms."""
         mine = governed | {r.term.about for r in held if r.term}
-        areas = {}  # area id -> (page of the first term seen, term count, roles by slug)
+        areas = {}  # area id -> (page of the first term seen, term count, roles by class IRI)
         for page in term_pages:
             if page.about not in mine:
                 continue
             first, n, roles = areas.get(page.subject_area.about, (page, 0, {}))
             for r in held:
                 if r.term and r.term.about == page.about:
-                    roles.setdefault(r.role, vm.RoleKind(role=r.role, role_label=r.role_label, role_iri=r.role_iri))
+                    roles.setdefault(r.role_iri, vm.RoleKind(role=r.role, role_label=r.role_label, role_iri=r.role_iri))
             areas[page.subject_area.about] = (first, n + 1, roles)
         out = [vm.GovernedArea(subject_area=p.subject_area, domain=p.domain, term_count=n, roles=list(roles.values()))
                for p, n, roles in areas.values()]
@@ -344,7 +345,8 @@ class Deriver:
             if role.role_of:
                 kind = dgo.kind_of(role)
                 held[role.role_of].append(vm.Responsibility(
-                    role=kind.slug, role_label=kind.name, role_iri=kind.iri, bearer=self.ref(role.role_of)))
+                    role=dgo.dgo_kind(role).slug, role_label=kind.name, role_iri=kind.iri,
+                    bearer=self.ref(role.role_of)))
 
         glossaries = [
             vm.GlossaryPage(**self.page(g), domains=self.refs(domains_in_glossary[g.id]),

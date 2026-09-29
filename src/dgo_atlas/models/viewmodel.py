@@ -289,9 +289,9 @@ class Responsibility(ConfiguredBaseModel):
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://w3id.org/dgo-atlas/viewmodel'})
 
-    role: str = Field(default=..., description="""Slug of the role kind, e.g. owner or chair.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Responsibility', 'RoleKind', 'CouncilRoleHeld']} })
-    role_label: str = Field(default=..., description="""DGO's name for the role kind, e.g. subject matter expert.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Responsibility', 'RoleKind', 'CouncilRoleHeld']} })
-    role_iri: str = Field(default=..., description="""The DGO class IRI of the role kind.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Responsibility', 'RoleKind', 'CouncilRoleHeld']} })
+    role: str = Field(default=..., description="""Slug of the DGO role kind, e.g. owner or chair. For a local class, its DGO ancestor's.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Responsibility', 'RoleKind', 'CouncilRoleHeld']} })
+    role_label: str = Field(default=..., description="""The role kind's name, e.g. subject matter expert: DGO's, or a local class's own.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Responsibility', 'RoleKind', 'CouncilRoleHeld']} })
+    role_iri: str = Field(default=..., description="""The class IRI of the role kind (DGO's, or a local class's).""", json_schema_extra = { "linkml_meta": {'domain_of': ['Responsibility', 'RoleKind', 'CouncilRoleHeld']} })
     term: Optional[Ref] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Responsibility']} })
     bearer: Ref = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Responsibility']} })
 
@@ -305,7 +305,7 @@ class Change(ConfiguredBaseModel):
     about: str = Field(default=..., description="""The CURIE of the governed object this page or link is about.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref', 'SemanticType', 'Change']} })
     label: str = Field(default=..., description="""The display label.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref', 'SourceRef', 'SemanticType', 'Change']} })
     process_kind: ProcessKind = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Change', 'HistoryEntry']} })
-    process_label: str = Field(default=..., description="""DGO's name for the process kind, e.g. term modification.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Change', 'HistoryEntry']} })
+    process_label: str = Field(default=..., description="""The process kind's name, e.g. term modification: DGO's, or a local class's own.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Change', 'HistoryEntry']} })
     outcome: Outcome = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Change']} })
 
 
@@ -321,9 +321,9 @@ class HistoryEntry(ConfiguredBaseModel):
     occurred_on: date = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['HistoryEntry']} })
     process: Change = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['HistoryEntry']} })
     process_kind: ProcessKind = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Change', 'HistoryEntry']} })
-    process_label: str = Field(default=..., description="""DGO's name for the process kind, e.g. term modification.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Change', 'HistoryEntry']} })
+    process_label: str = Field(default=..., description="""The process kind's name, e.g. term modification: DGO's, or a local class's own.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Change', 'HistoryEntry']} })
     boundary_kind: BoundaryKind = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['HistoryEntry']} })
-    boundary_label: str = Field(default=..., description="""DGO's name for the boundary kind, e.g. submitted for review.""", json_schema_extra = { "linkml_meta": {'domain_of': ['HistoryEntry']} })
+    boundary_label: str = Field(default=..., description="""The boundary kind's name, e.g. submitted for review: DGO's, or a local class's own.""", json_schema_extra = { "linkml_meta": {'domain_of': ['HistoryEntry']} })
 
 
 class CouncilPage(Page):
@@ -369,9 +369,9 @@ class RoleKind(ConfiguredBaseModel):
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://w3id.org/dgo-atlas/viewmodel'})
 
-    role: str = Field(default=..., description="""Slug of the role kind, e.g. owner or chair.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Responsibility', 'RoleKind', 'CouncilRoleHeld']} })
-    role_label: str = Field(default=..., description="""DGO's name for the role kind, e.g. subject matter expert.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Responsibility', 'RoleKind', 'CouncilRoleHeld']} })
-    role_iri: str = Field(default=..., description="""The DGO class IRI of the role kind.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Responsibility', 'RoleKind', 'CouncilRoleHeld']} })
+    role: str = Field(default=..., description="""Slug of the DGO role kind, e.g. owner or chair. For a local class, its DGO ancestor's.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Responsibility', 'RoleKind', 'CouncilRoleHeld']} })
+    role_label: str = Field(default=..., description="""The role kind's name, e.g. subject matter expert: DGO's, or a local class's own.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Responsibility', 'RoleKind', 'CouncilRoleHeld']} })
+    role_iri: str = Field(default=..., description="""The class IRI of the role kind (DGO's, or a local class's).""", json_schema_extra = { "linkml_meta": {'domain_of': ['Responsibility', 'RoleKind', 'CouncilRoleHeld']} })
 
 
 class Seat(ConfiguredBaseModel):
@@ -388,9 +388,9 @@ class Seat(ConfiguredBaseModel):
 class CouncilRoleHeld(ConfiguredBaseModel):
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://w3id.org/dgo-atlas/viewmodel'})
 
-    role: str = Field(default=..., description="""Slug of the role kind, e.g. owner or chair.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Responsibility', 'RoleKind', 'CouncilRoleHeld']} })
-    role_label: str = Field(default=..., description="""DGO's name for the role kind, e.g. subject matter expert.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Responsibility', 'RoleKind', 'CouncilRoleHeld']} })
-    role_iri: str = Field(default=..., description="""The DGO class IRI of the role kind.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Responsibility', 'RoleKind', 'CouncilRoleHeld']} })
+    role: str = Field(default=..., description="""Slug of the DGO role kind, e.g. owner or chair. For a local class, its DGO ancestor's.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Responsibility', 'RoleKind', 'CouncilRoleHeld']} })
+    role_label: str = Field(default=..., description="""The role kind's name, e.g. subject matter expert: DGO's, or a local class's own.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Responsibility', 'RoleKind', 'CouncilRoleHeld']} })
+    role_iri: str = Field(default=..., description="""The class IRI of the role kind (DGO's, or a local class's).""", json_schema_extra = { "linkml_meta": {'domain_of': ['Responsibility', 'RoleKind', 'CouncilRoleHeld']} })
 
 
 class AgentPage(Page):

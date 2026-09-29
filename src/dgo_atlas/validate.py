@@ -2,10 +2,11 @@
 
 Stages, stopping after the first that finds errors:
 
-1. **Read.** Every file must be YAML whose top level is a mapping. A `type`
-   written as a DGO class name (`approved`, `submitted for review`) is
-   rewritten to that class's CURIE, so every later stage, the site and the
-   exports see exactly DGO's value.
+1. **Read.** Every file must be YAML whose top level is a mapping. Local
+   classes are checked and imported next to DGO (local_classes.py). A `type`
+   written as a class name (`approved`, `submitted for review`, or a local
+   class's name) is rewritten to that class's CURIE, so every later stage,
+   the site and the exports see exactly that value.
 2. **Scalars.** DGO has no boolean, number or date slots, so any such value is
    an authoring slip: an unquoted date, or a YAML boolean such as `on` or
    `no`. (`label` has no range in DGO, so linkml-validate would accept
@@ -28,7 +29,7 @@ from dataclasses import dataclass, field
 from functools import cache
 from pathlib import Path
 
-from . import dgo
+from . import dgo, local_classes
 from .loader import Dataset, merge, read
 from .resources import ROOT_CLASS
 
@@ -117,7 +118,7 @@ def _typed_base(cls: str | None) -> str | None:
     if cls is None:
         return None
     sv = dgo.view()
-    for base in dgo.TYPED_BASES:
+    for base in dgo.typed_bases():
         if cls == base or base in sv.class_ancestors(cls):
             return base
     return None
@@ -333,7 +334,8 @@ def _graph_problems(dataset: Dataset, prefixes: dict[str, str]) -> tuple[list[Pr
             ids = ", ".join(p["id"] for p in procs)
             errors.append(Problem(where(index[term_id][1]), f"has more than one term creation ({ids})"))
 
-    closing = {dgo.kind("approved").name, dgo.kind("rejected").name}
+    # By DGO kind, so a local subclass of approved closes a process too.
+    closing = {"approved", "rejected"}
     approved_deprecations = set()
     for list_name in ("term_creations", "term_modifications", "term_deprecations"):
         for proc in merged.get(list_name) or []:
@@ -341,7 +343,8 @@ def _graph_problems(dataset: Dataset, prefixes: dict[str, str]) -> tuple[list[Pr
             if not bs:
                 warnings.append(Problem(where(proc), "has no status boundaries, so it counts as open"))
                 continue
-            kinds = [(str(b["occurred_on"]), _resolve_type("status boundary", b)) for b in bs]
+            kinds = [(str(b["occurred_on"]), dgo.kind(_resolve_type("status boundary", b)).dgo_ancestor)
+                     for b in bs]
             closed = sorted(d for d, k in kinds if k in closing)
             if len({k for _, k in kinds if k in closing}) > 1:
                 errors.append(Problem(where(proc), "has both an approved and a rejected boundary"))
@@ -380,6 +383,12 @@ def validate(data_dir: Path, root: Path, prefixes: dict[str, str]) -> Report:
     for source in dataset.files:
         if source.error:
             report.errors.append(Problem(source.rel, source.error))
+    if report.errors:
+        return report
+    found = local_classes.check(dataset, prefixes)
+    local_classes.activate(found, prefixes)
+    report.errors += [Problem(where, message) for where, message in found.errors]
+    report.warnings += [Problem(where, message) for where, message in found.warnings]
     if report.errors:
         return report
     for source in dataset.files:

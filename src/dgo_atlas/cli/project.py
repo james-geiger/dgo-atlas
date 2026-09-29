@@ -11,7 +11,8 @@ from ..build import build as build_site
 from ..build import check, load_project, print_report
 from ..config import ConfigError
 from ..convert import convert as convert_data
-from ..console import say
+from .. import dgo, local_classes
+from ..console import error, say
 from ..text import Text
 from .common import ProjectOption, config_problem, open_project, refresh_editor_schemas
 
@@ -53,6 +54,33 @@ def schema(project: ProjectOption = Path(".")) -> None:
     """Refresh the editor JSON Schemas in .dgo-atlas/."""
     if not refresh_editor_schemas(open_project(project)):
         say("Editor schemas are up to date.")
+
+
+@app.command("export-schema")
+def export_schema(
+    project: ProjectOption = Path("."),
+    local_only: Annotated[bool, typer.Option(help="Only the local classes, as a schema that imports DGO by URL.")
+                          ] = False,
+    out: Annotated[Path | None, typer.Option("--out", "-o", help="Write to this file. Default: standard output.")
+                   ] = None,
+) -> None:
+    """Write the project's LinkML schema, for LinkML's own generators.
+
+    By default the template, the DGO release and the local classes, merged into
+    one self-contained schema: run gen-pydantic, gen-json-schema, gen-owl or
+    gen-shacl on it. With --local-only, just the local classes.
+    """
+    loaded = open_project(project)
+    schema = local_classes.extension() if local_only else dgo.linkml_schema()
+    if not schema:
+        error("The governance data declares no local classes (`local_classes:`).")
+        raise typer.Exit(1)
+    if out:
+        out.write_text(schema, encoding="utf-8")
+        say(f"Wrote {out} (DGO {loaded.config.dgo_version}, "
+            f"{len(dgo.active().local_classes)} local class(es))")
+    else:
+        say(schema.rstrip("\n"))
 
 
 @app.command()

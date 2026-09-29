@@ -6,7 +6,8 @@ description: >-
   Ontology (DGO) unchanged and adds only a document root whose lists hold the
   identified objects. Every list is optional, so each data file may hold any
   subset; the middleware merges all files into one record before checking
-  references.
+  references. `local_classes` declares the implementer's own subclasses of
+  DGO classes; they are imported next to DGO at runtime.
 version: 0.1.0
 license: MIT
 prefixes:
@@ -47,6 +48,20 @@ classes:
       - term_modifications
       - term_deprecations
       - term_status_boundaries
+      - local_classes
+
+  LocalClass:
+    class_uri: dgoatlas:LocalClass
+    description: >-
+      A subclass of a DGO class with meaning only locally, such as an
+      institution's own risk level or kind of steward. Once declared, its
+      name can be used as a `type` wherever its DGO parent can. It adds no
+      fields.
+    slots:
+      - id
+      - name
+      - is_a
+      - description
 
 slots:
   processes:
@@ -132,3 +147,22 @@ slots:
     range: status boundary
     multivalued: true
     inlined_as_list: true
+  local_classes:
+    description: Local subclasses of DGO classes.
+    slot_uri: dgoatlas:local_classes
+    range: LocalClass
+    multivalued: true
+    inlined_as_list: true
+  name:
+    description: The class's name, used as a `type` value (e.g. data trustee).
+    slot_uri: dgoatlas:name
+    required: true
+  is_a:
+    description: >-
+      The class this one is a subclass of: a DGO class, by name or CURIE, or
+      another local class, by name or id.
+    slot_uri: dgoatlas:is_a
+    required: true
+  description:
+    description: What makes something a member of this class.
+    slot_uri: dgoatlas:description

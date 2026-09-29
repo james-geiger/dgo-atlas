@@ -1,0 +1,16 @@
+# Local classes: this institution's own subclasses of DGO classes. Each one
+# can be used as a `type` wherever its DGO parent can, and counts as that
+# parent in every rule (an "approved with conditions" boundary closes a
+# process as approved does).
+
+local_classes:
+  - id: ex:DataTrustee
+    name: data trustee
+    is_a: steward
+    description: >-
+      A steward who also answers to external sponsors for how the data is
+      shared.
+  - id: ex:ApprovedWithConditions
+    name: approved with conditions
+    is_a: dgo:DGO_00000026           # approved, by CURIE
+    description: Approved, subject to conditions recorded in the change request.

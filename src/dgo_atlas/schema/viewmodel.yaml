@@ -234,13 +234,17 @@ slots:
     description: The governance file the object is defined in, relative to the repository.
 
   role:
-    description: Slug of the role kind, e.g. owner or chair.
+    description: >-
+      Slug of the DGO role kind, e.g. owner or chair. For a local class, its
+      DGO ancestor's.
     required: true
   role_label:
-    description: DGO's name for the role kind, e.g. subject matter expert.
+    description: >-
+      The role kind's name, e.g. subject matter expert: DGO's, or a local
+      class's own.
     required: true
   role_iri:
-    description: The DGO class IRI of the role kind.
+    description: The class IRI of the role kind (DGO's, or a local class's).
     range: uri
     required: true
   term: { range: Ref, inlined: true }
@@ -248,14 +252,18 @@ slots:
 
   process_kind: { range: ProcessKind, required: true }
   process_label:
-    description: DGO's name for the process kind, e.g. term modification.
+    description: >-
+      The process kind's name, e.g. term modification: DGO's, or a local
+      class's own.
     required: true
   outcome: { range: Outcome, required: true }
   occurred_on: { range: date, required: true }
   process: { required: true }
   boundary_kind: { range: BoundaryKind, required: true }
   boundary_label:
-    description: DGO's name for the boundary kind, e.g. submitted for review.
+    description: >-
+      The boundary kind's name, e.g. submitted for review: DGO's, or a local
+      class's own.
     required: true
 
   participates_in: { range: Ref, inlined: true }

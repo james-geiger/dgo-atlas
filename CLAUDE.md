@@ -50,7 +50,10 @@ anything else to get a result, DGO Atlas is missing a feature.
   (`https://w3id.org/dgo-atlas/`, which is an identifier only and isn't
   registered). The template adds only a `GovernanceRecord` root made of lists.
   Readable type names are a lookup from DGO's own subclass names, not new
-  classes or enums.
+  classes or enums. The one exception is an implementer's own local classes
+  (`local_classes.py`). They are subclasses of DGO classes in the
+  implementer's namespace, and derivation treats each one as its nearest DGO
+  ancestor.
 - **Report DGO problems upstream.** Don't work around a DGO problem in the
   middleware. If DGO looks wrong or is missing something, say so and suggest
   the upstream change. The user maintains DGO too.

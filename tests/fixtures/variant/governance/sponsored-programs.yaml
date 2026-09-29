@@ -52,7 +52,7 @@ glossary_terms:
     responsibilities:
       - type: owner
         role_of: ex:spo
-      - type: steward
+      - type: data trustee           # a local subclass of steward (local-classes.yaml)
         role_of: ex:research-committee
 
 term_creations:

@@ -2,7 +2,8 @@
 
 Validated against schema/config.yaml with the same LinkML validator as the
 governance data, then loaded through the generated pydantic model. Paths in
-it are relative to the file. Loading a project makes its DGO release active.
+it are relative to the file. Loading a project makes its DGO release, with
+the data's local classes, active.
 """
 
 from __future__ import annotations
@@ -13,7 +14,7 @@ from pathlib import Path
 
 import yaml
 
-from . import dgo
+from . import dgo, local_classes
 from .models.config import Brand, Paths, SiteConfig
 from .text import Text, TextError
 from .resources import CONFIG_SCHEMA
@@ -137,4 +138,6 @@ def load(path: Path) -> Project:
         dgo.use(project.dgo)
     except dgo.DgoError as exc:
         raise ConfigError(f"{path.name}: {exc}") from exc
+    # So the editor schemas and exports know them; validation reports any problem.
+    local_classes.load(project.data_dir, project.root, project.prefixes)
     return project

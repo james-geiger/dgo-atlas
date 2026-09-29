@@ -8,6 +8,10 @@ SchemaView rather than restating it: which slots are references and what they
 may point at, which kinds a `type` value can name, the display labels and
 IRIs of DGO classes, and the pydantic model generated from it at runtime.
 
+An implementer's local classes (local_classes.py), their own subclasses of DGO
+classes, are imported alongside the release, so everything here reads them
+exactly as it reads DGO's own subclasses.
+
 When DGO changes (handoff §8), this module and derive.py are where the
 middleware changes.
 """
@@ -15,6 +19,7 @@ middleware changes.
 from __future__ import annotations
 
 import json
+import dataclasses
 import re
 import tempfile
 import urllib.error
@@ -42,10 +47,6 @@ TESTED_VERSIONS = ("0.1.0", "0.1.1")
 # The placeholder in schema/template.yaml that the import location replaces.
 IMPORT_PLACEHOLDER = "DGO_IMPORT"
 
-# The DGO classes whose subclasses `type` picks between. Objects in these
-# lists have no id; their kind comes from `type` alone.
-TYPED_BASES = ("governance role", "council role", "status boundary")
-
 # Classes the derivation depends on by name. A DGO release without them
 # cannot be used by this version of DGO Atlas.
 REQUIRED_CLASSES = (
@@ -63,10 +64,16 @@ class DgoError(Exception):
 
 @dataclass(frozen=True)
 class Source:
-    """One DGO release: its version and the location the template imports."""
+    """One DGO release: its version and the location the template imports.
+
+    With the implementer's local classes, and the prefixes their ids use,
+    when the data declares any (local_classes.activate).
+    """
 
     version: str
     location: str  # a URL or absolute path, without the ".yaml" LinkML appends
+    local_classes: tuple = ()  # of local_classes.LocalClass
+    prefixes: tuple[tuple[str, str], ...] = ()
 
     @property
     def tested(self) -> bool:
@@ -90,7 +97,8 @@ def use(source: Source) -> None:
     global _active
     if source == _active:
         return
-    _fetch_check(source)
+    if _active is None or (source.version, source.location) != (_active.version, _active.location):
+        _fetch_check(source)
     for fn in _CACHED:
         fn.cache_clear()
     previous, _active = _active, source
@@ -105,6 +113,13 @@ def active() -> Source:
     if _active is None:
         raise DgoError("no DGO release is active; call dgo.use() first")
     return _active
+
+
+def with_local_classes(classes: tuple, prefixes: dict[str, str]) -> None:
+    """Make the active release, extended with `classes`, the active one."""
+    base = active()
+    use(dataclasses.replace(base, local_classes=tuple(classes),
+                            prefixes=tuple(sorted(prefixes.items())) if classes else ()))
 
 
 def _fetch_check(source: Source) -> None:
@@ -125,54 +140,72 @@ def _fetch_check(source: Source) -> None:
 
 
 @cache
-def _template(location: str) -> Path:
+def _release(location: str) -> SchemaView:
+    """The release on its own, without the template or any local classes."""
+    return SchemaView(location + ".yaml")
+
+
+def release_prefixes(location: str) -> dict[str, str]:
+    """The prefixes a release declares (dgo, rdfs, skos, ro...)."""
+    return {p.prefix_prefix: p.prefix_reference for p in _release(location).schema.prefixes.values()}
+
+
+@cache
+def _template(source: Source) -> Path:
+    from .local_classes import extension_schema
+
     text = TEMPLATE.read_text(encoding="utf-8")
     assert IMPORT_PLACEHOLDER in text
-    template = yaml.safe_load(text.replace(IMPORT_PLACEHOLDER, location))
+    template = yaml.safe_load(text.replace(IMPORT_PLACEHOLDER, source.location))
     # LinkML expands CURIEs with the root schema's prefixes only, so the
-    # release's prefixes (rdfs, skos, ro...) are declared here too.
-    release = SchemaView(location + ".yaml").schema.prefixes
-    template["prefixes"] = {**{p.prefix_prefix: p.prefix_reference for p in release.values()},
-                            **template["prefixes"]}
+    # release's prefixes (rdfs, skos, ro...) are declared here too, and so are
+    # the prefixes of any local class ids.
+    template["prefixes"] = {**release_prefixes(source.location), **dict(source.prefixes), **template["prefixes"]}
     directory = Path(tempfile.mkdtemp(prefix="dgo-atlas-"))
+    if source.local_classes:
+        extension = directory / "local-classes.yaml"
+        extension.write_text(yaml.safe_dump(
+            extension_schema(source.local_classes, dict(source.prefixes), source.location), sort_keys=False),
+            encoding="utf-8")
+        template["imports"].append(str(extension.with_suffix("")))
     path = directory / TEMPLATE.name
     path.write_text(yaml.safe_dump(template, sort_keys=False), encoding="utf-8")
     return path
 
 
 def template_path() -> Path:
-    """The authoring template, importing the active DGO release."""
-    return _template(active().location)
+    """The authoring template, importing the active DGO release and any local classes."""
+    return _template(active())
 
 
 @cache
-def _view(location: str) -> SchemaView:
-    return SchemaView(str(_template(location)))
+def _view(source: Source) -> SchemaView:
+    return SchemaView(str(_template(source)))
 
 
 def view() -> SchemaView:
-    return _view(active().location)
+    return _view(active())
 
 
 @cache
-def _model(location: str):
+def _model(source: Source):
     from linkml.generators.pydanticgen import PydanticGenerator
 
-    return PydanticGenerator(str(_template(location))).compile_module()
+    return PydanticGenerator(str(_template(source))).compile_module()
 
 
 def model():
     """The pydantic model generated from the template for the active release."""
-    return _model(active().location)
+    return _model(active())
 
 
 @cache
-def _json_schema(location: str) -> str:
+def _json_schema(source: Source) -> str:
     from linkml.generators.jsonschemagen import JsonSchemaGenerator
 
-    schema = json.loads(JsonSchemaGenerator(str(_template(location)), top_class=ROOT_CLASS).serialize())
+    schema = json.loads(JsonSchemaGenerator(str(_template(source)), top_class=ROOT_CLASS).serialize())
     # Editors accept `type` as the class name too, as validate.py does.
-    names = {kind(c).curie: c for c in _view(location).all_classes()}
+    names = {kind(c).curie: c for c in _view(source).all_classes()}
     for definition in schema.get("$defs", {}).values():
         values = (definition.get("properties") or {}).get("type", {}).get("enum")
         if values:
@@ -182,7 +215,33 @@ def _json_schema(location: str) -> str:
 
 def json_schema() -> str:
     """JSON Schema for governance files, for editor validation."""
-    return _json_schema(active().location)
+    return _json_schema(active())
+
+
+def linkml_schema() -> str:
+    """The authoring template as one self-contained LinkML schema.
+
+    The template, the DGO release and any local classes, merged, so LinkML's
+    own generators (gen-pydantic, gen-json-schema, gen-owl...) can use it
+    without network access or DGO Atlas.
+    """
+    from linkml_runtime.dumpers import yaml_dumper
+
+    sv = SchemaView(str(template_path()))
+    sv.merge_imports()
+    schema = sv.schema
+    schema.source_file = schema.source_file_date = schema.source_file_size = None  # a temporary file
+    return yaml_dumper.dumps(schema)
+
+
+def release_classes() -> dict[str, str]:
+    """Every DGO class in the release, by name, CURIE and IRI -> its name."""
+    sv = _release(active().location)
+    out = {}
+    for name in sv.all_classes():
+        cls = sv.get_class(name)
+        out[name] = out[sv.get_uri(cls, expand=False)] = out[sv.get_uri(cls, expand=True)] = name
+    return out
 
 
 @dataclass(frozen=True)
@@ -195,6 +254,8 @@ class Kind:
     iri: str  # e.g. "https://w3id.org/dgo/DGO_00000015"
     description: str
     model_class: str  # the generated pydantic class name, e.g. "SubjectMatterExpert"
+    local: bool = False  # an implementer's local class, not DGO's
+    dgo_ancestor: str = ""  # the nearest DGO class: this one, or a local class's DGO parent
 
 
 def slug(name: str) -> str:
@@ -205,6 +266,7 @@ def slug(name: str) -> str:
 def kind(class_name: str) -> Kind:
     sv = view()
     cls = sv.get_class(class_name)
+    local = {c.name for c in active().local_classes}
     return Kind(
         name=cls.name,
         slug=slug(cls.name),
@@ -212,7 +274,14 @@ def kind(class_name: str) -> Kind:
         iri=sv.get_uri(cls, expand=True),
         description=" ".join((cls.description or "").split()),
         model_class=camelcase(cls.name),
+        local=cls.name in local,
+        dgo_ancestor=next(a for a in sv.class_ancestors(cls.name) if a not in local),
     )
+
+
+def dgo_kind(obj) -> Kind:
+    """The DGO kind of a loaded object: its own, or its local class's DGO ancestor."""
+    return kind(kind_of(obj).dgo_ancestor)
 
 
 @cache
@@ -227,6 +296,18 @@ def kind_of_model(model_class: str) -> Kind:
 def kind_of(obj) -> Kind:
     """The Kind of a loaded object. `type` has already resolved it to its subclass."""
     return kind_of_model(type(obj).__name__)
+
+
+@cache
+def typed_bases() -> tuple[str, ...]:
+    """The DGO classes whose subclasses `type` picks between: those that declare
+    DGO's type-designator slot. Objects in their lists have no id; their kind
+    comes from `type` alone.
+    """
+    sv = _release(active().location)
+    designators = {s for s in sv.all_slots() if sv.get_slot(s).designates_type}
+    return tuple(sorted(c for c in sv.all_classes()
+                        if designators & {*(sv.get_class(c).slots or []), *(sv.get_class(c).slot_usage or {})}))
 
 
 @cache
@@ -342,4 +423,4 @@ def class_slot_names(class_name: str) -> list[str]:
 
 
 # Caches that read the active release; use() clears them when it changes.
-_CACHED = (kind, kind_of_model, subkinds, accepted_types, named_types, list_ranges, reference_slots, inlined_slots)
+_CACHED = (kind, kind_of_model, typed_bases, subkinds, accepted_types, named_types, list_ranges, reference_slots, inlined_slots)

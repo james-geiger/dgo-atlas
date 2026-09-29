@@ -13,6 +13,6 @@ term_status_boundaries:
   - type: dgo:DGO_00000024           # drafted
     part_of: ex:clinical-investigation-creation
     occurred_on: "2024-03-04"
-  - type: dgo:DGO_00000026           # approved
+  - type: approved with conditions   # a local subclass of approved (local-classes.yaml)
     part_of: ex:clinical-investigation-creation
     occurred_on: "2024-04-02"

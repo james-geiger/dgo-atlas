@@ -6,16 +6,18 @@ shows the whole command surface:
 
     dgo-atlas init [DIR]          start a project from the scaffold (same as `new project`)
     dgo-atlas new project [DIR]   start a project from the scaffold
+    dgo-atlas new local-class N   add a local subclass of a DGO class
     dgo-atlas validate            validate the governance data
     dgo-atlas build               validate, then build the site
     dgo-atlas convert [ARGS]      export the data with linkml-convert (JSON, RDF...)
     dgo-atlas schema              refresh the editor JSON Schemas
+    dgo-atlas export-schema       write the LinkML schema (DGO + local classes)
     dgo-atlas text [PREFIX]       list every text key and its wording
     dgo-atlas linkcheck [SITE]    check a built site's internal links
     dgo-atlas --version           this package and the DGO releases it is tested with
 
 Commands stay thin: parse options, call the library (build, convert, scaffold,
-editor, linkcheck, text), print through dgo_atlas.console, and end with
+editor, linkcheck, text, local_classes), print through dgo_atlas.console, and end with
 `raise typer.Exit(code)` when the code can be non-zero.
 """
 

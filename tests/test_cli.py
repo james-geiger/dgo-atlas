@@ -31,9 +31,10 @@ def test_version_matches_pyproject():
 def test_help_lists_every_command():
     result = dgo_atlas("--help")
     assert result.exit_code == 0
-    for command in ("init", "new", "validate", "build", "convert", "schema", "text", "linkcheck"):
+    for command in ("init", "new", "validate", "build", "convert", "schema", "export-schema", "text", "linkcheck"):
         assert command in result.stdout, command
-    assert "project" in dgo_atlas("new", "--help").stdout
+    new_help = dgo_atlas("new", "--help").stdout
+    assert "project" in new_help and "local-class" in new_help
 
 
 def test_new_project_is_init(tmp_path):

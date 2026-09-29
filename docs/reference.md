@@ -70,6 +70,47 @@ time.
 | Console output (Rich) for the CLI and the build | `src/dgo_atlas/console.py` |
 | Implementer scaffold, and the code that copies it | `src/dgo_atlas/scaffold/`, `scaffold.py` |
 | Editor JSON Schemas written into a project | `src/dgo_atlas/editor.py` |
+| Local classes: an implementer's own subclasses of DGO classes | `src/dgo_atlas/local_classes.py` |
+
+## Local classes
+
+DGO is general on purpose. Some of what it describes only means something
+locally, such as an institution's own risk levels or a kind of steward that
+only it has. An implementer declares these as **local classes**, subclasses of
+DGO classes, in any governance file:
+
+```yaml
+local_classes:
+  - id: acme:DataTrustee         # in one of your prefixes; never dgo:
+    name: data trustee           # the readable `type:` name
+    is_a: steward                # a DGO class (name or CURIE), or another local class (name or id)
+    description: A steward who also answers to external sponsors for how the data is shared.
+```
+
+`dgo-atlas new local-class "data trustee" --is-a steward` writes one to
+`governance/local-classes/`. From then on `type: data trustee` works wherever
+`type: steward` does, and becomes `type: acme:DataTrustee`.
+
+- **How it works.** Local classes are read before the rest of the data is
+  validated. Each becomes a subclass of its parent in a small LinkML schema,
+  which the template imports next to DGO (`dgo._template`). Validation, the
+  editor JSON Schema, the runtime pydantic model (`class DataTrustee(Steward)`)
+  and every export then read it the same way they read DGO's own subclasses.
+- **Subclass only.** A local class adds no fields.
+- **Where it can be used.** Data can only name a local class through `type`,
+  which DGO gives to a few classes (`dgo.typed_bases()`, read from the
+  release). A local class under any other DGO class is still valid and
+  exported, and it gets a warning saying so. Once DGO gives that class a
+  `type`, the local class works with no change here.
+- **Rules.** The parent must exist and `is_a` must not loop. The name must not
+  clash with a DGO class or another local class. The id must use a declared
+  prefix, outside DGO's and DGO Atlas's namespaces. Problems are reported at
+  the read stage, with the file and entry.
+- **Derivation.** A local class counts as its nearest DGO ancestor
+  (`dgo.dgo_kind`). An "approved with conditions" boundary closes a process
+  as approved does, and a data trustee is styled as a steward. The site shows
+  the class's own name. The view model's `role`, `process_kind` and
+  `boundary_kind` slugs stay DGO's.
 
 ## Exporting the data
 
@@ -90,12 +131,35 @@ The RDF is what linkml-convert writes, including a blank-node
 RDF at all, the template sets `default_range: string` and declares the DGO
 release's prefixes, because LinkML takes neither from an imported schema.
 
+With local classes, JSON and YAML carry the local CURIE in `type`
+(`"type": "acme:DataTrustee"`). The RDF types each object with the local class
+(`a acme:DataTrustee`). Each declaration is exported too, as a
+`dgoatlas:LocalClass`. This data is valid against the project's schema, not
+against DGO alone.
+
+### The project's schema
+
+`dgo-atlas export-schema` writes the LinkML schema the data is checked
+against, for LinkML's own generators:
+
+```bash
+dgo-atlas export-schema -o governance.linkml.yaml            # template + DGO + local classes, merged
+dgo-atlas export-schema --local-only -o local-classes.yaml   # just the local classes; imports DGO by URL
+gen-pydantic governance.linkml.yaml > governance_model.py
+gen-owl --no-use-native-uris local-classes.yaml > local-classes.ttl   # acme:DataTrustee rdfs:subClassOf dgo:…
+```
+
+Pass `--no-use-native-uris` to gen-owl so that classes keep their own IRIs
+(`dgo:DGO_…`, `acme:…`) instead of being renamed into the schema's default
+prefix.
+
 ## How a build works
 
 1. **Config.** `dgo-atlas.yaml` is validated against `schema/config.yaml`, and
    its DGO release is loaded and checked.
 2. **Read.** Every `.yaml` under the data directory is parsed; each is a
-   partial `GovernanceRecord`. A `type` written as a DGO class name
+   partial `GovernanceRecord`. Local classes are checked and imported next to
+   DGO (see "Local classes"). A `type` written as a class name
    (`approved`, `submitted for review`, `owner`) is rewritten to that class's
    CURIE (`dgo:DGO_00000026`). The table comes from the release's own
    subclasses (`dgo.named_types`), no class is declared, and every later
@@ -235,6 +299,8 @@ changes expected in DGO each have one home here:
 | Expected DGO change | Where it lands |
 | --- | --- |
 | a new role or boundary kind | nothing: its class name works in `type` (`dgo.named_types`) |
+| a new class with a `type` slot (e.g. data classification) | nothing: `dgo.typed_bases()` finds it, and local classes can extend it |
+| a class renamed or removed that a local `is_a` names | the implementer's `local_classes`: the read stage reports each one |
 | a new term slot | `viewmodel.yaml`, `derive.term_page`, `templates/term.html.j2` |
 | `in_subject_area` multivalued | `derive.term_page` and the placement templates |
 | the state rule confirmed or changed | `derive.term_state` |
