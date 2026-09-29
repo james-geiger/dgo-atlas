@@ -1,5 +1,5 @@
 {% extends "base.html.j2" %}
-{% from "_macros.html.j2" import contact, link_panel %}
+{% from "_macros.html.j2" import contact, link_panel, cell_label %}
 {#- A person or organization: contact details, an organization's members,
     council seats, and the terms they hold a governance role for. -#}
 
@@ -26,17 +26,19 @@
       <div class="term-row term-row--office term-row--head" aria-hidden="true">
         <div>{{ t("agent.column_council") }}</div><div>{{ t("agent.column_seat") }}</div><div>{{ t("agent.column_takes_part_in") }}</div><div></div>
       </div>
-      {%- for seat in agent.memberships %}
-      {%- set council = lookup.get(seat.council.about) %}
-      <a class="term-row term-row--office" href="{{ rel }}{{ seat.council.url }}">
-        <span class="term-row__name">{{ seat.council.label }}</span>
-        <span>
-          {%- for r in seat.council_roles or [] %}<span class="badge badge--council-role">{{ r.role_label }}</span> {% else %}<span class="term-row__sub">{{ t("agent.member") }}</span>{% endfor %}
-        </span>
-        <span class="term-row__sub">{{ council.participates_in.label if council and council.participates_in else "—" }}</span>
-        <span class="term-row__chev" aria-hidden="true">&rsaquo;</span>
-      </a>
-      {%- endfor %}
+      <ul class="term-list">
+        {%- for seat in agent.memberships %}
+        {%- set council = lookup.get(seat.council.about) %}
+        <li><a class="term-row term-row--office" href="{{ rel }}{{ seat.council.url }}">
+          <span class="term-row__name">{{ seat.council.label }}</span>
+          <span>{{ cell_label("agent.column_seat") }}
+            {%- for r in seat.council_roles or [] %}<span class="badge badge--council-role">{{ r.role_label }}</span> {% else %}<span class="term-row__sub">{{ t("agent.member") }}</span>{% endfor %}
+          </span>
+          <span class="term-row__sub">{{ cell_label("agent.column_takes_part_in") }}{{ council.participates_in.label if council and council.participates_in else "—" }}</span>
+          <span class="term-row__chev" aria-hidden="true">&rsaquo;</span>
+        </a></li>
+        {%- endfor %}
+      </ul>
     </div>
     {%- endif %}
 
@@ -51,9 +53,11 @@
     {{ link_panel(t("agent.member_of"), agent.member_of, rel, show_state=False) }}
     {%- if show_identifiers %}
     <div class="panel">
-      <div class="panel__label">{{ t("agent.identifier") }}</div>
-      <div class="ref-row"><span class="ref-row__k">{{ t("agent.id") }}</span><code class="ref-row__v">{{ agent.about }}</code></div>
-      <div class="ref-row"><span class="ref-row__k">{{ t("agent.iri") }}</span><code class="ref-row__v">{{ agent.iri }}</code></div>
+      <h2 class="panel__label">{{ t("agent.identifier") }}</h2>
+      <dl class="ref-list">
+        <div class="ref-row"><dt class="ref-row__k">{{ t("agent.id") }}</dt><dd><code class="ref-row__v">{{ agent.about }}</code></dd></div>
+        <div class="ref-row"><dt class="ref-row__k">{{ t("agent.iri") }}</dt><dd><code class="ref-row__v">{{ agent.iri }}</code></dd></div>
+      </dl>
     </div>
     {%- endif %}
   </aside>

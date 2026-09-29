@@ -51,7 +51,7 @@
     <div class="fact-box">
       {%- for f in fields %}
       <div class="fact-box__lead">
-        <div class="fact__k">{{ f.label }}{% if f.required %} &middot; {{ t("how_to_read.required") }}{% endif %}</div>
+        <h3 class="fact__k">{{ f.label }}{% if f.required %} &middot; {{ t("how_to_read.required") }}{% endif %}</h3>
         <p style="margin:4px 0 0;font-size:14.5px;color:var(--ink-2)">{{ f.description or t("how_to_read.no_description") }}</p>
         <p style="margin:6px 0 0"><code class="term-code">{{ f.name }}</code>{% if f.uri %} &middot; <code class="term-code">{{ f.uri }}</code>{% endif %}</p>
       </div>
@@ -61,14 +61,16 @@
   </article>
 
   <aside class="split__aside">
-    <div class="toc-rail">
-      <div class="toc-rail__label">{{ t("how_to_read.on_this_page") }}</div>
-      <a href="#state">{{ t("how_to_read.state") }}</a>
-      <a href="#lifecycle">{{ t("how_to_read.lifecycle") }}</a>
-      <a href="#roles">{{ t("how_to_read.roles") }}</a>
-      <a href="#council-roles">{{ t("how_to_read.council_roles") }}</a>
-      <a href="#fields">{{ t("how_to_read.fields") }}</a>
-    </div>
+    <nav class="toc-rail" aria-labelledby="toc-label">
+      <h2 class="toc-rail__label" id="toc-label">{{ t("how_to_read.on_this_page") }}</h2>
+      <ul>
+        <li><a href="#state">{{ t("how_to_read.state") }}</a></li>
+        <li><a href="#lifecycle">{{ t("how_to_read.lifecycle") }}</a></li>
+        <li><a href="#roles">{{ t("how_to_read.roles") }}</a></li>
+        <li><a href="#council-roles">{{ t("how_to_read.council_roles") }}</a></li>
+        <li><a href="#fields">{{ t("how_to_read.fields") }}</a></li>
+      </ul>
+    </nav>
   </aside>
 </div>
 {% endblock %}

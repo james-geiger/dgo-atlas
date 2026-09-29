@@ -20,10 +20,12 @@
   <aside class="split__aside">
     {%- if state_counts %}
     <div class="panel">
-      <div class="panel__label">{{ t("area.by_state") }}</div>
-      {%- for label, count in state_counts %}
-      <div class="kv"><span class="kv__k">{{ label }}</span><span class="kv__v">{{ count }}</span></div>
-      {%- endfor %}
+      <h2 class="panel__label">{{ t("area.by_state") }}</h2>
+      <dl class="kv-list">
+        {%- for label, count in state_counts %}
+        <div class="kv"><dt class="kv__k">{{ label }}</dt><dd class="kv__v">{{ count }}</dd></div>
+        {%- endfor %}
+      </dl>
     </div>
     {%- endif %}
   </aside>

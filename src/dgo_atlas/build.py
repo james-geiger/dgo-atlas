@@ -16,7 +16,7 @@ import time
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from . import __version__, content, derive, dgo, linkcheck, semantic, validate
+from . import __version__, content, contrast, derive, dgo, linkcheck, semantic, validate
 from .config import ConfigError, Project
 from .console import fail, note, say, warn
 from .models import viewmodel as vm
@@ -82,6 +82,8 @@ def build(project: Project, *, out: Path | None = None) -> int:
     report = check(project)
     if print_report(report):
         return 1
+    for message in contrast.brand_problems(project.brand):
+        warn(message)
 
     deriver = derive.Deriver(report.record, project.prefixes, sources=sources_by_id(report),
                              accents=project.accents, describe=semantic.describe)

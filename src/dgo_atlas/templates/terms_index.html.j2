@@ -1,5 +1,5 @@
 {% extends "base.html.j2" %}
-{% from "_macros.html.j2" import state_badge %}
+{% from "_macros.html.j2" import state_badge, cell_label %}
 {#- Every term. Filtering and paging are progressive: with JavaScript off every
     term is still listed and every row is a link. -#}
 
@@ -13,24 +13,28 @@
     <button class="pill" type="button" data-filter="domain:{{ d.about }}" aria-pressed="false">{{ d.label }}</button>
     {%- endfor %}
     <button class="pill" type="button" data-filter="attention" aria-pressed="false">{{ t("terms_index.filter_attention") }}</button>
-    <span class="filter-bar__count" data-term-count>{{ count("term", terms | length) }}</span>
+    <span class="filter-bar__count" data-term-count role="status">{{ count("term", terms | length) }}</span>
   </div>
 
   <div class="term-table">
     <div class="term-row term-row--head" aria-hidden="true">
       <div>{{ t("terms_index.column_term") }}</div><div>{{ t("terms_index.column_subject_area") }}</div><div>{{ t("terms_index.column_state") }}</div><div></div>
     </div>
-    {%- for t in terms %}
-    <a class="term-row"
-       href="{{ rel }}{{ t.url }}"
-       data-domain="{{ t.domain.about }}"
-       {%- if (t.state | enum) == "proposed" or t.pending_changes %} data-attention{% endif %}>
-      <span class="term-row__name{% if (t.state | enum) == 'deprecated' %} term-row__name--deprecated{% endif %}">{{ t.label }}</span>
-      <span class="term-row__sub">{{ t.subject_area.label }}</span>
-      <span>{{ state_badge(t.state) }}</span>
-      <span class="term-row__chev" aria-hidden="true">&rsaquo;</span>
-    </a>
-    {%- endfor %}
+    {#- site.js filters and pages by hiding list items, so a screen reader's
+        item count matches what is on screen. #}
+    <ul class="term-list">
+      {%- for t in terms %}
+      <li data-domain="{{ t.domain.about }}"
+          {%- if (t.state | enum) == "proposed" or t.pending_changes %} data-attention{% endif %}>
+        <a class="term-row" href="{{ rel }}{{ t.url }}">
+          <span class="term-row__name{% if (t.state | enum) == 'deprecated' %} term-row__name--deprecated{% endif %}">{{ t.label }}</span>
+          <span class="term-row__sub">{{ cell_label("terms_index.column_subject_area") }}{{ t.subject_area.label }}</span>
+          <span>{{ cell_label("terms_index.column_state") }}{{ state_badge(t.state) }}</span>
+          <span class="term-row__chev" aria-hidden="true">&rsaquo;</span>
+        </a>
+      </li>
+      {%- endfor %}
+    </ul>
     <div class="empty-state" data-empty hidden>{{ t("terms_index.empty") }}</div>
   </div>
 
@@ -45,9 +49,9 @@
       </select>
     </div>
     <div class="pager__nav" data-pager-nav hidden>
-      <button class="pager__btn" type="button" data-pager-prev>&lsaquo; {{ t("terms_index.previous") }}</button>
+      <button class="pager__btn" type="button" data-pager-prev><span aria-hidden="true">&lsaquo;</span> {{ t("terms_index.previous") }}</button>
       <span class="pager__status" data-pager-status aria-live="polite"></span>
-      <button class="pager__btn" type="button" data-pager-next>{{ t("terms_index.next") }} &rsaquo;</button>
+      <button class="pager__btn" type="button" data-pager-next>{{ t("terms_index.next") }} <span aria-hidden="true">&rsaquo;</span></button>
     </div>
   </nav>
 </div>

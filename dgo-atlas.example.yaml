@@ -23,6 +23,11 @@
 # # The site's name, shown in the header and every page title. (required)
 # title:
 
+# # The language the site is written in, as a BCP 47 tag (e.g. "en", "fr-CA").
+# # Set it to match any `text:` translations, so screen readers pronounce the
+# # pages correctly.
+# language: en
+
 # # The organization the site belongs to, shown under the title.
 # organization:
 
@@ -100,9 +105,12 @@
 #   site.search_placeholder: Search terms, people, councils
 #   site.search_label: Search the glossary
 #   site.search_results: Search results
+#   site.search_shortcut: Ctrl K
 #   site.theme_toggle: Switch colour theme
 #   site.built_on: Built {date}
 #   site.sections: Site sections
+#   site.breadcrumb: Breadcrumb
+#   site.cell_label: "{label}:"
 #   site.report_title: Something wrong?
 #   site.report_body: If a definition doesn't match what you see in the data, tell the people responsible for it.
 #   site.report_link: Report a discrepancy
@@ -322,9 +330,12 @@
 #   not_found.browse_terms: Browse the terms
 #   not_found.home: Home
 #
-#   js.theme_dark: ☾ Dark
-#   js.theme_light: ☀ Light
+#   js.theme_dark: Dark
+#   js.theme_light: Light
 #   js.search_empty: No matches for “{query}”
+#   js.search_count_one: "{n} result"
+#   js.search_count_other: "{n} results"
+#   js.search_shortcut_mac: ⌘ K
 #   js.count_none: No terms
 #   js.count_one: "{n} term"
 #   js.count_other: "{n} terms"

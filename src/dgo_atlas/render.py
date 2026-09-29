@@ -149,7 +149,7 @@ def make_env(text: Text) -> Environment:
     env.filters["initials"] = _initials
     env.filters["enum"] = _enum
     env.filters["state_label"] = lambda s: text(f"state.{_enum(s)}.label")
-    env.filters["role_colour"] = lambda role: ROLE_COLOURS.get(role, "var(--ink-3)")
+    env.filters["role_colour"] = lambda role: ROLE_COLOURS.get(role, "var(--slate)")
     env.globals["t"] = text
     env.globals["count"] = text.count
     return env

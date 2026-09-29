@@ -94,6 +94,7 @@ class SiteConfig(ConfiguredBaseModel):
     dgo_version: str = Field(default=..., description="""The Data Governance Ontology release to use, as its tag (e.g. \"0.1.0\"). Its schema is imported from the DGO repository's dist/dgo.yaml at that tag. Quote it, or YAML may read it as a number.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SiteConfig']} })
     dgo_source: Optional[str] = Field(default=None, description="""Import DGO from here instead of the release URL: a URL, or a path relative to dgo-atlas.yaml, to a single-file DGO schema (for a mirror, a fork, or offline builds). dgo_version still names the release.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SiteConfig']} })
     title: str = Field(default=..., description="""The site's name, shown in the header and every page title.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SiteConfig']} })
+    language: Optional[str] = Field(default="en", description="""The language the site is written in, as a BCP 47 tag (e.g. \"en\", \"fr-CA\"). Set it to match any `text:` translations, so screen readers pronounce the pages correctly.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SiteConfig'], 'ifabsent': 'string(en)'} })
     organization: Optional[str] = Field(default=None, description="""The organization the site belongs to, shown under the title.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SiteConfig']} })
     description: Optional[str] = Field(default=None, description="""One sentence describing the site, used on the landing page and in search results.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SiteConfig']} })
     contact_email: Optional[str] = Field(default=None, description="""Where readers report a problem with a definition.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SiteConfig']} })
@@ -117,6 +118,19 @@ class SiteConfig(ConfiguredBaseModel):
                     raise ValueError(err_msg)
         elif isinstance(v, str) and not pattern.match(v):
             err_msg = f"Invalid dgo_version format: {v}"
+            raise ValueError(err_msg)
+        return v
+
+    @field_validator('language')
+    def pattern_language(cls, v):
+        pattern=re.compile(r"^[A-Za-z]{2,3}(-[A-Za-z0-9]{1,8})*$")
+        if isinstance(v, list):
+            for element in v:
+                if isinstance(element, str) and not pattern.match(element):
+                    err_msg = f"Invalid language format: {element}"
+                    raise ValueError(err_msg)
+        elif isinstance(v, str) and not pattern.match(v):
+            err_msg = f"Invalid language format: {v}"
             raise ValueError(err_msg)
         return v
 

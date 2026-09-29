@@ -140,6 +140,30 @@ recorded for it, whatever steps that creation has reached, unless the creation
 was rejected (`derive.unpublished_reason`). Other terms, and links to them,
 are left out of every page, and the build prints a note for each.
 
+## Accessibility
+
+The generated site targets WCAG 2.1 Level AA. Keep to these when changing
+templates, CSS or `site.js`:
+
+- **Colour.** Text uses `--ink`, `--ink-2` or `--ink-3`, each at least 4.5:1
+  on `--bg`, `--bg-sub` and the soft tints in both themes. A border that
+  identifies a control (a field, a button) uses `--line-strong` (3:1);
+  `--line` is only for dividers. The build warns when `brand.accent` or
+  `brand.accent_dark` falls below 4.5:1 (`contrast.py`).
+- **Links.** A link inside running text is underlined. Only standalone links
+  (cards, rows, nav, panels) go without.
+- **Structure.** Panel, callout and TOC labels are headings. Groups of links
+  are lists. Key/value pairs are `<dl>`. Row tables whose rows are links are
+  `<ul class="term-list">` with an `aria-hidden` visual header, and each
+  value is preceded by `cell_label(key)` (a visually hidden "Column:"). Data
+  that isn't a link per row, such as council members, is a real `<table>`.
+- **Script.** Anything `site.js` changes that a reader needs to know (search
+  result counts, filter counts, "copied") goes through a live region: the
+  page's `#site-status`, or `role="status"` on the element. Search is an ARIA
+  combobox. Keyboard shortcuts need a modifier (Ctrl+K / ⌘K).
+- **Language.** `language` in `dgo-atlas.yaml` sets `<html lang>`. Change it
+  when translating the site with `text:`.
+
 ## Development
 
 ```bash

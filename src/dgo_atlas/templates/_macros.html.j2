@@ -28,34 +28,47 @@
 </div>
 {%- endmacro %}
 
+{#- The column a value sits in, read aloud before it. A row table is a list of
+    links, not a <table>, so its visible header row is hidden from screen
+    readers and each value carries its own label instead (WCAG 1.3.1). -#}
+{% macro cell_label(key) -%}
+<span class="visually-hidden">{{ t("site.cell_label", label=t(key)) }} </span>
+{%- endmacro %}
+
 {% macro term_rows(refs, rel, empty) -%}
 <div class="term-table">
+  {%- if refs %}
   <div class="term-row term-row--head" aria-hidden="true">
     <div>{{ t("area.column_term") }}</div><div></div><div>{{ t("area.column_state") }}</div><div></div>
   </div>
-  {%- for t in refs %}
-  <a class="term-row" href="{{ rel }}{{ t.url }}">
-    <span class="term-row__name{% if (t.state | enum) == 'deprecated' %} term-row__name--deprecated{% endif %}">{{ t.label }}</span>
-    <span class="term-row__sub"></span>
-    <span>{{ state_badge(t.state) }}</span>
-    <span class="term-row__chev" aria-hidden="true">&rsaquo;</span>
-  </a>
+  <ul class="term-list">
+    {%- for t in refs %}
+    <li><a class="term-row" href="{{ rel }}{{ t.url }}">
+      <span class="term-row__name{% if (t.state | enum) == 'deprecated' %} term-row__name--deprecated{% endif %}">{{ t.label }}</span>
+      <span class="term-row__sub"></span>
+      <span>{{ cell_label("area.column_state") }}{{ state_badge(t.state) }}</span>
+      <span class="term-row__chev" aria-hidden="true">&rsaquo;</span>
+    </a></li>
+    {%- endfor %}
+  </ul>
   {%- else %}
   <div class="empty-state">{{ empty }}</div>
-  {%- endfor %}
+  {%- endif %}
 </div>
 {%- endmacro %}
 
 {% macro link_panel(title, refs, rel, show_state=True) -%}
 {%- if refs %}
 <div class="panel">
-  <div class="panel__label">{{ title }}</div>
-  {%- for r in refs %}
-  <a class="panel-link" href="{{ rel }}{{ r.url }}">
-    <div class="panel-link__name">{{ r.label }}</div>
-    {%- if show_state and r.state %}<div class="panel-link__rel">{{ r.state | state_label }}</div>{% endif %}
-  </a>
-  {%- endfor %}
+  <h2 class="panel__label">{{ title }}</h2>
+  <ul class="panel-list">
+    {%- for r in refs %}
+    <li><a class="panel-link" href="{{ rel }}{{ r.url }}">
+      <div class="panel-link__name">{{ r.label }}</div>
+      {%- if show_state and r.state %}<div class="panel-link__rel">{{ r.state | state_label }}</div>{% endif %}
+    </a></li>
+    {%- endfor %}
+  </ul>
 </div>
 {%- endif %}
 {%- endmacro %}

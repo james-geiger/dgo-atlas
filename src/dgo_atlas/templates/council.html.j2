@@ -14,27 +14,37 @@
     {%- endif %}
 
     <h2 class="subhead">{{ t("council.members") }}</h2>
-    {#- Rows aren't links: the name and the email each link somewhere different. #}
-    <div class="term-table">
-      {%- if council.members %}
-      <div class="term-row term-row--member term-row--head" aria-hidden="true">
-        <div>{{ t("council.column_name") }}</div><div>{{ t("council.column_title") }}</div><div>{{ t("council.column_email") }}</div><div>{{ t("council.column_role") }}</div>
-      </div>
-      {%- endif %}
-      {%- for seat in council.members or [] %}
-      {%- set p = lookup.get(seat.member.about) %}
-      <div class="term-row term-row--member">
-        <a class="term-row__name" href="{{ rel }}{{ seat.member.url }}">{{ seat.member.label }}</a>
-        <span class="term-row__sub">{{ p.job_title if p and p.job_title is defined and p.job_title else "—" }}</span>
-        <span class="term-row__sub">{% if p and p.email is defined and p.email %}<a href="mailto:{{ p.email }}">{{ p.email }}</a>{% else %}—{% endif %}</span>
-        <span class="term-row__roles">
-          {%- for r in seat.council_roles or [] %}<span class="badge badge--council-role">{{ r.role_label }}</span>{% else %}<span class="term-row__sub">{{ t("council.member") }}</span>{% endfor %}
-        </span>
-      </div>
-      {%- else %}
-      <div class="empty-state">{{ t("council.members_empty") }}</div>
-      {%- endfor %}
+    {#- A real table: the rows aren't links (the name and the email each link
+        somewhere different), so nothing stops it being one. #}
+    {%- if council.members %}
+    <div class="table-scroll">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th scope="col">{{ t("council.column_name") }}</th>
+            <th scope="col">{{ t("council.column_title") }}</th>
+            <th scope="col">{{ t("council.column_email") }}</th>
+            <th scope="col">{{ t("council.column_role") }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {%- for seat in council.members %}
+          {%- set p = lookup.get(seat.member.about) %}
+          <tr>
+            <th scope="row"><a class="term-row__name" href="{{ rel }}{{ seat.member.url }}">{{ seat.member.label }}</a></th>
+            <td class="term-row__sub">{{ p.job_title if p and p.job_title is defined and p.job_title else "—" }}</td>
+            <td class="term-row__sub">{% if p and p.email is defined and p.email %}<a href="mailto:{{ p.email }}">{{ p.email }}</a>{% else %}—{% endif %}</td>
+            <td><span class="term-row__roles">
+              {%- for r in seat.council_roles or [] %}<span class="badge badge--council-role">{{ r.role_label }}</span>{% else %}<span class="term-row__sub">{{ t("council.member") }}</span>{% endfor %}
+            </span></td>
+          </tr>
+          {%- endfor %}
+        </tbody>
+      </table>
     </div>
+    {%- else %}
+    <div class="empty-state">{{ t("council.members_empty") }}</div>
+    {%- endif %}
 
     {#- Terms are listed on their subject area's page; here each area appears once. #}
     <h2 class="subhead">{{ t("council.areas") }}</h2>
@@ -68,9 +78,11 @@
     {{ link_panel(t("council.processes"), council.process_chain, rel, show_state=False) }}
     {%- if show_identifiers %}
     <div class="panel">
-      <div class="panel__label">{{ t("council.identifier") }}</div>
-      <div class="ref-row"><span class="ref-row__k">{{ t("council.id") }}</span><code class="ref-row__v">{{ council.about }}</code></div>
-      <div class="ref-row"><span class="ref-row__k">{{ t("council.iri") }}</span><code class="ref-row__v">{{ council.iri }}</code></div>
+      <h2 class="panel__label">{{ t("council.identifier") }}</h2>
+      <dl class="ref-list">
+        <div class="ref-row"><dt class="ref-row__k">{{ t("council.id") }}</dt><dd><code class="ref-row__v">{{ council.about }}</code></dd></div>
+        <div class="ref-row"><dt class="ref-row__k">{{ t("council.iri") }}</dt><dd><code class="ref-row__v">{{ council.iri }}</code></dd></div>
+      </dl>
     </div>
     {%- endif %}
   </aside>

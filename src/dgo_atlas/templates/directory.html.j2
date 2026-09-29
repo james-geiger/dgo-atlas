@@ -1,4 +1,5 @@
 {% extends "base.html.j2" %}
+{% from "_macros.html.j2" import cell_label %}
 {#- Everyone recorded in the governance data, with what they hold. -#}
 
 {% block content %}
@@ -9,18 +10,22 @@
     <div class="term-row term-row--office term-row--head" aria-hidden="true">
       <div>{{ t("directory.column_name") }}</div><div>{{ t("directory.column_roles") }}</div><div>{{ t("directory.column_seats") }}</div><div></div>
     </div>
-    {%- for a in agents %}
-    {%- set roles = [] %}
-    {%- for r in a.responsibilities or [] %}{% if r.role_label not in roles %}{% set _ = roles.append(r.role_label) %}{% endif %}{% endfor %}
-    <a class="term-row term-row--office" href="{{ rel }}{{ a.url }}">
-      <span class="term-row__name">{{ a.label }}</span>
-      <span class="term-row__sub">{{ roles | join(", ") if roles else "—" }}</span>
-      <span class="term-row__sub">{{ (a.memberships or []) | length or "—" }}</span>
-      <span class="term-row__chev" aria-hidden="true">&rsaquo;</span>
-    </a>
+    {%- if agents %}
+    <ul class="term-list">
+      {%- for a in agents %}
+      {%- set roles = [] %}
+      {%- for r in a.responsibilities or [] %}{% if r.role_label not in roles %}{% set _ = roles.append(r.role_label) %}{% endif %}{% endfor %}
+      <li><a class="term-row term-row--office" href="{{ rel }}{{ a.url }}">
+        <span class="term-row__name">{{ a.label }}</span>
+        <span class="term-row__sub">{{ cell_label("directory.column_roles") }}{{ roles | join(", ") if roles else "—" }}</span>
+        <span class="term-row__sub">{{ cell_label("directory.column_seats") }}{{ (a.memberships or []) | length or "—" }}</span>
+        <span class="term-row__chev" aria-hidden="true">&rsaquo;</span>
+      </a></li>
+      {%- endfor %}
+    </ul>
     {%- else %}
     <div class="empty-state">{{ t("directory.empty") }}</div>
-    {%- endfor %}
+    {%- endif %}
   </div>
 </div>
 {% endblock %}
