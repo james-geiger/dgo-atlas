@@ -1,25 +1,28 @@
 {#- Responsibilities held by one bearer, grouped by term. Expects `holder`. -#}
+{%- from "_macros.html.j2" import cell_label %}
 {%- if holder.responsibilities %}
 <h2 class="subhead">{{ t("responsibilities.heading") }}</h2>
 <div class="term-table">
   <div class="term-row term-row--head" aria-hidden="true">
     <div>{{ t("responsibilities.column_term") }}</div><div>{{ t("responsibilities.column_role") }}</div><div>{{ t("responsibilities.column_state") }}</div><div></div>
   </div>
-  {%- for r in holder.responsibilities %}
-  {%- if r.term %}
-  <a class="term-row" href="{{ rel }}{{ r.term.url }}">
-    <span class="term-row__name">{{ r.term.label }}</span>
-    <span><span class="badge badge--{{ r.role }}">{{ r.role_label }}</span></span>
-    <span class="term-row__sub">{{ r.term.state | state_label }}</span>
-    <span class="term-row__chev" aria-hidden="true">&rsaquo;</span>
-  </a>
-  {%- else %}
-  <div class="term-row">
-    <span class="term-row__name">{{ t("responsibilities.no_term") }}</span>
-    <span><span class="badge badge--{{ r.role }}">{{ r.role_label }}</span></span>
-    <span></span><span></span>
-  </div>
-  {%- endif %}
-  {%- endfor %}
+  <ul class="term-list">
+    {%- for r in holder.responsibilities %}
+    {%- if r.term %}
+    <li><a class="term-row" href="{{ rel }}{{ r.term.url }}">
+      <span class="term-row__name">{{ r.term.label }}</span>
+      <span>{{ cell_label("responsibilities.column_role") }}<span class="badge badge--{{ r.role }}">{{ r.role_label }}</span></span>
+      <span class="term-row__sub">{{ cell_label("responsibilities.column_state") }}{{ r.term.state | state_label }}</span>
+      <span class="term-row__chev" aria-hidden="true">&rsaquo;</span>
+    </a></li>
+    {%- else %}
+    <li><div class="term-row">
+      <span class="term-row__name">{{ t("responsibilities.no_term") }}</span>
+      <span>{{ cell_label("responsibilities.column_role") }}<span class="badge badge--{{ r.role }}">{{ r.role_label }}</span></span>
+      <span></span><span></span>
+    </div></li>
+    {%- endif %}
+    {%- endfor %}
+  </ul>
 </div>
 {%- endif %}

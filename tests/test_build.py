@@ -109,3 +109,30 @@ def test_base_path_404(tmp_path):
     assert build(project, out=tmp_path) == 0
     assert 'href="/glossary/assets/site.css' in (tmp_path / "404.html").read_text()
     assert linkcheck.check(tmp_path, "/glossary/") == []
+
+
+def test_accessible_structure(site):
+    """The semantics WCAG 2.1 AA relies on ("Accessibility" in docs/reference.md)."""
+    home = read(site, "index.html")
+    assert '<html lang="en">' in home
+    assert 'role="combobox"' in home and 'aria-autocomplete="list"' in home
+    assert 'role="status" id="site-status"' in home
+    assert 'aria-label="Switch colour theme"' not in home  # the toggle is named by its visible word
+    terms = read(site, "terms/index.html")
+    assert '<ul class="term-list">' in terms
+    assert 'data-term-count role="status"' in terms
+    assert '<span class="visually-hidden">State: </span>' in terms  # each value says which column it is in
+    council = read(site, "councils/research-committee.html")
+    assert '<table class="data-table">' in council and '<th scope="col">' in council
+    term = read(site, "terms/clinical-trial.html")
+    assert '<nav class="breadcrumb" aria-label="Breadcrumb">' in term
+    assert '<h2 class="panel__label">' in term
+    assert '<ol class="history">' in term
+
+
+def test_site_language(tmp_path):
+    project = config.load(FIXTURES / "variant" / config.CONFIG_NAME)
+    project.config.language = "fr-CA"
+    assert build(project, out=tmp_path) == 0
+    for page in ("index.html", "404.html", "terms/clinical-trial.html"):
+        assert '<html lang="fr-CA">' in (tmp_path / page).read_text(), page

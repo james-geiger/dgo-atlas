@@ -24,6 +24,23 @@
   }
   var THEME_KEY = "dgo-atlas-theme";
 
+  /* ---------- Announcements ---------- */
+
+  /* The page's one polite live region (base.html.j2). Emptied first so the
+     same message twice in a row is still read out. */
+  var statusEl = document.getElementById("site-status");
+  var announceTimer = null;
+  function announce(message, delay) {
+    if (!statusEl) return;
+    clearTimeout(announceTimer);
+    announceTimer = setTimeout(function () {
+      statusEl.textContent = "";
+      setTimeout(function () {
+        statusEl.textContent = message;
+      }, 50);
+    }, delay || 0);
+  }
+
   /* ---------- Theme ---------- */
 
   function currentTheme() {
@@ -36,8 +53,10 @@
 
   function paintToggle() {
     var label = document.querySelector("[data-theme-label]");
-    if (!label) return;
-    label.textContent = currentTheme() === "dark" ? T("theme_light") : T("theme_dark");
+    var glyph = document.querySelector("[data-theme-glyph]");
+    var dark = currentTheme() === "dark";
+    if (label) label.textContent = dark ? T("theme_light") : T("theme_dark");
+    if (glyph) glyph.textContent = dark ? "\u2600" : "\u263E";
   }
 
   var toggle = document.getElementById("theme-toggle");
@@ -131,7 +150,10 @@
   function closeResults() {
     if (!results) return;
     results.innerHTML = "";
-    if (input) input.setAttribute("aria-expanded", "false");
+    if (input) {
+      input.setAttribute("aria-expanded", "false");
+      input.removeAttribute("aria-activedescendant");
+    }
   }
 
   function renderDropdown(hits, query) {
@@ -140,14 +162,20 @@
       closeResults();
       return;
     }
+    input.removeAttribute("aria-activedescendant");
     if (!hits.length) {
-      results.innerHTML = '<div class="search__empty">' + escapeHtml(T("search_empty", { query: query })) + "</div>";
+      var empty = T("search_empty", { query: query });
+      results.innerHTML =
+        '<div class="search__empty" role="option" aria-disabled="true">' + escapeHtml(empty) + "</div>";
       input.setAttribute("aria-expanded", "true");
+      /* Announced after typing pauses, not on every keystroke. */
+      announce(empty, 600);
       return;
     }
-    var html = hits.slice(0, 8).map(function (entry) {
+    var shown = hits.slice(0, 8);
+    var html = shown.map(function (entry, i) {
       return (
-        '<a class="search__hit" role="option" href="' + BASE + entry.url + '">' +
+        '<a class="search__hit" role="option" id="search-option-' + i + '" href="' + BASE + entry.url + '">' +
         '<div class="search__hit-title">' + escapeHtml(entry.title) + "</div>" +
         '<div class="search__hit-meta">' + escapeHtml(entry.meta || "") + "</div>" +
         "</a>"
@@ -155,6 +183,7 @@
     });
     results.innerHTML = html.join("");
     input.setAttribute("aria-expanded", "true");
+    announce(T(shown.length === 1 ? "search_count_one" : "search_count_other", { n: shown.length }), 600);
   }
 
   if (input) {
@@ -173,10 +202,12 @@
         return;
       }
       if (event.key === "Enter") {
-        var first = results && results.querySelector(".search__hit");
-        if (first) {
+        /* The option picked with the arrow keys, else the best match. */
+        var chosen = results &&
+          (results.querySelector('.search__hit[aria-selected="true"]') || results.querySelector(".search__hit"));
+        if (chosen) {
           event.preventDefault();
-          window.location.href = first.getAttribute("href");
+          window.location.href = chosen.getAttribute("href");
         }
         return;
       }
@@ -194,6 +225,9 @@
         if (next < 0) next = hits.length - 1;
         if (next >= hits.length) next = 0;
         hits[next].setAttribute("aria-selected", "true");
+        /* Focus stays in the input; this tells a screen reader which option
+           is picked. */
+        input.setAttribute("aria-activedescendant", hits[next].id);
         hits[next].scrollIntoView({ block: "nearest" });
       }
     });
@@ -202,9 +236,15 @@
       if (results && !results.contains(event.target) && event.target !== input) closeResults();
     });
 
+    /* Ctrl+K (⌘K on a Mac) jumps to search. It needs a modifier: a bare
+       character key would fire whenever a speech-input user says a word
+       containing it (WCAG 2.1.4). */
+    var isMac = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent || "");
+    var keyHint = document.querySelector("[data-search-key]");
+    if (keyHint && isMac && T("search_shortcut_mac")) keyHint.textContent = T("search_shortcut_mac");
     document.addEventListener("keydown", function (event) {
-      var tag = (event.target.tagName || "").toLowerCase();
-      if (event.key === "/" && tag !== "input" && tag !== "textarea" && !event.metaKey && !event.ctrlKey) {
+      if ((event.key === "k" || event.key === "K") && (isMac ? event.metaKey : event.ctrlKey) &&
+          !event.altKey && !event.shiftKey) {
         event.preventDefault();
         input.focus();
         input.select();
@@ -224,7 +264,9 @@
     var DEFAULT_PAGE_SIZE = 25;
     var SIZE_KEY = "dgo-atlas-page-size";
 
-    var rows = Array.prototype.slice.call(document.querySelectorAll(".term-row[data-domain]"));
+    /* The list items, not the links: hiding the item keeps a screen reader's
+       count of the list in step with what is on screen. */
+    var rows = Array.prototype.slice.call(document.querySelectorAll(".term-list > li[data-domain]"));
     var countEl = document.querySelector("[data-term-count]");
     var emptyEl = document.querySelector("[data-empty]");
     var table = document.querySelector(".term-table");
@@ -383,11 +425,13 @@
         function () {
           button.textContent = T("copied");
           button.setAttribute("data-copied", "");
+          announce(T("copied"));
         },
         function () {
           /* Say so rather than silently doing nothing; the value is on screen
              and can still be selected by hand. */
           button.textContent = T("copy_fallback");
+          announce(T("copy_fallback"));
           var range = document.createRange();
           range.selectNodeContents(source);
           var selection = window.getSelection();

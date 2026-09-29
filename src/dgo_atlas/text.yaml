@@ -18,9 +18,14 @@ site:
   search_placeholder: Search terms, people, councils
   search_label: Search the glossary
   search_results: Search results
+  # The key hint shown in the search box. The shortcut is Ctrl+K (⌘K on a Mac).
+  search_shortcut: Ctrl K
   theme_toggle: Switch colour theme
   built_on: Built {date}
   sections: Site sections
+  breadcrumb: Breadcrumb
+  # Read aloud before each value in a list row, e.g. "State: Approved".
+  cell_label: "{label}:"
   report_title: Something wrong?
   report_body: If a definition doesn't match what you see in the data, tell the people responsible for it.
   report_link: Report a discrepancy
@@ -276,9 +281,12 @@ not_found:
 
 # Wording the site's JavaScript writes into the page.
 js:
-  theme_dark: ☾ Dark
-  theme_light: ☀ Light
+  theme_dark: Dark
+  theme_light: Light
   search_empty: No matches for “{query}”
+  search_count_one: "{n} result"
+  search_count_other: "{n} results"
+  search_shortcut_mac: ⌘ K
   count_none: No terms
   count_one: "{n} term"
   count_other: "{n} terms"

@@ -4,7 +4,7 @@
     the site works under a GitHub Pages project subpath and from file:// when a
     reviewer opens a downloaded build artifact. -#}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ site.language or "en" }}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -33,17 +33,22 @@
       class="search__input"
       type="search"
       id="site-search"
+      role="combobox"
       autocomplete="off"
       placeholder="{{ t("site.search_placeholder") }}"
       aria-label="{{ t("site.search_label") }}"
+      aria-autocomplete="list"
       aria-expanded="false"
-      aria-controls="search-results">
-    <span class="search__key" aria-hidden="true">/</span>
+      aria-controls="search-results"
+      aria-keyshortcuts="Control+K Meta+K">
+    <span class="search__key" aria-hidden="true" data-search-key>{{ t("site.search_shortcut") }}</span>
     <div class="search__results" id="search-results" role="listbox" aria-label="{{ t("site.search_results") }}"></div>
   </div>
 
   <div class="header__meta">
-    <button class="theme-toggle" type="button" id="theme-toggle" aria-label="{{ t("site.theme_toggle") }}">
+    {#- No aria-label: the button is named by the word it shows (WCAG 2.5.3). -#}
+    <button class="theme-toggle" type="button" id="theme-toggle" title="{{ t("site.theme_toggle") }}">
+      <span aria-hidden="true" data-theme-glyph>&#9790;</span>
       <span data-theme-label>{{ t("js.theme_dark") }}</span>
     </button>
     <span>{{ t("site.built_on", date=built_on) }}</span>
@@ -54,34 +59,40 @@
   <nav class="sidebar" id="sitenav" aria-label="{{ t("site.sections") }}">
     {%- for group in nav %}
     <div class="nav-group">
-      <div class="nav-group__label">{{ group.label }}</div>
-      {%- for item in group.items %}
-      <a class="nav-item" href="{{ rel }}{{ item.url }}"{% if item.url == current_url %} aria-current="page"{% endif %}>{{ item.label }}</a>
-      {%- endfor %}
+      <div class="nav-group__label" id="nav-group-{{ loop.index }}">{{ group.label }}</div>
+      <ul aria-labelledby="nav-group-{{ loop.index }}">
+        {%- for item in group.items %}
+        <li><a class="nav-item" href="{{ rel }}{{ item.url }}"{% if item.url == current_url %} aria-current="page"{% endif %}>{{ item.label }}</a></li>
+        {%- endfor %}
+      </ul>
     </div>
     {%- endfor %}
     {%- if contact_email %}
     <div class="sidebar-note">
-      <div class="sidebar-note__title">{{ t("site.report_title") }}</div>
+      <h2 class="sidebar-note__title">{{ t("site.report_title") }}</h2>
       <p>{{ t("site.report_body") }}</p>
-      <a href="mailto:{{ contact_email }}">{{ t("site.report_link") }} &rarr;</a>
+      <a href="mailto:{{ contact_email }}">{{ t("site.report_link") }} <span aria-hidden="true">&rarr;</span></a>
     </div>
     {%- endif %}
   </nav>
 
   <main class="main" id="main">
     {%- if breadcrumb %}
-    <div class="breadcrumb">
-      <a href="{{ rel }}index.html">{{ site.title }}</a>
-      {%- for crumb in breadcrumb %}
-      <span aria-hidden="true">/</span>
-      {%- if crumb.url %}
-      <a href="{{ rel }}{{ crumb.url }}">{{ crumb.label }}</a>
-      {%- else %}
-      <span class="breadcrumb__current">{{ crumb.label }}</span>
-      {%- endif %}
-      {%- endfor %}
-    </div>
+    <nav class="breadcrumb" aria-label="{{ t("site.breadcrumb") }}">
+      <ol>
+        <li><a href="{{ rel }}index.html">{{ site.title }}</a></li>
+        {%- for crumb in breadcrumb %}
+        <li>
+          <span aria-hidden="true">/</span>
+          {%- if crumb.url %}
+          <a href="{{ rel }}{{ crumb.url }}">{{ crumb.label }}</a>
+          {%- else %}
+          <span class="breadcrumb__current" aria-current="page">{{ crumb.label }}</span>
+          {%- endif %}
+        </li>
+        {%- endfor %}
+      </ol>
+    </nav>
     {%- endif %}
 
     {% block content %}{% endblock %}
@@ -89,6 +100,10 @@
 </div>
 
 {% include "_footer.html.j2" %}
+
+{#- One polite live region for the whole page: search result counts and
+    "copied" confirmations are announced here (WCAG 4.1.3). -#}
+<div class="visually-hidden" role="status" id="site-status"></div>
 
 <script>window.DGO_SITE_BASE = {{ rel | tojson }}; window.DGO_SITE_TEXT = {{ js_text | tojson }};</script>
 <script>

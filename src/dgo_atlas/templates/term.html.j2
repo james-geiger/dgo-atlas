@@ -7,7 +7,7 @@
 {%- set state = term.state | enum %}
 <div class="split">
   <article class="split__body split__body--wide">
-    <a class="back-link" href="{{ rel }}terms/index.html">&larr; {{ t("term.back") }}</a>
+    <a class="back-link" href="{{ rel }}terms/index.html"><span aria-hidden="true">&larr;</span> {{ t("term.back") }}</a>
 
     <h1 class="page-title page-title--term">{{ term.label }}</h1>
 
@@ -25,9 +25,9 @@
     </div>
 
     <div class="definition-box">
-      <div class="definition-box__label">
+      <h2 class="definition-box__label">
         {{- t("state." ~ state ~ ".definition") -}}
-      </div>
+      </h2>
       <p>{{ term.definition }}</p>
       {%- if term.definition_source %}
       <div class="definition-box__source">
@@ -40,7 +40,7 @@
 
     {%- if state == "deprecated" %}
     <div class="callout callout--required">
-      <div class="callout__label">{{ t("term.deprecated") }}</div>
+      <h2 class="callout__label">{{ t("term.deprecated") }}</h2>
       <p>{% if term.successor %}{% set successor %}<a href="{{ rel }}{{ term.successor.url }}">{{ term.successor.label }}</a>{% endset %}{{ t("term.deprecated_use", successor=successor) }} {% endif %}
       {{ t("term.deprecated_body") }}</p>
     </div>
@@ -48,7 +48,7 @@
 
     {%- for change in term.pending_changes or [] %}
     <div class="callout callout--in_review">
-      <div class="callout__label">{{ t("term.change_under_review") }}</div>
+      <h2 class="callout__label">{{ t("term.change_under_review") }}</h2>
       <p>{{ change.label }} <span class="term-row__sub">({{ change.process_label }})</span>. {{ t("term.change_body") }}</p>
     </div>
     {%- endfor %}
@@ -60,15 +60,15 @@
 
     <h2 class="subhead subhead--term" id="history">{{ t("term.history") }}</h2>
     {%- if term.history %}
-    <div class="history">
+    <ol class="history">
       {%- for h in term.history | reverse %}
-      <div class="history__entry">
+      <li class="history__entry">
         <div class="history__dot" aria-hidden="true"></div>
         <div class="history__meta">{{ h.occurred_on }} &middot; {{ h.process_label }} &middot; {{ h.process.label }}</div>
         <div class="history__what">{{ h.boundary_label | capitalize }}</div>
-      </div>
+      </li>
       {%- endfor %}
-    </div>
+    </ol>
     {%- else %}
     <p class="history__empty">{{ t("term.history_empty") }}</p>
     {%- endif %}
@@ -76,7 +76,7 @@
 
   <aside class="split__aside">
     <div class="panel">
-      <div class="panel__label">{{ t("term.responsibility") }}</div>
+      <h2 class="panel__label">{{ t("term.responsibility") }}</h2>
       {%- for r in term.responsibilities or [] %}
       <div class="person">
         <div class="avatar avatar--sm" style="background:{{ r.role | role_colour }}" aria-hidden="true">{{ r.bearer.label | initials }}</div>
@@ -89,7 +89,7 @@
       <div class="empty-state">{{ t("term.responsibility_empty") }}</div>
       {%- endfor %}
       {%- if suggest_change_url %}
-      <a class="link-cta" href="{{ suggest_change_url }}{{ term.about | urlencode }}" rel="noopener">{{ t("term.suggest_change") }} &rarr;</a>
+      <a class="link-cta" href="{{ suggest_change_url }}{{ term.about | urlencode }}" rel="noopener">{{ t("term.suggest_change") }} <span aria-hidden="true">&rarr;</span></a>
       {%- endif %}
     </div>
 
@@ -100,7 +100,7 @@
     {%- set st = term.semantic_type %}
     {%- if st %}
     <div class="panel">
-      <div class="panel__label" title="{{ t("term.denotes_title") }}">{{ t("term.denotes") }}</div>
+      <h2 class="panel__label" title="{{ t("term.denotes_title") }}">{{ t("term.denotes") }}</h2>
       <a class="panel-link" href="{{ st.iri }}" rel="noopener">
         <div class="panel-link__name">{{ st.label or st.about }}</div>
         <div class="panel-link__rel">
@@ -111,10 +111,12 @@
     {%- endif %}
 
     <div class="panel">
-      <div class="panel__label">{{ t("term.filed_under") }}</div>
-      <div class="kv"><span class="kv__k">{{ t("term.glossary") }}</span><span class="kv__v"><a href="{{ rel }}{{ term.glossary.url }}">{{ term.glossary.label }}</a></span></div>
-      <div class="kv"><span class="kv__k">{{ t("term.domain") }}</span><span class="kv__v"><a href="{{ rel }}{{ term.domain.url }}">{{ term.domain.label }}</a></span></div>
-      <div class="kv"><span class="kv__k">{{ t("term.subject_area") }}</span><span class="kv__v"><a href="{{ rel }}{{ term.subject_area.url }}">{{ term.subject_area.label }}</a></span></div>
+      <h2 class="panel__label">{{ t("term.filed_under") }}</h2>
+      <dl class="kv-list">
+        <div class="kv"><dt class="kv__k">{{ t("term.glossary") }}</dt><dd class="kv__v"><a href="{{ rel }}{{ term.glossary.url }}">{{ term.glossary.label }}</a></dd></div>
+        <div class="kv"><dt class="kv__k">{{ t("term.domain") }}</dt><dd class="kv__v"><a href="{{ rel }}{{ term.domain.url }}">{{ term.domain.label }}</a></dd></div>
+        <div class="kv"><dt class="kv__k">{{ t("term.subject_area") }}</dt><dd class="kv__v"><a href="{{ rel }}{{ term.subject_area.url }}">{{ term.subject_area.label }}</a></dd></div>
+      </dl>
     </div>
 
     {{ link_panel(t("term.broader"), term.broader, rel) }}
@@ -132,27 +134,30 @@
     {%- set view_source = repo_blob_url and term.source_file %}
     {%- if show_identifiers or view_source %}
     <div class="panel">
-      <div class="panel__label">{{ t("term.identifier") if show_identifiers else t("term.source") }}</div>
+      <h2 class="panel__label">{{ t("term.identifier") if show_identifiers else t("term.source") }}</h2>
       {%- if show_identifiers %}
-      <div class="ref-row">
-        <span class="ref-row__k">{{ t("term.term_id") }}</span>
-        <code class="ref-row__v">{{ term.about }}</code>
-      </div>
-      <div class="ref-row">
-        <span class="ref-row__k">{{ t("term.iri") }}</span>
-        <code class="permalink" id="permalink-value">{{ term.iri }}</code>
-        <button class="permalink__copy" type="button"
-                data-copy-target="permalink-value"
-                data-copy-label="{{ t("term.copy_iri") }}"
-                aria-live="polite">{{ t("term.copy_iri") }}</button>
-      </div>
-      <div class="ref-row">
-        <span class="ref-row__k">{{ t("term.class") }}</span>
-        <a class="ref-row__v" href="{{ term_kind.iri }}" rel="noopener"><code>{{ term_kind.curie }}</code></a>
-      </div>
+      <dl class="ref-list">
+        <div class="ref-row">
+          <dt class="ref-row__k">{{ t("term.term_id") }}</dt>
+          <dd><code class="ref-row__v">{{ term.about }}</code></dd>
+        </div>
+        <div class="ref-row">
+          <dt class="ref-row__k">{{ t("term.iri") }}</dt>
+          <dd>
+            <code class="permalink" id="permalink-value">{{ term.iri }}</code>
+            <button class="permalink__copy" type="button"
+                    data-copy-target="permalink-value"
+                    data-copy-label="{{ t("term.copy_iri") }}">{{ t("term.copy_iri") }}</button>
+          </dd>
+        </div>
+        <div class="ref-row">
+          <dt class="ref-row__k">{{ t("term.class") }}</dt>
+          <dd><a class="ref-row__v" href="{{ term_kind.iri }}" rel="noopener"><code>{{ term_kind.curie }}</code></a></dd>
+        </div>
+      </dl>
       {%- endif %}
       {%- if view_source %}
-      <a class="link-cta ref-source" href="{{ repo_blob_url }}{{ term.source_file }}" rel="noopener">{{ t("term.view_source") }} &rarr;</a>
+      <a class="link-cta ref-source" href="{{ repo_blob_url }}{{ term.source_file }}" rel="noopener">{{ t("term.view_source") }} <span aria-hidden="true">&rarr;</span></a>
       {%- endif %}
     </div>
     {%- endif %}

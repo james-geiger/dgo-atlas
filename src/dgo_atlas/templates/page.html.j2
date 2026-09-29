@@ -25,12 +25,14 @@
 
   {%- if page.toc %}
   <aside class="split__aside">
-    <div class="toc-rail">
-      <div class="toc-rail__label">{{ t("content.on_this_page") }}</div>
-      {%- for entry in page.toc %}
-      <a href="#{{ entry.id }}">{{ entry.label }}</a>
-      {%- endfor %}
-    </div>
+    <nav class="toc-rail" aria-labelledby="toc-label">
+      <h2 class="toc-rail__label" id="toc-label">{{ t("content.on_this_page") }}</h2>
+      <ul>
+        {%- for entry in page.toc %}
+        <li><a href="#{{ entry.id }}">{{ entry.label }}</a></li>
+        {%- endfor %}
+      </ul>
+    </nav>
   </aside>
   {%- endif %}
 </div>

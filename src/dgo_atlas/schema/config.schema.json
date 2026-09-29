@@ -234,6 +234,14 @@
                     "pattern": "^[0-9A-Za-z][0-9A-Za-z._-]*$",
                     "type": "string"
                 },
+                "language": {
+                    "description": "The language the site is written in, as a BCP 47 tag (e.g. \"en\", \"fr-CA\"). Set it to match any `text:` translations, so screen readers pronounce the pages correctly.",
+                    "pattern": "^[A-Za-z]{2,3}(-[A-Za-z0-9]{1,8})*$",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
                 "organization": {
                     "description": "The organization the site belongs to, shown under the title.",
                     "type": [
@@ -425,6 +433,14 @@
             "description": "The Data Governance Ontology release to use, as its tag (e.g. \"0.1.0\"). Its schema is imported from the DGO repository's dist/dgo.yaml at that tag. Quote it, or YAML may read it as a number.",
             "pattern": "^[0-9A-Za-z][0-9A-Za-z._-]*$",
             "type": "string"
+        },
+        "language": {
+            "description": "The language the site is written in, as a BCP 47 tag (e.g. \"en\", \"fr-CA\"). Set it to match any `text:` translations, so screen readers pronounce the pages correctly.",
+            "pattern": "^[A-Za-z]{2,3}(-[A-Za-z0-9]{1,8})*$",
+            "type": [
+                "string",
+                "null"
+            ]
         },
         "organization": {
             "description": "The organization the site belongs to, shown under the title.",
