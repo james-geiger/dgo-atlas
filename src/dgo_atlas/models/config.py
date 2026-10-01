@@ -100,7 +100,9 @@ class SiteConfig(ConfiguredBaseModel):
     contact_email: Optional[str] = Field(default=None, description="""Where readers report a problem with a definition.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SiteConfig']} })
     base_path: Optional[str] = Field(default="/", description="""Where the site is served from: \"/\" for a custom domain, \"/<repo>/\" for a GitHub Pages project site. Only the 404 page uses it.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SiteConfig'], 'ifabsent': 'string(/)'} })
     show_identifiers: Optional[bool] = Field(default=True, description="""Show the Identifier panel (id, expanded IRI, DGO class) on term, council, person and organization pages. Set false to hide it.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SiteConfig'], 'ifabsent': 'True'} })
-    prefixes: dict[str, Union[str, Prefix]] = Field(default=..., description="""The instance namespaces used in governance data, as `prefix: namespace`.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SiteConfig']} })
+    iri_base: str = Field(default=..., description="""The namespace every id is minted in: a base you control and will keep stable, such as a w3id.org redirect (e.g. https://w3id.org/acme/). Each kind of object gets its own namespace under it (see `namespaces`), and each page is published at its IRI's path under the site, so one redirect from this base to the site resolves every IRI. Never change it once IRIs are published.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SiteConfig']} })
+    namespaces: Optional[dict[str, KindNamespace]] = Field(default=None, description="""Each kind's namespace and authoring prefix: objects of a kind are minted at <iri_base><iri_segment>/<name> and written <authoring_prefix>:<name>. iri_segment is part of every IRI, so never change it (or override a default) once IRIs are published; authoring_prefix is only how ids are written and may change at any time.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SiteConfig']} })
+    prefixes: Optional[dict[str, Union[str, Prefix]]] = Field(default=None, description="""Extra prefixes, as `prefix: namespace`: those of the ontologies your semantic types come from, and any alias for one of your own namespaces. Each kind's authoring prefix is declared for you.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SiteConfig']} })
     paths: Optional[Paths] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SiteConfig']} })
     repository: Optional[Repository] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SiteConfig']} })
     suggest_change_url: Optional[str] = Field(default=None, description="""A URL that starts a change request. The term's CURIE is appended, URL encoded, so end it with a query parameter such as `&term=`.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SiteConfig']} })
@@ -134,10 +136,34 @@ class SiteConfig(ConfiguredBaseModel):
             raise ValueError(err_msg)
         return v
 
+    @field_validator('iri_base')
+    def pattern_iri_base(cls, v):
+        pattern=re.compile(r"^https?://")
+        if isinstance(v, list):
+            for element in v:
+                if isinstance(element, str) and not pattern.match(element):
+                    err_msg = f"Invalid iri_base format: {element}"
+                    raise ValueError(err_msg)
+        elif isinstance(v, str) and not pattern.match(v):
+            err_msg = f"Invalid iri_base format: {v}"
+            raise ValueError(err_msg)
+        return v
+
+
+class KindNamespace(ConfiguredBaseModel):
+    """
+    Where one kind of object is minted and how its ids are written, keyed by kind (e.g. `organization: {iri_segment: offices, authoring_prefix: office}`). Either field may be left out to keep its default.
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://w3id.org/dgo-atlas/config'})
+
+    kind: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['KindNamespace']} })
+    iri_segment: Optional[str] = Field(default=None, description="""The path segment after iri_base for this kind's IRIs (permanent once published).""", json_schema_extra = { "linkml_meta": {'domain_of': ['KindNamespace']} })
+    authoring_prefix: Optional[str] = Field(default=None, description="""The prefix this kind's ids are written with (may change at any time).""", json_schema_extra = { "linkml_meta": {'domain_of': ['KindNamespace']} })
+
 
 class Prefix(ConfiguredBaseModel):
     """
-    An instance namespace used in governance data, written as `prefix: namespace` (e.g. `acme: https://data.acme.example/`).
+    A prefix ids or semantic types may use, written as `prefix: namespace` (e.g. `bfo: http://purl.obolibrary.org/obo/BFO_`).
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://w3id.org/dgo-atlas/config'})
 
@@ -204,6 +230,7 @@ class TextOverride(ConfiguredBaseModel):
 # Model rebuild
 # see https://pydantic-docs.helpmanual.io/usage/models/#rebuilding-a-model
 SiteConfig.model_rebuild()
+KindNamespace.model_rebuild()
 Prefix.model_rebuild()
 Paths.model_rebuild()
 Repository.model_rebuild()

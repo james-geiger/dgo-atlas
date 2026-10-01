@@ -5,7 +5,7 @@ as an institution's own risk levels or a kind of steward only it has. An
 implementer declares such a class in governance data:
 
     local_classes:
-      - id: acme:DataTrustee      # in one of the project's prefixes, never dgo:
+      - id: class:DataTrustee     # in the project's namespace for local classes
         name: data trustee        # the readable `type:` name
         is_a: steward             # a DGO class (name or CURIE) or another local class
         description: ...
@@ -28,6 +28,7 @@ from linkml_runtime.utils.formatutils import camelcase
 
 from . import dgo
 from .loader import Dataset, read
+from .namespaces import Namespaces
 
 LIST_NAME = "local_classes"
 RESERVED_NAMESPACES = (dgo.DGO_NAMESPACE, "https://w3id.org/dgo-atlas/")
@@ -35,7 +36,7 @@ RESERVED_NAMESPACES = (dgo.DGO_NAMESPACE, "https://w3id.org/dgo-atlas/")
 
 @dataclass(frozen=True)
 class LocalClass:
-    id: str  # a CURIE in one of the project's prefixes
+    id: str  # a CURIE in the project's namespace for local classes (namespaces.py)
     name: str
     is_a: str  # the parent's class name, DGO's or local
     description: str | None = None
@@ -71,14 +72,7 @@ def extension_schema(classes, prefixes: dict[str, str], dgo_location: str) -> di
     }
 
 
-def _expand(curie: str, prefixes: dict[str, str]) -> str | None:
-    prefix, sep, local = curie.partition(":")
-    if not sep or prefix not in prefixes or not local:
-        return None
-    return prefixes[prefix] + local
-
-
-def check(dataset: Dataset, prefixes: dict[str, str]) -> Found:
+def check(dataset: Dataset, ns: Namespaces) -> Found:
     """Read and check every local class declared in the (parsed, unmerged) data files.
 
     Entries that are malformed (not a mapping, or missing `id`, `name` or
@@ -99,13 +93,13 @@ def check(dataset: Dataset, prefixes: dict[str, str]) -> Found:
     models: dict[str, str] = {}
     for where, e in entries:
         name = e["name"]
-        prefix = e["id"].partition(":")[0]
-        if prefix in ("dgo", "dgoatlas") or prefixes.get(prefix) in RESERVED_NAMESPACES:
+        iri = ns.expand(e["id"]) or ""
+        if iri.startswith(RESERVED_NAMESPACES):
             errors.append((where, f"id {e['id']} is in DGO's or DGO Atlas's namespace; a local class needs "
                                   "an id in your own namespace"))
-        elif _expand(e["id"], prefixes) is None:
-            errors.append((where, f"id {e['id']} does not use a declared prefix; add it under `prefixes:` "
-                                  "in dgo-atlas.yaml"))
+        elif problem := ns.problem(LIST_NAME, e["id"]):
+            errors.append((where, problem))
+        e["id"] = ns.canonical(e["id"])
         if name in dgo_names or camelcase(name) in dgo_models:
             errors.append((where, f"name {name!r} is already a DGO class; choose a name of your own"))
         elif name in by_name or camelcase(name) in models:
@@ -145,15 +139,15 @@ def _typed(dgo_class: str) -> bool:
     return any(base in ancestors for base in dgo.typed_bases())
 
 
-def activate(found: Found, prefixes: dict[str, str]) -> None:
+def activate(found: Found) -> None:
     """Make the active DGO release carry these local classes (none, if any had errors)."""
-    dgo.with_local_classes(found.classes, prefixes)
+    dgo.with_local_classes(found.classes)
 
 
-def load(data_dir: Path, root: Path, prefixes: dict[str, str]) -> Found:
+def load(data_dir: Path, root: Path, ns: Namespaces) -> Found:
     """Read the project's local classes and activate them; problems are left for validation to report."""
-    found = check(read(data_dir, root), prefixes) if data_dir.is_dir() else Found()
-    activate(found, prefixes)
+    found = check(read(data_dir, root), ns) if data_dir.is_dir() else Found()
+    activate(found)
     return found
 
 
@@ -164,11 +158,11 @@ def extension() -> str:
     source = dgo.active()
     if not source.local_classes:
         return ""
-    schema = extension_schema(source.local_classes, dict(source.prefixes), source.location)
+    schema = extension_schema(source.local_classes, source.prefixes, source.location)
     return yaml.safe_dump(schema, sort_keys=False)
 
 
-def scaffold(data_dir: Path, name: str, is_a: str, prefixes: dict[str, str], *,
+def scaffold(data_dir: Path, name: str, is_a: str, ns: Namespaces, *,
              id: str | None = None, description: str | None = None) -> Path:
     """Write a new local class to its own file under the data directory; return the file.
 
@@ -181,9 +175,9 @@ def scaffold(data_dir: Path, name: str, is_a: str, prefixes: dict[str, str], *,
     if is_a not in known:
         raise ValueError(f"is_a: {is_a} is not a DGO class or a local class")
     if id is None:
-        if not prefixes:
-            raise ValueError("no prefixes are declared in dgo-atlas.yaml; pass --id")
-        id = f"{next(iter(prefixes))}:{camelcase(name)}"
+        id = f"{ns.for_list(LIST_NAME).authoring_prefix}:{camelcase(name)}"
+    elif problem := ns.problem(LIST_NAME, id):
+        raise ValueError(problem)
     target = data_dir / "local-classes" / f"{dgo.slug(name).replace('_', '-')}.yaml"
     if target.exists():
         raise ValueError(f"{target} already exists")

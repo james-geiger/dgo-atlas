@@ -388,6 +388,18 @@ search:
 content:
   on_this_page: On this page
 
+local_class:
+  eyebrow: Local class
+  subclass_of: A kind of {parent}
+  used_by: Used by
+  unused: Nothing in the governance data is declared one yet.
+  iri: IRI
+
+redirect:
+  title: "{label}"
+  moved: "{label} is shown on another page:"
+  continue: Go to {label}
+
 not_found:
   title: Page not found
   eyebrow: Not found

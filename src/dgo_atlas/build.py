@@ -4,7 +4,8 @@
 2. Validate the governance data (validate.py): shape, references, rules.
 3. Derive the view model (derive.py), reading each semantic type's label
    from the class it names (semantic.py), and validate it against
-   schema/viewmodel.yaml.
+   schema/viewmodel.yaml. Every page is placed at its IRI (namespaces.py);
+   one that would land on another page's path stops the build.
 4. Render the pages.
 5. Check every internal link.
 """
@@ -20,7 +21,7 @@ from . import __version__, content, contrast, derive, dgo, linkcheck, semantic, 
 from .config import ConfigError, Project
 from .console import fail, note, say, warn
 from .models import viewmodel as vm
-from .render import Renderer, split_pages
+from .render import Renderer, page_clashes, split_pages
 
 
 @dataclass
@@ -45,7 +46,7 @@ def check(project: Project) -> validate.Report:
         report = validate.Report(stage="read")
         report.errors.append(validate.Problem(str(data_dir), "data directory does not exist"))
         return report
-    report = validate.validate(data_dir, project.root, project.prefixes)
+    report = validate.validate(data_dir, project.root, project.namespaces)
     return report
 
 
@@ -85,7 +86,7 @@ def build(project: Project, *, out: Path | None = None) -> int:
     for message in contrast.brand_problems(project.brand):
         warn(message)
 
-    deriver = derive.Deriver(report.record, project.prefixes, sources=sources_by_id(report),
+    deriver = derive.Deriver(report.record, project.namespaces, sources=sources_by_id(report),
                              accents=project.accents, describe=semantic.describe)
     site = deriver.site()
     for message in deriver.notes:
@@ -101,6 +102,9 @@ def build(project: Project, *, out: Path | None = None) -> int:
         split_pages(pages)  # a content file clashing with a generated page fails here, before any output
     except content.ContentError as exc:
         return fail("Authored content failed to load:", [exc])
+    clashes = page_clashes(site, pages)
+    if clashes:
+        return fail("Some pages can't be published at their IRIs:", clashes)
     if pages:
         say(f"  loaded {len(pages)} authored page(s)")
 

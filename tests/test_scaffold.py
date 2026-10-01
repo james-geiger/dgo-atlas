@@ -26,18 +26,18 @@ def test_init_then_build(tmp_path):
     # Add a term in its own file, as an implementer would.
     (project / "governance" / "terms" / "trial-phase.yaml").write_text(
         "glossary_terms:\n"
-        "  - id: org:trial-phase\n"
+        "  - id: term:trial-phase\n"
         "    label: trial phase\n"
         "    definition: The stage a clinical trial has reached.\n"
-        "    part_of: org:glossary\n"
-        "    in_subject_area: org:clinical-research\n"
-        "    related: [org:clinical-trial]\n"
+        "    part_of: glossary:glossary\n"
+        "    in_subject_area: area:clinical-research\n"
+        "    related: [term:clinical-trial]\n"
         "lifecycle_processes:\n"
-        "  - id: org:trial-phase-creation\n"
+        "  - id: process:trial-phase-creation\n"
         "    type: creation\n"
         "    label: Creation of \"trial phase\"\n"
-        "    has_output: org:trial-phase\n"
-        "    part_of: org:research-data-governance\n"
+        "    has_output: term:trial-phase\n"
+        "    part_of: process:research-data-governance\n"
     )
     result = dgo_atlas("build", "--project", project)
     assert result.exit_code == 0, result.output

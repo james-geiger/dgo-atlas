@@ -57,6 +57,62 @@
             "title": "Brand",
             "type": "object"
         },
+        "KindNamespace": {
+            "additionalProperties": false,
+            "description": "Where one kind of object is minted and how its ids are written, keyed by kind (e.g. `organization: {iri_segment: offices, authoring_prefix: office}`). Either field may be left out to keep its default.",
+            "properties": {
+                "authoring_prefix": {
+                    "description": "The prefix this kind's ids are written with (may change at any time).",
+                    "pattern": "^[a-zA-Z_][\\w.-]*$",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "iri_segment": {
+                    "description": "The path segment after iri_base for this kind's IRIs (permanent once published).",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "kind": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "kind"
+            ],
+            "title": "KindNamespace",
+            "type": "object"
+        },
+        "KindNamespace__identifier_optional": {
+            "additionalProperties": false,
+            "description": "Where one kind of object is minted and how its ids are written, keyed by kind (e.g. `organization: {iri_segment: offices, authoring_prefix: office}`). Either field may be left out to keep its default.",
+            "properties": {
+                "authoring_prefix": {
+                    "description": "The prefix this kind's ids are written with (may change at any time).",
+                    "pattern": "^[a-zA-Z_][\\w.-]*$",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "iri_segment": {
+                    "description": "The path segment after iri_base for this kind's IRIs (permanent once published).",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "kind": {
+                    "type": "string"
+                }
+            },
+            "required": [],
+            "title": "KindNamespace",
+            "type": "object"
+        },
         "PageSetting": {
             "additionalProperties": false,
             "description": "Settings for one page, keyed by the IRI or CURIE of what it is about.",
@@ -128,7 +184,7 @@
         },
         "Prefix": {
             "additionalProperties": false,
-            "description": "An instance namespace used in governance data, written as `prefix: namespace` (e.g. `acme: https://data.acme.example/`).",
+            "description": "A prefix ids or semantic types may use, written as `prefix: namespace` (e.g. `bfo: http://purl.obolibrary.org/obo/BFO_`).",
             "properties": {
                 "namespace": {
                     "format": "uri",
@@ -148,7 +204,7 @@
         },
         "Prefix__identifier_optional": {
             "additionalProperties": false,
-            "description": "An instance namespace used in governance data, written as `prefix: namespace` (e.g. `acme: https://data.acme.example/`).",
+            "description": "A prefix ids or semantic types may use, written as `prefix: namespace` (e.g. `bfo: http://purl.obolibrary.org/obo/BFO_`).",
             "properties": {
                 "namespace": {
                     "format": "uri",
@@ -234,11 +290,34 @@
                     "pattern": "^[0-9A-Za-z][0-9A-Za-z._-]*$",
                     "type": "string"
                 },
+                "iri_base": {
+                    "description": "The namespace every id is minted in: a base you control and will keep stable, such as a w3id.org redirect (e.g. https://w3id.org/acme/). Each kind of object gets its own namespace under it (see `namespaces`), and each page is published at its IRI's path under the site, so one redirect from this base to the site resolves every IRI. Never change it once IRIs are published.",
+                    "format": "uri",
+                    "pattern": "^https?://",
+                    "type": "string"
+                },
                 "language": {
                     "description": "The language the site is written in, as a BCP 47 tag (e.g. \"en\", \"fr-CA\"). Set it to match any `text:` translations, so screen readers pronounce the pages correctly.",
                     "pattern": "^[A-Za-z]{2,3}(-[A-Za-z0-9]{1,8})*$",
                     "type": [
                         "string",
+                        "null"
+                    ]
+                },
+                "namespaces": {
+                    "additionalProperties": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/$defs/KindNamespace__identifier_optional"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "description": "Each kind's namespace and authoring prefix: objects of a kind are minted at <iri_base><iri_segment>/<name> and written <authoring_prefix>:<name>. iri_segment is part of every IRI, so never change it (or override a default) once IRIs are published; authoring_prefix is only how ids are written and may change at any time.",
+                    "type": [
+                        "object",
                         "null"
                     ]
                 },
@@ -292,8 +371,11 @@
                             }
                         ]
                     },
-                    "description": "The instance namespaces used in governance data, as `prefix: namespace`.",
-                    "type": "object"
+                    "description": "Extra prefixes, as `prefix: namespace`: those of the ontologies your semantic types come from, and any alias for one of your own namespaces. Each kind's authoring prefix is declared for you.",
+                    "type": [
+                        "object",
+                        "null"
+                    ]
                 },
                 "repository": {
                     "anyOf": [
@@ -344,7 +426,7 @@
             "required": [
                 "dgo_version",
                 "title",
-                "prefixes"
+                "iri_base"
             ],
             "title": "SiteConfig",
             "type": "object"
@@ -434,11 +516,34 @@
             "pattern": "^[0-9A-Za-z][0-9A-Za-z._-]*$",
             "type": "string"
         },
+        "iri_base": {
+            "description": "The namespace every id is minted in: a base you control and will keep stable, such as a w3id.org redirect (e.g. https://w3id.org/acme/). Each kind of object gets its own namespace under it (see `namespaces`), and each page is published at its IRI's path under the site, so one redirect from this base to the site resolves every IRI. Never change it once IRIs are published.",
+            "format": "uri",
+            "pattern": "^https?://",
+            "type": "string"
+        },
         "language": {
             "description": "The language the site is written in, as a BCP 47 tag (e.g. \"en\", \"fr-CA\"). Set it to match any `text:` translations, so screen readers pronounce the pages correctly.",
             "pattern": "^[A-Za-z]{2,3}(-[A-Za-z0-9]{1,8})*$",
             "type": [
                 "string",
+                "null"
+            ]
+        },
+        "namespaces": {
+            "additionalProperties": {
+                "anyOf": [
+                    {
+                        "$ref": "#/$defs/KindNamespace__identifier_optional"
+                    },
+                    {
+                        "type": "null"
+                    }
+                ]
+            },
+            "description": "Each kind's namespace and authoring prefix: objects of a kind are minted at <iri_base><iri_segment>/<name> and written <authoring_prefix>:<name>. iri_segment is part of every IRI, so never change it (or override a default) once IRIs are published; authoring_prefix is only how ids are written and may change at any time.",
+            "type": [
+                "object",
                 "null"
             ]
         },
@@ -492,8 +597,11 @@
                     }
                 ]
             },
-            "description": "The instance namespaces used in governance data, as `prefix: namespace`.",
-            "type": "object"
+            "description": "Extra prefixes, as `prefix: namespace`: those of the ontologies your semantic types come from, and any alias for one of your own namespaces. Each kind's authoring prefix is declared for you.",
+            "type": [
+                "object",
+                "null"
+            ]
         },
         "repository": {
             "anyOf": [
@@ -544,7 +652,7 @@
     "required": [
         "dgo_version",
         "title",
-        "prefixes"
+        "iri_base"
     ],
     "title": "dgo_atlas_config",
     "type": "object",

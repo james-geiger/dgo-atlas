@@ -101,4 +101,6 @@ def test_content_file_sets_a_generated_page_header(tmp_path):
 def test_content_file_cannot_replace_other_generated_pages(tmp_path, capsys):
     root = _project(tmp_path, content={"terms/clinical-trial.md": "---\ntitle: Mine\n---\n"})
     assert build(config.load(root / config.CONFIG_NAME), out=tmp_path / "site") == 1
-    assert "would replace a generated page" in capsys.readouterr().err
+    err = capsys.readouterr().err
+    assert "can't be published at their IRIs" in err
+    assert "terms/clinical-trial.html, which is already the content page terms/clinical-trial.html" in " ".join(err.split())

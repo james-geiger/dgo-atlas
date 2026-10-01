@@ -15,8 +15,10 @@ Stages, stopping after the first that finds errors:
    check `linkml-validate -s template.yaml -C GovernanceRecord` makes.
 4. **Graph.** The files are merged and every reference is resolved: it must
    name an object that exists and is of a kind the slot allows. linkml-validate
-   checks the form of an id only. Identifiers must be unique and use a
-   declared prefix, and the authoring rules in the docs are enforced.
+   checks the form of an id only. Every id and reference is first rewritten
+   to its canonical form (namespaces.py: an alias or full IRI becomes the
+   kind's authoring prefix). Identifiers must be unique and minted in their
+   kind's namespace, and the authoring rules in the docs are enforced.
 5. **Load.** The merged data is loaded into the generated pydantic model.
 """
 
@@ -31,6 +33,7 @@ from pathlib import Path
 
 from . import dgo, local_classes
 from .loader import Dataset, merge, read
+from .namespaces import Namespaces
 from .resources import ROOT_CLASS
 
 
@@ -226,11 +229,33 @@ def _shape_problems(source) -> list[tuple[list[str], str]]:
 # ---------------------------------------------------------------- stage 4
 
 
-def _expandable(value: str, prefixes: dict[str, str]) -> bool:
-    if value.startswith(("http://", "https://")):
-        return True
-    prefix, sep, _ = value.partition(":")
-    return bool(sep) and (prefix in prefixes or prefix == "dgo")
+def canonical_ids(merged: dict, ns: Namespaces) -> None:
+    """Rewrite, in place, every id and reference to its canonical CURIE (Namespaces.canonical).
+
+    An alias or a full IRI in a kind's namespace becomes that kind's authoring
+    prefix, so every later stage matches objects by one spelling.
+    """
+
+    def visit(obj, cls: str) -> None:
+        if not isinstance(obj, dict):
+            return
+        if isinstance(obj.get("id"), str):
+            obj["id"] = ns.canonical(obj["id"])
+        for ref in dgo.reference_slots(cls):
+            value = obj.get(ref.slot)
+            if isinstance(value, list):
+                obj[ref.slot] = [ns.canonical(v) for v in value]
+            elif isinstance(value, str):
+                obj[ref.slot] = ns.canonical(value)
+        for slot, range_cls in dgo.inlined_slots(cls).items():
+            for child in obj.get(slot) or []:
+                if isinstance(child, dict):
+                    visit(child, _resolve_type(range_cls, child))
+
+    for list_name, items in merged.items():
+        for obj in items:
+            if list_name in dgo.list_ranges() and isinstance(obj, dict):
+                visit(obj, _declared_class(list_name, obj))
 
 
 def _declared_class(list_name: str, obj: dict) -> str:
@@ -247,10 +272,11 @@ def _resolve_type(cls: str, obj: dict) -> str:
     return cls
 
 
-def _graph_problems(dataset: Dataset, prefixes: dict[str, str]) -> tuple[list[Problem], list[Problem]]:
+def _graph_problems(dataset: Dataset, ns: Namespaces) -> tuple[list[Problem], list[Problem]]:
     errors: list[Problem] = []
     warnings: list[Problem] = []
     merged = dataset.merged
+    canonical_ids(merged, ns)
 
     def where(obj) -> str:
         origin = dataset.origin(obj)
@@ -270,9 +296,11 @@ def _graph_problems(dataset: Dataset, prefixes: dict[str, str]) -> tuple[list[Pr
                 errors.append(Problem(where(obj), f"id {oid} is already defined at {first}"))
                 continue
             index[oid] = (cls, obj)
-            if not _expandable(oid, prefixes):
-                errors.append(Problem(where(obj), f"id {oid} does not use a declared prefix; "
-                                      "add it under `prefixes:` in dgo-atlas.yaml"))
+            problem = ns.problem(list_name, oid)
+            if problem is None and ns.expand(oid) is None:
+                problem = f"id {oid} does not use a declared prefix; add it under `prefixes:` in dgo-atlas.yaml"
+            if problem:
+                errors.append(Problem(where(obj), problem))
 
     def check_refs(obj: dict, cls: str, at: str) -> None:
         for ref in dgo.reference_slots(cls):
@@ -305,7 +333,7 @@ def _graph_problems(dataset: Dataset, prefixes: dict[str, str]) -> tuple[list[Pr
         at = where(term)
         tid = term["id"]
         semantic_type = term.get("semantic_type")
-        if semantic_type and not _expandable(semantic_type, prefixes):
+        if semantic_type and ns.expand(semantic_type) is None:
             errors.append(Problem(at, f"semantic_type: {semantic_type} does not use a declared prefix; add it "
                                       "under `prefixes:` in dgo-atlas.yaml, or write the full IRI"))
         pref, alts = term.get("pref_label"), term.get("alt_labels") or []
@@ -435,7 +463,7 @@ def _top_allowed(ref) -> list[str]:
 # ---------------------------------------------------------------- entry point
 
 
-def validate(data_dir: Path, root: Path, prefixes: dict[str, str]) -> Report:
+def validate(data_dir: Path, root: Path, ns: Namespaces) -> Report:
     report = Report()
     dataset = read(data_dir, root)
     report.dataset = dataset
@@ -449,8 +477,9 @@ def validate(data_dir: Path, root: Path, prefixes: dict[str, str]) -> Report:
             report.errors.append(Problem(source.rel, source.error))
     if report.errors:
         return report
-    found = local_classes.check(dataset, prefixes)
-    local_classes.activate(found, prefixes)
+    dgo.with_namespaces(ns)
+    found = local_classes.check(dataset, ns)
+    local_classes.activate(found)
     report.errors += [Problem(where, message) for where, message in found.errors]
     report.warnings += [Problem(where, message) for where, message in found.warnings]
     if report.errors:
@@ -476,7 +505,7 @@ def validate(data_dir: Path, root: Path, prefixes: dict[str, str]) -> Report:
     report.stage = "graph"
     merge(dataset)
     report.warnings += [Problem(where, message) for where, message in dataset.deprecations]
-    errors, warnings = _graph_problems(dataset, prefixes)
+    errors, warnings = _graph_problems(dataset, ns)
     report.errors += errors
     report.warnings += warnings
     if report.errors:

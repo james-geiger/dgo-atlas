@@ -27,7 +27,7 @@ from markupsafe import Markup
 from . import __version__, dgo
 from .config import Project
 from .content import ContentError, ContentPage
-from .derive import CLASSIFICATION_LISTS, CLASSIFICATION_PAGE, DIRS, PROCESS_PAGE
+from .derive import CLASSIFICATION_LISTS, CLASSIFICATION_PAGE, PROCESS_PAGE
 from .models import viewmodel as vm
 from .resources import STATIC, TEMPLATES
 from .text import Text
@@ -76,6 +76,9 @@ OVERRIDABLE = {
     DATA_PAGE: "data",
     CLASSIFICATION_PAGE: "classification",
 }
+# Every page the site generates at a fixed path, and the directory of its assets.
+FIXED_PAGES = ("index.html", "404.html", *OVERRIDABLE)
+ASSETS = "assets/"
 
 
 @dataclass
@@ -130,21 +133,44 @@ def split_pages(pages: list[ContentPage]) -> tuple[list[ContentPage], dict[str, 
     """Separate authored pages from those that set a generated page's header.
 
     A content file may share a path with one of the OVERRIDABLE pages; any
-    other clash with a generated page is an error rather than a silent
-    overwrite.
+    other clash with a fixed generated page is an error rather than a silent
+    overwrite. (Clashes with the pages at IRIs are `page_clashes`.)
     """
     own, overrides = [], {}
-    generated_dirs = tuple(f"{d}/" for d in (*DIRS.values(), "assets"))
     for page in pages:
         if page.url in OVERRIDABLE:
             overrides[page.url] = page
-        elif page.url.startswith(generated_dirs) or page.url == "404.html":
+        elif page.url.startswith(ASSETS) or page.url == "404.html":
             raise ContentError(
                 f"{page.url} would replace a generated page. Content files can only set the header of "
                 + ", ".join(sorted(OVERRIDABLE)) + "; move this page elsewhere.")
         else:
             own.append(page)
     return own, overrides
+
+
+def page_clashes(site: vm.Site, pages: list[ContentPage]) -> list[str]:
+    """Pages at IRIs that would land on another page's path (compared ignoring case,
+    since some file systems do); a page is never silently renamed, as it must stay at its IRI."""
+    taken = {p.casefold(): "a generated page" for p in FIXED_PAGES}
+    for page in pages:
+        if not page.is_hub and page.url not in OVERRIDABLE:
+            taken[page.url.casefold()] = f"the content page {page.url}"
+    problems = []
+    at_iris = [p for group in (site.glossaries, site.domains, site.subject_areas, site.terms, site.councils,
+                               site.agents, site.data_stores, site.data_sets, site.data_elements,
+                               site.local_classes, site.redirects) for p in group or []]
+    for page in at_iris:
+        if not page.url or "#" in page.url:
+            continue
+        key = page.url.casefold()
+        other = "the site's assets" if key.startswith(ASSETS) else taken.get(key)
+        if other:
+            problems.append(f"{page.about} ({page.iri}) would be published at {page.url}, which is already "
+                            f"{other}; give it another name")
+        else:
+            taken[key] = f"the page for {page.about}"
+    return problems
 
 
 def make_env(text: Text) -> Environment:
@@ -182,7 +208,7 @@ class Renderer:
             p.about: p
             for group in (site.glossaries, site.domains, site.subject_areas, site.terms,
                           site.councils, site.agents, site.processes,
-                          site.data_stores, site.data_sets, site.data_elements)
+                          site.data_stores, site.data_sets, site.data_elements, site.local_classes)
             for p in group or []
         }
         accents = iter(CARD_ACCENTS * 100)
@@ -410,6 +436,13 @@ class Renderer:
                                   description=head["lede"] or self.plain("classification.description"),
                                   breadcrumb=[{"label": self.plain("breadcrumb.data"), "url": DATA_PAGE},
                                               {"label": head["title"], "url": None}]))
+    def local_class_page(self, c: vm.LocalClassPage) -> None:
+        self.write(c.url, "local_class.html.j2", local_class=c,
+                   **self.context(c.url, c.label, description=c.class_description,
+                                  breadcrumb=[{"label": c.label, "url": None}]))
+
+    def redirect(self, r: vm.Redirect) -> None:
+        self.write(r.url, "redirect.html.j2", redirect=r, site=self.cfg, rel=rel_for(r.url))
 
     def directory(self) -> None:
         url = "directory.html"
@@ -449,6 +482,7 @@ class Renderer:
                                   for c in CERTIFICATION_STATES] if data else [],
             data_kinds=[dgo.kind(k) for k in DATA_KINDS] if data else [],
             classification_kinds=dgo.subkinds("data classification") if data else [],
+            local_pages={c.iri: c.url for c in self.site.local_classes or []},
             **self.context(url, head["title"], breadcrumb=[{"label": head["title"], "url": None}],
                            description=head["lede"] or self.plain("how_to_read.description")),
         )
@@ -489,6 +523,10 @@ class Renderer:
             self.data_set_page(s)
         for e in self.site.data_elements or []:
             self.data_element_page(e)
+        for c in self.site.local_classes or []:
+            self.local_class_page(c)
+        for r in self.site.redirects or []:
+            self.redirect(r)
         self.directory()
         self.governance()
         self.how_to_read()

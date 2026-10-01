@@ -72,6 +72,10 @@ classes:
       - is_a
       - description
 
+# Each list of identified objects is annotated with the kind of object it
+# holds and that kind's default namespace (namespaces.py): its objects are
+# minted at <iri_base><iri_segment>/<local> and written <authoring_prefix>:<local>.
+# A project may override both per kind with `namespaces:` in dgo-atlas.yaml.
 slots:
   processes:
     description: Data governance processes, nested with part_of.
@@ -79,22 +83,26 @@ slots:
     range: data governance
     multivalued: true
     inlined_as_list: true
+    annotations: {kind: process, iri_segment: processes, authoring_prefix: process}
   councils:
     description: Data governance councils.
     slot_uri: dgoatlas:councils
     range: data governance council
     multivalued: true
     inlined_as_list: true
+    annotations: {kind: council, iri_segment: councils, authoring_prefix: council}
   people:
     slot_uri: dgoatlas:people
     range: person
     multivalued: true
     inlined_as_list: true
+    annotations: {kind: person, iri_segment: people, authoring_prefix: person}
   organizations:
     slot_uri: dgoatlas:organizations
     range: organization
     multivalued: true
     inlined_as_list: true
+    annotations: {kind: organization, iri_segment: organizations, authoring_prefix: organization}
   council_roles:
     description: Council roles such as chair; `type` picks the kind.
     slot_uri: dgoatlas:council_roles
@@ -114,21 +122,25 @@ slots:
     range: business glossary
     multivalued: true
     inlined_as_list: true
+    annotations: {kind: glossary, iri_segment: glossaries, authoring_prefix: glossary}
   domains:
     slot_uri: dgoatlas:domains
     range: domain
     multivalued: true
     inlined_as_list: true
+    annotations: {kind: domain, iri_segment: domains, authoring_prefix: domain}
   subject_areas:
     slot_uri: dgoatlas:subject_areas
     range: subject area
     multivalued: true
     inlined_as_list: true
+    annotations: {kind: subject_area, iri_segment: areas, authoring_prefix: area}
   glossary_terms:
     slot_uri: dgoatlas:glossary_terms
     range: glossary term
     multivalued: true
     inlined_as_list: true
+    annotations: {kind: term, iri_segment: terms, authoring_prefix: term}
   definition_sources:
     description: Sources definitions are drawn from; each `id` is the source's IRI.
     slot_uri: dgoatlas:definition_sources
@@ -145,6 +157,7 @@ slots:
     range: lifecycle process
     multivalued: true
     inlined_as_list: true
+    annotations: {kind: process, iri_segment: processes, authoring_prefix: process}
   status_boundaries:
     description: >-
       Dated status boundaries of lifecycle processes; `type` picks the kind.
@@ -194,41 +207,48 @@ slots:
     range: data store
     multivalued: true
     inlined_as_list: true
+    annotations: {kind: data, iri_segment: data, authoring_prefix: data}
   data_sets:
     slot_uri: dgoatlas:data_sets
     range: data set
     multivalued: true
     inlined_as_list: true
+    annotations: {kind: data, iri_segment: data, authoring_prefix: data}
   data_elements:
     description: Fields or columns; each is part_of exactly one data set.
     slot_uri: dgoatlas:data_elements
     range: data element
     multivalued: true
     inlined_as_list: true
+    annotations: {kind: data, iri_segment: data, authoring_prefix: data}
   sensitivity_levels:
     description: The organization's sensitivity levels, ordered by severity.
     slot_uri: dgoatlas:sensitivity_levels
     range: sensitivity level
     multivalued: true
     inlined_as_list: true
+    annotations: {kind: classification, iri_segment: classifications, authoring_prefix: classification}
   security_levels:
     description: The organization's security levels, ordered by severity.
     slot_uri: dgoatlas:security_levels
     range: security level
     multivalued: true
     inlined_as_list: true
+    annotations: {kind: classification, iri_segment: classifications, authoring_prefix: classification}
   regulations:
     description: The regulatory categories data may fall under.
     slot_uri: dgoatlas:regulations
     range: regulatory category
     multivalued: true
     inlined_as_list: true
+    annotations: {kind: classification, iri_segment: classifications, authoring_prefix: classification}
   local_classes:
     description: Local subclasses of DGO classes.
     slot_uri: dgoatlas:local_classes
     range: LocalClass
     multivalued: true
     inlined_as_list: true
+    annotations: {kind: local_class, iri_segment: classes, authoring_prefix: class}
   name:
     description: The class's name, used as a `type` value (e.g. data trustee).
     slot_uri: dgoatlas:name

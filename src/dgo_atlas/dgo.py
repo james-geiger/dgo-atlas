@@ -67,18 +67,23 @@ class DgoError(Exception):
 class Source:
     """One DGO release: its version and the location the template imports.
 
-    With the implementer's local classes, and the prefixes their ids use,
-    when the data declares any (local_classes.activate).
+    With the project's namespaces (namespaces.py), so the template knows
+    every prefix its ids use, and the implementer's local classes, when the
+    data declares any (local_classes.activate).
     """
 
     version: str
     location: str  # a URL or absolute path, without the ".yaml" LinkML appends
     local_classes: tuple = ()  # of local_classes.LocalClass
-    prefixes: tuple[tuple[str, str], ...] = ()
+    namespaces: object = None  # a namespaces.Namespaces
 
     @property
     def tested(self) -> bool:
         return self.version in TESTED_VERSIONS
+
+    @property
+    def prefixes(self) -> dict[str, str]:
+        return self.namespaces.canonical_prefixes if self.namespaces else {}
 
 
 _active: Source | None = None
@@ -116,11 +121,14 @@ def active() -> Source:
     return _active
 
 
-def with_local_classes(classes: tuple, prefixes: dict[str, str]) -> None:
+def with_namespaces(namespaces) -> None:
+    """Make the active release, with the project's namespaces, the active one."""
+    use(dataclasses.replace(active(), namespaces=namespaces))
+
+
+def with_local_classes(classes: tuple) -> None:
     """Make the active release, extended with `classes`, the active one."""
-    base = active()
-    use(dataclasses.replace(base, local_classes=tuple(classes),
-                            prefixes=tuple(sorted(prefixes.items())) if classes else ()))
+    use(dataclasses.replace(active(), local_classes=tuple(classes)))
 
 
 def _fetch_check(source: Source) -> None:
@@ -160,14 +168,14 @@ def _template(source: Source) -> Path:
     template = yaml.safe_load(text.replace(IMPORT_PLACEHOLDER, source.location))
     # LinkML expands CURIEs with the root schema's prefixes only, so the
     # release's prefixes (rdfs, skos, ro...) are declared here too, and so are
-    # the prefixes of any local class ids.
-    template["prefixes"] = {**release_prefixes(source.location), **dict(source.prefixes), **template["prefixes"]}
+    # the project's prefixes: each kind's authoring prefix and any declared ones.
+    template["prefixes"] = {**release_prefixes(source.location), **source.prefixes, **template["prefixes"]}
     _fit_to_release(template, _release(source.location))
     directory = Path(tempfile.mkdtemp(prefix="dgo-atlas-"))
     if source.local_classes:
         extension = directory / "local-classes.yaml"
         extension.write_text(yaml.safe_dump(
-            extension_schema(source.local_classes, dict(source.prefixes), source.location), sort_keys=False),
+            extension_schema(source.local_classes, source.prefixes, source.location), sort_keys=False),
             encoding="utf-8")
         template["imports"].append(str(extension.with_suffix("")))
     path = directory / TEMPLATE.name
@@ -232,7 +240,61 @@ def _json_schema(source: Source) -> str:
         values = (definition.get("properties") or {}).get("type", {}).get("enum")
         if values:
             values += [names[v] for v in list(values) if v in names]
+    if source.namespaces:
+        _id_patterns(schema, source.namespaces, _view(source))
     return json.dumps(schema, indent=4) + "\n"
+
+
+def _id_patterns(schema: dict, ns, sv: SchemaView) -> None:
+    """Tell editors which namespace each id and reference belongs in (namespaces.py).
+
+    Each list's `id` gets a pattern accepting its kind's authoring prefix, an
+    alias into its namespace, or the full IRI, and a snippet offering the
+    prefix. Each reference slot whose targets all have one kind of namespace
+    gets the same pattern.
+    """
+    from .namespaces import LOCAL
+
+    defs = schema.get("$defs", {})
+    local = LOCAL.pattern.removeprefix("^").removesuffix("$")
+
+    def pattern(kinds) -> str:
+        starts = []
+        for kind in kinds:
+            namespace = ns.namespace(kind)
+            names = [p for p, uri in ns.prefixes.items() if uri == namespace]
+            starts += [re.escape(n) + ":" for n in names] + [re.escape(namespace)]
+        return f"^(?:{'|'.join(starts)}){local}$"
+
+    by_class: dict[str, set] = {}
+    for list_name, cls in list_ranges().items():
+        kind = ns.for_list(list_name)
+        if kind is None:
+            continue
+        by_class.setdefault(cls, set()).add(kind)
+        item = defs.get(camelcase(cls), {}).get("properties", {}).get("id")
+        if item is None:
+            continue
+        item["pattern"] = pattern([kind])
+        item["description"] = (f"{item.get('description', '')} Written {kind.authoring_prefix}:<name>, "
+                               f"minted in {ns.namespace(kind)}.").strip()
+        item["defaultSnippets"] = [{"label": f"{kind.authoring_prefix}:", "body": f"{kind.authoring_prefix}:${{1:name}}"}]
+
+    for cls in sv.all_classes():
+        properties = defs.get(camelcase(cls), {}).get("properties", {})
+        for ref in reference_slots(cls):
+            spec = properties.get(ref.slot)
+            kinds, covered = set(), True
+            for allowed in ref.allowed:  # each target class counts as its nearest listed class
+                listed = next((b for b in sv.class_ancestors(allowed, reflexive=True) if b in by_class), None)
+                if listed:
+                    kinds |= by_class[listed]
+                elif not sv.get_class(allowed).abstract:
+                    covered = False
+            if spec is None or not kinds or not covered:
+                continue
+            target = spec["items"] if "items" in spec else spec
+            target["pattern"] = pattern(sorted(kinds, key=lambda k: k.kind))
 
 
 def json_schema() -> str:

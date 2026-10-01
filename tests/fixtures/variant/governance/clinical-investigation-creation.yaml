@@ -4,16 +4,16 @@
 # the site. With it, "clinical investigation" is published as deprecated.
 
 lifecycle_processes:
-  - id: ex:clinical-investigation-creation
+  - id: process:clinical-investigation-creation
     type: creation
     label: initial creation of the term
-    has_output: ex:clinical-investigation
-    part_of: ex:research-dg
+    has_output: term:clinical-investigation
+    part_of: process:research-dg
 
 status_boundaries:
   - type: dgo:DGO_00000024           # drafted
-    part_of: ex:clinical-investigation-creation
+    part_of: process:clinical-investigation-creation
     occurred_on: "2024-03-04"
   - type: approved with conditions   # a local subclass of approved (local-classes.yaml)
-    part_of: ex:clinical-investigation-creation
+    part_of: process:clinical-investigation-creation
     occurred_on: "2024-04-02"

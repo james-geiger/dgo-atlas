@@ -5,10 +5,14 @@ import pytest
 
 from dgo_atlas import config, dgo
 from dgo_atlas.derive import Deriver
+from dgo_atlas.namespaces import Namespaces
 from dgo_atlas.validate import validate
 
 FIXTURES = Path(__file__).parent / "fixtures"
-EX = {"ex": "https://w3id.org/dgo/data/", "bfo": "http://purl.obolibrary.org/obo/BFO_"}  # the variant's prefixes
+BASE = "https://w3id.org/northfield/"  # the variant's iri_base
+# The variant's namespaces, as its dgo-atlas.yaml declares them.
+OVERRIDES = {"classification": {"iri_segment": "data", "authoring_prefix": "data"}}
+NS = Namespaces.build(BASE, OVERRIDES, declared={"office": BASE + "organizations/", "bfo": "http://purl.obolibrary.org/obo/BFO_"})
 DGO_VERSION = "0.3.0"  # imported from the DGO repository; the tests need network access
 
 
@@ -22,9 +26,9 @@ def active_dgo():
 def load(name: str):
     """Validate a fixture project; return its Deriver and derived view model."""
     project = config.load(FIXTURES / name / config.CONFIG_NAME)
-    report = validate(project.data_dir, project.root, project.prefixes)
+    report = validate(project.data_dir, project.root, project.namespaces)
     assert report.ok, [str(e) for e in report.errors]
-    deriver = Deriver(report.record, project.prefixes)
+    deriver = Deriver(report.record, project.namespaces)
     return deriver, deriver.site()
 
 
@@ -38,11 +42,12 @@ def broken(tmp_path):
     """Copy the variant's data into a temp data dir, edit it, and validate it.
 
     Pass (old, new) replacements, applied to governance.yaml; add files with
-    extra={name: text}; leave files out with drop=[name, ...].
+    extra={name: text}; leave files out with drop=[name, ...]; validate
+    against other namespaces with ns=.
     """
     source = FIXTURES / "variant" / "governance"
 
-    def run(*replacements, extra=None, drop=()):
+    def run(*replacements, extra=None, drop=(), ns=NS):
         data = tmp_path / "governance"
         shutil.rmtree(data, ignore_errors=True)
         shutil.copytree(source, data)
@@ -55,6 +60,6 @@ def broken(tmp_path):
         (data / "governance.yaml").write_text(text)
         for name, body in (extra or {}).items():
             (data / name).write_text(body)
-        return validate(data, tmp_path, EX)
+        return validate(data, tmp_path, ns)
 
     return run

@@ -2,7 +2,7 @@
 # each pull request about one term.
 
 glossary_terms:
-  - id: org:clinical-trial
+  - id: term:clinical-trial
     label: clinical trial
     pref_label: Clinical Trial          # shown to readers when it differs from label
     alt_labels:
@@ -12,32 +12,32 @@ glossary_terms:
       prospectively assigned to one or more interventions to evaluate their
       effects on health-related outcomes.
     definition_source: https://grants.nih.gov/policy/clinical-trials/definition.htm
-    part_of: org:glossary
-    in_subject_area: org:clinical-research
+    part_of: glossary:glossary
+    in_subject_area: area:clinical-research
     broader:
-      - org:clinical-study
+      - term:clinical-study
     semantic_type: bfo:0000015          # what a clinical trial is (BFO "process"); the site shows its label
     responsibilities:                   # who holds each role now
       - type: owner
-        role_of: org:research-office
+        role_of: organization:research-office
       - type: steward
-        role_of: org:research-council
+        role_of: council:research-council
 
 lifecycle_processes:
-  - id: org:clinical-trial-creation
+  - id: process:clinical-trial-creation
     type: creation
     label: Creation of "clinical trial"
-    has_output: org:clinical-trial
-    part_of: org:research-data-governance
+    has_output: term:clinical-trial
+    part_of: process:research-data-governance
 
 # Quote every date, or it is read as a date and rejected.
 status_boundaries:
   - type: drafted
-    part_of: org:clinical-trial-creation
+    part_of: process:clinical-trial-creation
     occurred_on: "2026-09-01"
   - type: submitted for review
-    part_of: org:clinical-trial-creation
+    part_of: process:clinical-trial-creation
     occurred_on: "2026-09-08"
   - type: approved
-    part_of: org:clinical-trial-creation
+    part_of: process:clinical-trial-creation
     occurred_on: "2026-09-15"

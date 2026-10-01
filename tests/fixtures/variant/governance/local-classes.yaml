@@ -4,13 +4,13 @@
 # process as approved does).
 
 local_classes:
-  - id: ex:DataTrustee
+  - id: class:DataTrustee
     name: data trustee
     is_a: steward
     description: >-
       A steward who also answers to external sponsors for how the data is
       shared.
-  - id: ex:ApprovedWithConditions
+  - id: class:ApprovedWithConditions
     name: approved with conditions
     is_a: dgo:DGO_00000026           # approved, by CURIE
     description: Approved, subject to conditions recorded in the change request.

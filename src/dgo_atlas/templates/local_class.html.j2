@@ -1,0 +1,34 @@
+{% extends "base.html.j2" %}
+{#- One of the implementer's local classes, at its class IRI: what it is, the
+    class it refines, and what in the data is declared one. -#}
+
+{% block content %}
+<div style="max-width:880px">
+  <div class="eyebrow">{{ t("local_class.eyebrow") }}</div>
+  <h1 class="page-title">{{ local_class.label }}</h1>
+  <div class="meta-row">
+    {%- set parent %}{% if local_class.parent_url %}<a href="{{ rel }}{{ local_class.parent_url }}">{{ local_class.parent_label }}</a>{% else %}<a href="{{ local_class.parent_iri }}" rel="noopener">{{ local_class.parent_label }}</a>{% endif %}{% endset %}
+    <span>{{ t("local_class.subclass_of", parent=parent) }}</span>
+  </div>
+  {%- if local_class.class_description %}
+  <p class="lede">{{ local_class.class_description }}</p>
+  {%- endif %}
+
+  <h2 class="subhead">{{ t("local_class.used_by") }}</h2>
+  {%- if local_class.used_by %}
+  <ul>
+    {%- for r in local_class.used_by %}
+    <li><a href="{{ rel }}{{ r.url }}">{{ r.label }}</a></li>
+    {%- endfor %}
+  </ul>
+  {%- else %}
+  <div class="empty-state">{{ t("local_class.unused") }}</div>
+  {%- endif %}
+
+  {%- if show_identifiers %}
+  <dl class="ref-list">
+    <div class="ref-row"><dt class="ref-row__k">{{ t("local_class.iri") }}</dt><dd><code class="ref-row__v">{{ local_class.iri }}</code></dd></div>
+  </dl>
+  {%- endif %}
+</div>
+{% endblock %}

@@ -177,6 +177,8 @@ class Site(ConfiguredBaseModel):
     data_sets: Optional[list[DataSetPage]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Site', 'DomainPage', 'SubjectAreaPage', 'DataStorePage']} })
     data_elements: Optional[list[DataElementPage]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Site', 'DataSetPage']} })
     classification_levels: Optional[list[ClassificationLevel]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Site']} })
+    local_classes: Optional[list[LocalClassPage]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Site']} })
+    redirects: Optional[list[Redirect]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Site']} })
 
 
 class Page(ConfiguredBaseModel):
@@ -185,10 +187,15 @@ class Page(ConfiguredBaseModel):
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'abstract': True, 'from_schema': 'https://w3id.org/dgo-atlas/viewmodel'})
 
-    about: str = Field(default=..., description="""The CURIE of the governed object this page or link is about.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref', 'SemanticType', 'Change']} })
-    iri: str = Field(default=..., description="""The expanded IRI of the governed object (or the source).""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'SourceRef', 'SemanticType']} })
-    url: Optional[str] = Field(default=None, description="""Site-relative path of the page, e.g. terms/clinical-trial.html.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref']} })
-    label: str = Field(default=..., description="""The display label.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref', 'SourceRef', 'SemanticType', 'Change']} })
+    about: str = Field(default=..., description="""The CURIE of the governed object this page or link is about.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref', 'SemanticType', 'Change', 'Redirect']} })
+    iri: str = Field(default=..., description="""The expanded IRI of the governed object (or the source).""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'SourceRef', 'SemanticType', 'Redirect']} })
+    url: Optional[str] = Field(default=None, description="""Site-relative path of the page, e.g. terms/clinical-trial.html: its IRI less iri_base, plus .html (see namespaces.py).""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref', 'Redirect']} })
+    label: str = Field(default=..., description="""The display label.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page',
+                       'Ref',
+                       'SourceRef',
+                       'SemanticType',
+                       'Change',
+                       'Redirect']} })
 
 
 class Ref(ConfiguredBaseModel):
@@ -201,9 +208,14 @@ class Ref(ConfiguredBaseModel):
                                                     'elements apart.',
                                      'name': 'data_set'}}})
 
-    about: str = Field(default=..., description="""The CURIE of the governed object this page or link is about.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref', 'SemanticType', 'Change']} })
-    url: Optional[str] = Field(default=None, description="""Site-relative path of the page, e.g. terms/clinical-trial.html.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref']} })
-    label: str = Field(default=..., description="""The display label.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref', 'SourceRef', 'SemanticType', 'Change']} })
+    about: str = Field(default=..., description="""The CURIE of the governed object this page or link is about.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref', 'SemanticType', 'Change', 'Redirect']} })
+    url: Optional[str] = Field(default=None, description="""Site-relative path of the page, e.g. terms/clinical-trial.html: its IRI less iri_base, plus .html (see namespaces.py).""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref', 'Redirect']} })
+    label: str = Field(default=..., description="""The display label.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page',
+                       'Ref',
+                       'SourceRef',
+                       'SemanticType',
+                       'Change',
+                       'Redirect']} })
     state: Optional[TermState] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Ref', 'TermPage']} })
     kind: Optional[AgentKind] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Ref', 'AgentPage']} })
     certification: Optional[CertificationState] = Field(default=None, description="""A data set's certification status (see derive.certification_state).""", json_schema_extra = { "linkml_meta": {'domain_of': ['Ref', 'DataSetPage']} })
@@ -220,9 +232,14 @@ class HierarchyNode(Ref):
     below: Optional[list[HierarchyNode]] = Field(default=None, description="""The nodes on the way down to the one the hierarchy belongs to (a term, or a data set's lineage).""", json_schema_extra = { "linkml_meta": {'domain_of': ['HierarchyNode']} })
     repeated: Optional[bool] = Field(default=None, description="""Already shown higher in the same tree, so the terms beneath it are not shown again.""", json_schema_extra = { "linkml_meta": {'domain_of': ['HierarchyNode']} })
     current: Optional[bool] = Field(default=None, description="""The term whose page this hierarchy is on.""", json_schema_extra = { "linkml_meta": {'domain_of': ['HierarchyNode']} })
-    about: str = Field(default=..., description="""The CURIE of the governed object this page or link is about.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref', 'SemanticType', 'Change']} })
-    url: Optional[str] = Field(default=None, description="""Site-relative path of the page, e.g. terms/clinical-trial.html.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref']} })
-    label: str = Field(default=..., description="""The display label.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref', 'SourceRef', 'SemanticType', 'Change']} })
+    about: str = Field(default=..., description="""The CURIE of the governed object this page or link is about.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref', 'SemanticType', 'Change', 'Redirect']} })
+    url: Optional[str] = Field(default=None, description="""Site-relative path of the page, e.g. terms/clinical-trial.html: its IRI less iri_base, plus .html (see namespaces.py).""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref', 'Redirect']} })
+    label: str = Field(default=..., description="""The display label.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page',
+                       'Ref',
+                       'SourceRef',
+                       'SemanticType',
+                       'Change',
+                       'Redirect']} })
     state: Optional[TermState] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Ref', 'TermPage']} })
     kind: Optional[AgentKind] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Ref', 'AgentPage']} })
     certification: Optional[CertificationState] = Field(default=None, description="""A data set's certification status (see derive.certification_state).""", json_schema_extra = { "linkml_meta": {'domain_of': ['Ref', 'DataSetPage']} })
@@ -239,10 +256,15 @@ class GlossaryPage(Page):
 
     domains: Optional[list[Ref]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Site', 'GlossaryPage', 'DataSetPage']} })
     term_count: Optional[int] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['GlossaryPage', 'DomainPage', 'GovernedArea']} })
-    about: str = Field(default=..., description="""The CURIE of the governed object this page or link is about.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref', 'SemanticType', 'Change']} })
-    iri: str = Field(default=..., description="""The expanded IRI of the governed object (or the source).""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'SourceRef', 'SemanticType']} })
-    url: Optional[str] = Field(default=None, description="""Site-relative path of the page, e.g. terms/clinical-trial.html.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref']} })
-    label: str = Field(default=..., description="""The display label.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref', 'SourceRef', 'SemanticType', 'Change']} })
+    about: str = Field(default=..., description="""The CURIE of the governed object this page or link is about.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref', 'SemanticType', 'Change', 'Redirect']} })
+    iri: str = Field(default=..., description="""The expanded IRI of the governed object (or the source).""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'SourceRef', 'SemanticType', 'Redirect']} })
+    url: Optional[str] = Field(default=None, description="""Site-relative path of the page, e.g. terms/clinical-trial.html: its IRI less iri_base, plus .html (see namespaces.py).""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref', 'Redirect']} })
+    label: str = Field(default=..., description="""The display label.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page',
+                       'Ref',
+                       'SourceRef',
+                       'SemanticType',
+                       'Change',
+                       'Redirect']} })
 
 
 class DomainPage(Page):
@@ -264,10 +286,15 @@ class DomainPage(Page):
     term_count: Optional[int] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['GlossaryPage', 'DomainPage', 'GovernedArea']} })
     accent: Optional[str] = Field(default=None, description="""A CSS colour for this page's cards, from the site config.""", json_schema_extra = { "linkml_meta": {'domain_of': ['DomainPage', 'SubjectAreaPage']} })
     data_sets: Optional[list[Ref]] = Field(default=None, description="""Data sets in the domain's subject areas (a data set's domains are inferred).""", json_schema_extra = { "linkml_meta": {'domain_of': ['Site', 'DomainPage', 'SubjectAreaPage', 'DataStorePage']} })
-    about: str = Field(default=..., description="""The CURIE of the governed object this page or link is about.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref', 'SemanticType', 'Change']} })
-    iri: str = Field(default=..., description="""The expanded IRI of the governed object (or the source).""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'SourceRef', 'SemanticType']} })
-    url: Optional[str] = Field(default=None, description="""Site-relative path of the page, e.g. terms/clinical-trial.html.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref']} })
-    label: str = Field(default=..., description="""The display label.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref', 'SourceRef', 'SemanticType', 'Change']} })
+    about: str = Field(default=..., description="""The CURIE of the governed object this page or link is about.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref', 'SemanticType', 'Change', 'Redirect']} })
+    iri: str = Field(default=..., description="""The expanded IRI of the governed object (or the source).""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'SourceRef', 'SemanticType', 'Redirect']} })
+    url: Optional[str] = Field(default=None, description="""Site-relative path of the page, e.g. terms/clinical-trial.html: its IRI less iri_base, plus .html (see namespaces.py).""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref', 'Redirect']} })
+    label: str = Field(default=..., description="""The display label.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page',
+                       'Ref',
+                       'SourceRef',
+                       'SemanticType',
+                       'Change',
+                       'Redirect']} })
 
 
 class SubjectAreaPage(Page):
@@ -287,10 +314,15 @@ class SubjectAreaPage(Page):
     terms: Optional[list[Ref]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Site', 'SubjectAreaPage']} })
     accent: Optional[str] = Field(default=None, description="""A CSS colour for this page's cards, from the site config.""", json_schema_extra = { "linkml_meta": {'domain_of': ['DomainPage', 'SubjectAreaPage']} })
     data_sets: Optional[list[Ref]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Site', 'DomainPage', 'SubjectAreaPage', 'DataStorePage']} })
-    about: str = Field(default=..., description="""The CURIE of the governed object this page or link is about.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref', 'SemanticType', 'Change']} })
-    iri: str = Field(default=..., description="""The expanded IRI of the governed object (or the source).""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'SourceRef', 'SemanticType']} })
-    url: Optional[str] = Field(default=None, description="""Site-relative path of the page, e.g. terms/clinical-trial.html.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref']} })
-    label: str = Field(default=..., description="""The display label.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref', 'SourceRef', 'SemanticType', 'Change']} })
+    about: str = Field(default=..., description="""The CURIE of the governed object this page or link is about.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref', 'SemanticType', 'Change', 'Redirect']} })
+    iri: str = Field(default=..., description="""The expanded IRI of the governed object (or the source).""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'SourceRef', 'SemanticType', 'Redirect']} })
+    url: Optional[str] = Field(default=None, description="""Site-relative path of the page, e.g. terms/clinical-trial.html: its IRI less iri_base, plus .html (see namespaces.py).""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref', 'Redirect']} })
+    label: str = Field(default=..., description="""The display label.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page',
+                       'Ref',
+                       'SourceRef',
+                       'SemanticType',
+                       'Change',
+                       'Redirect']} })
 
 
 class TermPage(Page):
@@ -330,10 +362,15 @@ class TermPage(Page):
     value_of: Optional[Ref] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['TermPage']} })
     values: Optional[list[Ref]] = Field(default=None, description="""Terms whose value_of is this term.""", json_schema_extra = { "linkml_meta": {'domain_of': ['TermPage']} })
     source_file: Optional[str] = Field(default=None, description="""The governance file the object is defined in, relative to the repository.""", json_schema_extra = { "linkml_meta": {'domain_of': ['TermPage', 'DataSetPage', 'DataElementPage']} })
-    about: str = Field(default=..., description="""The CURIE of the governed object this page or link is about.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref', 'SemanticType', 'Change']} })
-    iri: str = Field(default=..., description="""The expanded IRI of the governed object (or the source).""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'SourceRef', 'SemanticType']} })
-    url: Optional[str] = Field(default=None, description="""Site-relative path of the page, e.g. terms/clinical-trial.html.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref']} })
-    label: str = Field(default=..., description="""The display label.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref', 'SourceRef', 'SemanticType', 'Change']} })
+    about: str = Field(default=..., description="""The CURIE of the governed object this page or link is about.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref', 'SemanticType', 'Change', 'Redirect']} })
+    iri: str = Field(default=..., description="""The expanded IRI of the governed object (or the source).""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'SourceRef', 'SemanticType', 'Redirect']} })
+    url: Optional[str] = Field(default=None, description="""Site-relative path of the page, e.g. terms/clinical-trial.html: its IRI less iri_base, plus .html (see namespaces.py).""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref', 'Redirect']} })
+    label: str = Field(default=..., description="""The display label.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page',
+                       'Ref',
+                       'SourceRef',
+                       'SemanticType',
+                       'Change',
+                       'Redirect']} })
 
 
 class SourceRef(ConfiguredBaseModel):
@@ -342,8 +379,13 @@ class SourceRef(ConfiguredBaseModel):
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://w3id.org/dgo-atlas/viewmodel'})
 
-    iri: str = Field(default=..., description="""The expanded IRI of the governed object (or the source).""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'SourceRef', 'SemanticType']} })
-    label: str = Field(default=..., description="""The display label.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref', 'SourceRef', 'SemanticType', 'Change']} })
+    iri: str = Field(default=..., description="""The expanded IRI of the governed object (or the source).""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'SourceRef', 'SemanticType', 'Redirect']} })
+    label: str = Field(default=..., description="""The display label.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page',
+                       'Ref',
+                       'SourceRef',
+                       'SemanticType',
+                       'Change',
+                       'Redirect']} })
 
 
 class SemanticType(ConfiguredBaseModel):
@@ -353,9 +395,14 @@ class SemanticType(ConfiguredBaseModel):
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://w3id.org/dgo-atlas/viewmodel',
          'slot_usage': {'label': {'name': 'label', 'required': False}}})
 
-    about: str = Field(default=..., description="""The CURIE of the governed object this page or link is about.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref', 'SemanticType', 'Change']} })
-    iri: str = Field(default=..., description="""The expanded IRI of the governed object (or the source).""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'SourceRef', 'SemanticType']} })
-    label: Optional[str] = Field(default=None, description="""The display label.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref', 'SourceRef', 'SemanticType', 'Change']} })
+    about: str = Field(default=..., description="""The CURIE of the governed object this page or link is about.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref', 'SemanticType', 'Change', 'Redirect']} })
+    iri: str = Field(default=..., description="""The expanded IRI of the governed object (or the source).""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'SourceRef', 'SemanticType', 'Redirect']} })
+    label: Optional[str] = Field(default=None, description="""The display label.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page',
+                       'Ref',
+                       'SourceRef',
+                       'SemanticType',
+                       'Change',
+                       'Redirect']} })
     ontology: Optional[str] = Field(default=None, description="""The short name of the ontology that defines a class, e.g. BFO.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SemanticType']} })
 
 
@@ -378,8 +425,13 @@ class Change(ConfiguredBaseModel):
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://w3id.org/dgo-atlas/viewmodel'})
 
-    about: str = Field(default=..., description="""The CURIE of the governed object this page or link is about.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref', 'SemanticType', 'Change']} })
-    label: str = Field(default=..., description="""The display label.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref', 'SourceRef', 'SemanticType', 'Change']} })
+    about: str = Field(default=..., description="""The CURIE of the governed object this page or link is about.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref', 'SemanticType', 'Change', 'Redirect']} })
+    label: str = Field(default=..., description="""The display label.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page',
+                       'Ref',
+                       'SourceRef',
+                       'SemanticType',
+                       'Change',
+                       'Redirect']} })
     process_kind: ProcessKind = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Change', 'HistoryEntry']} })
     process_label: str = Field(default=..., description="""The process kind's name, e.g. modification: DGO's, or a local class's own.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Change', 'HistoryEntry']} })
     outcome: Outcome = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Change']} })
@@ -421,10 +473,15 @@ class CouncilPage(Page):
     governed_terms: Optional[list[Ref]] = Field(default=None, description="""Terms whose lifecycle processes fall under this council.""", json_schema_extra = { "linkml_meta": {'domain_of': ['CouncilPage']} })
     governed_areas: Optional[list[GovernedArea]] = Field(default=None, description="""Subject areas of the council's governed terms and the terms it holds roles on, by domain.""", json_schema_extra = { "linkml_meta": {'domain_of': ['CouncilPage']} })
     certified_sets: Optional[list[Ref]] = Field(default=None, description="""Data sets whose certifications fall under this council.""", json_schema_extra = { "linkml_meta": {'domain_of': ['CouncilPage']} })
-    about: str = Field(default=..., description="""The CURIE of the governed object this page or link is about.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref', 'SemanticType', 'Change']} })
-    iri: str = Field(default=..., description="""The expanded IRI of the governed object (or the source).""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'SourceRef', 'SemanticType']} })
-    url: Optional[str] = Field(default=None, description="""Site-relative path of the page, e.g. terms/clinical-trial.html.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref']} })
-    label: str = Field(default=..., description="""The display label.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref', 'SourceRef', 'SemanticType', 'Change']} })
+    about: str = Field(default=..., description="""The CURIE of the governed object this page or link is about.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref', 'SemanticType', 'Change', 'Redirect']} })
+    iri: str = Field(default=..., description="""The expanded IRI of the governed object (or the source).""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'SourceRef', 'SemanticType', 'Redirect']} })
+    url: Optional[str] = Field(default=None, description="""Site-relative path of the page, e.g. terms/clinical-trial.html: its IRI less iri_base, plus .html (see namespaces.py).""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref', 'Redirect']} })
+    label: str = Field(default=..., description="""The display label.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page',
+                       'Ref',
+                       'SourceRef',
+                       'SemanticType',
+                       'Change',
+                       'Redirect']} })
 
 
 class GovernedArea(ConfiguredBaseModel):
@@ -497,10 +554,15 @@ class AgentPage(Page):
                        'DataStorePage',
                        'DataSetPage',
                        'DataElementPage']} })
-    about: str = Field(default=..., description="""The CURIE of the governed object this page or link is about.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref', 'SemanticType', 'Change']} })
-    iri: str = Field(default=..., description="""The expanded IRI of the governed object (or the source).""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'SourceRef', 'SemanticType']} })
-    url: Optional[str] = Field(default=None, description="""Site-relative path of the page, e.g. terms/clinical-trial.html.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref']} })
-    label: str = Field(default=..., description="""The display label.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref', 'SourceRef', 'SemanticType', 'Change']} })
+    about: str = Field(default=..., description="""The CURIE of the governed object this page or link is about.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref', 'SemanticType', 'Change', 'Redirect']} })
+    iri: str = Field(default=..., description="""The expanded IRI of the governed object (or the source).""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'SourceRef', 'SemanticType', 'Redirect']} })
+    url: Optional[str] = Field(default=None, description="""Site-relative path of the page, e.g. terms/clinical-trial.html: its IRI less iri_base, plus .html (see namespaces.py).""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref', 'Redirect']} })
+    label: str = Field(default=..., description="""The display label.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page',
+                       'Ref',
+                       'SourceRef',
+                       'SemanticType',
+                       'Change',
+                       'Redirect']} })
 
 
 class ProcessPage(Page):
@@ -516,10 +578,15 @@ class ProcessPage(Page):
     parent: Optional[Ref] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['ProcessPage']} })
     children: Optional[list[Ref]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['ProcessPage']} })
     councils: Optional[list[Ref]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Site', 'ProcessPage']} })
-    about: str = Field(default=..., description="""The CURIE of the governed object this page or link is about.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref', 'SemanticType', 'Change']} })
-    iri: str = Field(default=..., description="""The expanded IRI of the governed object (or the source).""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'SourceRef', 'SemanticType']} })
-    url: Optional[str] = Field(default=None, description="""Site-relative path of the page, e.g. terms/clinical-trial.html.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref']} })
-    label: str = Field(default=..., description="""The display label.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref', 'SourceRef', 'SemanticType', 'Change']} })
+    about: str = Field(default=..., description="""The CURIE of the governed object this page or link is about.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref', 'SemanticType', 'Change', 'Redirect']} })
+    iri: str = Field(default=..., description="""The expanded IRI of the governed object (or the source).""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'SourceRef', 'SemanticType', 'Redirect']} })
+    url: Optional[str] = Field(default=None, description="""Site-relative path of the page, e.g. terms/clinical-trial.html: its IRI less iri_base, plus .html (see namespaces.py).""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref', 'Redirect']} })
+    label: str = Field(default=..., description="""The display label.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page',
+                       'Ref',
+                       'SourceRef',
+                       'SemanticType',
+                       'Change',
+                       'Redirect']} })
 
 
 class DataStorePage(Page):
@@ -540,10 +607,15 @@ class DataStorePage(Page):
                        'DataStorePage',
                        'DataSetPage',
                        'DataElementPage']} })
-    about: str = Field(default=..., description="""The CURIE of the governed object this page or link is about.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref', 'SemanticType', 'Change']} })
-    iri: str = Field(default=..., description="""The expanded IRI of the governed object (or the source).""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'SourceRef', 'SemanticType']} })
-    url: Optional[str] = Field(default=None, description="""Site-relative path of the page, e.g. terms/clinical-trial.html.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref']} })
-    label: str = Field(default=..., description="""The display label.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref', 'SourceRef', 'SemanticType', 'Change']} })
+    about: str = Field(default=..., description="""The CURIE of the governed object this page or link is about.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref', 'SemanticType', 'Change', 'Redirect']} })
+    iri: str = Field(default=..., description="""The expanded IRI of the governed object (or the source).""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'SourceRef', 'SemanticType', 'Redirect']} })
+    url: Optional[str] = Field(default=None, description="""Site-relative path of the page, e.g. terms/clinical-trial.html: its IRI less iri_base, plus .html (see namespaces.py).""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref', 'Redirect']} })
+    label: str = Field(default=..., description="""The display label.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page',
+                       'Ref',
+                       'SourceRef',
+                       'SemanticType',
+                       'Change',
+                       'Redirect']} })
 
 
 class DataSetPage(Page):
@@ -591,10 +663,15 @@ class DataSetPage(Page):
     certifying_councils: Optional[list[Ref]] = Field(default=None, description="""Councils governing the data set's certifications, through their governance processes.""", json_schema_extra = { "linkml_meta": {'domain_of': ['DataSetPage']} })
     history: Optional[list[HistoryEntry]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['TermPage', 'DataSetPage']} })
     source_file: Optional[str] = Field(default=None, description="""The governance file the object is defined in, relative to the repository.""", json_schema_extra = { "linkml_meta": {'domain_of': ['TermPage', 'DataSetPage', 'DataElementPage']} })
-    about: str = Field(default=..., description="""The CURIE of the governed object this page or link is about.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref', 'SemanticType', 'Change']} })
-    iri: str = Field(default=..., description="""The expanded IRI of the governed object (or the source).""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'SourceRef', 'SemanticType']} })
-    url: Optional[str] = Field(default=None, description="""Site-relative path of the page, e.g. terms/clinical-trial.html.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref']} })
-    label: str = Field(default=..., description="""The display label.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref', 'SourceRef', 'SemanticType', 'Change']} })
+    about: str = Field(default=..., description="""The CURIE of the governed object this page or link is about.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref', 'SemanticType', 'Change', 'Redirect']} })
+    iri: str = Field(default=..., description="""The expanded IRI of the governed object (or the source).""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'SourceRef', 'SemanticType', 'Redirect']} })
+    url: Optional[str] = Field(default=None, description="""Site-relative path of the page, e.g. terms/clinical-trial.html: its IRI less iri_base, plus .html (see namespaces.py).""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref', 'Redirect']} })
+    label: str = Field(default=..., description="""The display label.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page',
+                       'Ref',
+                       'SourceRef',
+                       'SemanticType',
+                       'Change',
+                       'Redirect']} })
 
 
 class DataElementPage(Page):
@@ -619,10 +696,15 @@ class DataElementPage(Page):
                        'DataSetPage',
                        'DataElementPage']} })
     source_file: Optional[str] = Field(default=None, description="""The governance file the object is defined in, relative to the repository.""", json_schema_extra = { "linkml_meta": {'domain_of': ['TermPage', 'DataSetPage', 'DataElementPage']} })
-    about: str = Field(default=..., description="""The CURIE of the governed object this page or link is about.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref', 'SemanticType', 'Change']} })
-    iri: str = Field(default=..., description="""The expanded IRI of the governed object (or the source).""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'SourceRef', 'SemanticType']} })
-    url: Optional[str] = Field(default=None, description="""Site-relative path of the page, e.g. terms/clinical-trial.html.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref']} })
-    label: str = Field(default=..., description="""The display label.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref', 'SourceRef', 'SemanticType', 'Change']} })
+    about: str = Field(default=..., description="""The CURIE of the governed object this page or link is about.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref', 'SemanticType', 'Change', 'Redirect']} })
+    iri: str = Field(default=..., description="""The expanded IRI of the governed object (or the source).""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'SourceRef', 'SemanticType', 'Redirect']} })
+    url: Optional[str] = Field(default=None, description="""Site-relative path of the page, e.g. terms/clinical-trial.html: its IRI less iri_base, plus .html (see namespaces.py).""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref', 'Redirect']} })
+    label: str = Field(default=..., description="""The display label.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page',
+                       'Ref',
+                       'SourceRef',
+                       'SemanticType',
+                       'Change',
+                       'Redirect']} })
 
 
 class ClassificationLevel(Page):
@@ -635,10 +717,69 @@ class ClassificationLevel(Page):
     axis: ClassificationAxis = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ClassificationLevel']} })
     definition: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['TermPage', 'ClassificationLevel']} })
     severity: Optional[int] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['ClassificationLevel']} })
-    about: str = Field(default=..., description="""The CURIE of the governed object this page or link is about.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref', 'SemanticType', 'Change']} })
-    iri: str = Field(default=..., description="""The expanded IRI of the governed object (or the source).""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'SourceRef', 'SemanticType']} })
-    url: Optional[str] = Field(default=None, description="""Site-relative path of the page, e.g. terms/clinical-trial.html.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref']} })
-    label: str = Field(default=..., description="""The display label.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref', 'SourceRef', 'SemanticType', 'Change']} })
+    about: str = Field(default=..., description="""The CURIE of the governed object this page or link is about.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref', 'SemanticType', 'Change', 'Redirect']} })
+    iri: str = Field(default=..., description="""The expanded IRI of the governed object (or the source).""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'SourceRef', 'SemanticType', 'Redirect']} })
+    url: Optional[str] = Field(default=None, description="""Site-relative path of the page, e.g. terms/clinical-trial.html: its IRI less iri_base, plus .html (see namespaces.py).""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref', 'Redirect']} })
+    label: str = Field(default=..., description="""The display label.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page',
+                       'Ref',
+                       'SourceRef',
+                       'SemanticType',
+                       'Change',
+                       'Redirect']} })
+
+
+class LocalClassPage(Page):
+    """
+    One of the implementer's local classes, at its class IRI.
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://w3id.org/dgo-atlas/viewmodel'})
+
+    class_description: Optional[str] = Field(default=None, description="""What makes something a member of the local class.""", json_schema_extra = { "linkml_meta": {'domain_of': ['LocalClassPage']} })
+    parent_label: str = Field(default=..., description="""The name of the class it is a subclass of (DGO's, or another local class's).""", json_schema_extra = { "linkml_meta": {'domain_of': ['LocalClassPage']} })
+    parent_iri: str = Field(default=..., description="""The IRI of the class it is a subclass of.""", json_schema_extra = { "linkml_meta": {'domain_of': ['LocalClassPage']} })
+    parent_url: Optional[str] = Field(default=None, description="""The parent's page, when the parent is another local class.""", json_schema_extra = { "linkml_meta": {'domain_of': ['LocalClassPage']} })
+    used_by: Optional[list[Ref]] = Field(default=None, description="""The terms, councils and agents whose data uses the local class as a `type`.""", json_schema_extra = { "linkml_meta": {'domain_of': ['LocalClassPage']} })
+    about: str = Field(default=..., description="""The CURIE of the governed object this page or link is about.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref', 'SemanticType', 'Change', 'Redirect']} })
+    iri: str = Field(default=..., description="""The expanded IRI of the governed object (or the source).""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'SourceRef', 'SemanticType', 'Redirect']} })
+    url: Optional[str] = Field(default=None, description="""Site-relative path of the page, e.g. terms/clinical-trial.html: its IRI less iri_base, plus .html (see namespaces.py).""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref', 'Redirect']} })
+    label: str = Field(default=..., description="""The display label.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page',
+                       'Ref',
+                       'SourceRef',
+                       'SemanticType',
+                       'Change',
+                       'Redirect']} })
+
+
+class Redirect(ConfiguredBaseModel):
+    """
+    A page at the IRI of something shown on another page (a data governance process on the governance page, a lifecycle process in its term's or data set's history, a classification level on the classification page), so every IRI in the project's namespace resolves. IRIs that differ only in their fragment share one page, which sends each fragment on with `fragments`.
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://w3id.org/dgo-atlas/viewmodel',
+         'slot_usage': {'iri': {'description': 'The IRI the page is at (without any '
+                                               'fragment).',
+                                'name': 'iri'}}})
+
+    about: str = Field(default=..., description="""The CURIE of the governed object this page or link is about.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref', 'SemanticType', 'Change', 'Redirect']} })
+    iri: str = Field(default=..., description="""The IRI the page is at (without any fragment).""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'SourceRef', 'SemanticType', 'Redirect']} })
+    url: Optional[str] = Field(default=None, description="""Site-relative path of the page, e.g. terms/clinical-trial.html: its IRI less iri_base, plus .html (see namespaces.py).""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref', 'Redirect']} })
+    label: str = Field(default=..., description="""The display label.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page',
+                       'Ref',
+                       'SourceRef',
+                       'SemanticType',
+                       'Change',
+                       'Redirect']} })
+    target: str = Field(default=..., description="""The site-relative page (and anchor) a redirect leads to.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Redirect', 'RedirectFragment']} })
+    fragments: Optional[list[RedirectFragment]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Redirect']} })
+
+
+class RedirectFragment(ConfiguredBaseModel):
+    """
+    Where a redirect page sends one fragment of its IRI.
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://w3id.org/dgo-atlas/viewmodel'})
+
+    fragment: str = Field(default=..., description="""An IRI fragment, without the '#'.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RedirectFragment']} })
+    target: str = Field(default=..., description="""The site-relative page (and anchor) a redirect leads to.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Redirect', 'RedirectFragment']} })
 
 
 # Model rebuild
@@ -667,3 +808,6 @@ DataStorePage.model_rebuild()
 DataSetPage.model_rebuild()
 DataElementPage.model_rebuild()
 ClassificationLevel.model_rebuild()
+LocalClassPage.model_rebuild()
+Redirect.model_rebuild()
+RedirectFragment.model_rebuild()

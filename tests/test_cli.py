@@ -83,9 +83,12 @@ def test_convert_passes_through_to_linkml_convert(tmp_path):
     ttl = tmp_path / "glossary.ttl"
     assert dgo_atlas("convert", "--project", variant, "-t", "ttl", "-o", ttl).exit_code == 0
     graph = rdflib.Graph().parse(ttl)
-    term = rdflib.URIRef("https://w3id.org/dgo/data/indirect-cost")
+    term = rdflib.URIRef("https://w3id.org/northfield/terms/indirect-cost")
     assert (term, RDF.type, rdflib.URIRef(dgo.kind("glossary term").iri)) in graph
     assert (term, RDFS.label, rdflib.Literal("indirect cost")) in graph  # prefixes from DGO expand
+    # The organization written with the office: alias is the same individual, shown with the canonical prefix.
+    assert (rdflib.URIRef("https://w3id.org/northfield/organizations/cto"), None, None) in graph
+    assert "@prefix organization:" in ttl.read_text() and "@prefix office:" not in ttl.read_text()
 
     result = dgo_atlas("convert", "--project", variant, "-t", "json")
     assert result.exit_code == 0

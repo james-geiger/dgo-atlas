@@ -49,7 +49,7 @@ def test_local_source_override(tmp_path):
     project = _project(tmp_path, dgo_version=DGO_VERSION, dgo_source="dgo.yaml")
     try:
         assert project.dgo.location == str(tmp_path / "dgo")
-        assert dgo.active() == project.dgo
+        assert (dgo.active().version, dgo.active().location) == (project.dgo.version, project.dgo.location)
         assert "glossary term" in dgo.view().all_classes()
     finally:
         dgo.use(dgo.source_for(DGO_VERSION))
@@ -92,7 +92,7 @@ def test_no_dgo_namespace_minted_by_the_middleware():
 
 
 def _project(root, **settings):
-    body = {"title": "T", "prefixes": {"ex": "https://example.org/"}, **settings}
+    body = {"title": "T", "iri_base": "https://example.org/", **settings}
     path = root / config.CONFIG_NAME
     path.write_text(yaml.safe_dump(body))
     return config.load(path)

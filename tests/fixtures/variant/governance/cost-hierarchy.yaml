@@ -5,62 +5,62 @@
 # its full hierarchy reaches "personnel cost" by two paths and expands it once.
 
 glossary_terms:
-  - id: ex:project-cost
+  - id: term:project-cost
     label: sponsored project cost
     pref_label: Sponsored Project Cost
     definition: >-
       Any cost charged to, or shared on, a sponsored project.
-    part_of: ex:business-glossary
-    in_subject_area: ex:sponsored-programs
+    part_of: glossary:business-glossary
+    in_subject_area: area:sponsored-programs
 
-  - id: ex:personnel-cost
+  - id: term:personnel-cost
     label: personnel cost
     pref_label: Personnel Cost
     definition: >-
       Salary, wages and fringe benefits of people working on a sponsored
       project, charged directly or recovered through the indirect cost rate.
-    part_of: ex:business-glossary
-    in_subject_area: ex:sponsored-programs
+    part_of: glossary:business-glossary
+    in_subject_area: area:sponsored-programs
     broader:
-      - ex:direct-cost
-      - ex:indirect-cost
+      - term:direct-cost
+      - term:indirect-cost
 
-  - id: ex:faculty-salary
+  - id: term:faculty-salary
     label: faculty salary
     pref_label: Faculty Salary
     definition: >-
       The institutional base salary of faculty effort charged to a sponsored
       project.
-    part_of: ex:business-glossary
-    in_subject_area: ex:sponsored-programs
+    part_of: glossary:business-glossary
+    in_subject_area: area:sponsored-programs
     broader:
-      - ex:personnel-cost
+      - term:personnel-cost
 
 lifecycle_processes:
-  - id: ex:project-cost-creation
+  - id: process:project-cost-creation
     type: creation
     label: Creation of the term "sponsored project cost"
-    has_output: ex:project-cost
-    part_of: ex:research-dg
-  - id: ex:personnel-cost-creation
+    has_output: term:project-cost
+    part_of: process:research-dg
+  - id: process:personnel-cost-creation
     type: creation
     label: Creation of the term "personnel cost"
-    has_output: ex:personnel-cost
-    part_of: ex:research-dg
+    has_output: term:personnel-cost
+    part_of: process:research-dg
 
-  - id: ex:faculty-salary-creation
+  - id: process:faculty-salary-creation
     type: creation
     label: Creation of the term "faculty salary"
-    has_output: ex:faculty-salary
-    part_of: ex:research-dg
+    has_output: term:faculty-salary
+    part_of: process:research-dg
 
 status_boundaries:
   - type: drafted
-    part_of: ex:project-cost-creation
+    part_of: process:project-cost-creation
     occurred_on: "2026-09-08"
   - type: drafted
-    part_of: ex:personnel-cost-creation
+    part_of: process:personnel-cost-creation
     occurred_on: "2026-09-21"
   - type: drafted
-    part_of: ex:faculty-salary-creation
+    part_of: process:faculty-salary-creation
     occurred_on: "2026-09-22"

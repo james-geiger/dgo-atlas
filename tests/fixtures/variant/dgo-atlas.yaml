@@ -12,9 +12,21 @@ organization: Northfield University
 description: The shared, authoritative definitions of research data.
 contact_email: governance@example.org
 
-# Every id in governance/ is a CURIE with a prefix declared here.
+# Every id is minted under this base, in its kind's namespace:
+# term:clinical-trial is https://w3id.org/northfield/terms/clinical-trial.
+iri_base: https://w3id.org/northfield/   # the fixture's namespace only; never a scaffold default
+
+# Classification levels minted in the data namespace, as `data:<scheme>#<level>`:
+# kinds may share a namespace when they also share its prefix.
+namespaces:
+  classification:
+    iri_segment: data
+    authoring_prefix: data
+
+# Extra prefixes: an alias for the organizations namespace (governance.yaml
+# declares one organization with it) and one for semantic types.
 prefixes:
-  ex: https://w3id.org/dgo/data/    # the fixture's namespace only; never a scaffold default
+  office: https://w3id.org/northfield/organizations/
   bfo: http://purl.obolibrary.org/obo/BFO_   # for semantic types: bfo:0000015 is BFO's "process"
 
 paths:
@@ -50,7 +62,7 @@ brand:
 
 # Per-page settings, keyed by the id of what the page is about.
 pages:
-  ex:research:
+  domain:research:
     accent: "#2E7D6B"
-  ex:sponsored-programs:
+  area:sponsored-programs:
     accent: "#34568B"

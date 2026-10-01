@@ -24,13 +24,13 @@ def convert(project: Project, args: list[str]) -> int:
     """Run linkml-convert on the project's merged data; return its exit code."""
     from linkml.converter.cli import cli as linkml_convert
 
-    report = validate.validate(project.data_dir, project.root, project.prefixes)
+    report = validate.validate(project.data_dir, project.root, project.namespaces)
     if not report.ok:
         return fail("The governance data is not valid; run `dgo-atlas validate`:", report.errors)
     with tempfile.TemporaryDirectory(prefix="dgo-atlas-") as directory:
         merged = Path(directory) / "governance.yaml"
         merged.write_text(yaml.safe_dump(report.dataset.merged, sort_keys=False), encoding="utf-8")
-        prefixes = [arg for name, uri in project.prefixes.items() for arg in ("-P", f"{name}={uri}")]
+        prefixes = [arg for name, uri in project.namespaces.canonical_prefixes.items() for arg in ("-P", f"{name}={uri}")]
         try:
             linkml_convert.main([str(merged), "-s", str(dgo.template_path()), "-C", ROOT_CLASS, *prefixes, *args],
                                 prog_name="linkml-convert")

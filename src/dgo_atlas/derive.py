@@ -7,6 +7,10 @@ and kinds are isinstance checks. A local class counts as its DGO ancestor
 page's facts, derived and denormalised, ready to render. Governance data never
 stores these facts; the view model always does.
 
+Every page lives at its IRI (namespaces.py): the page path is the IRI less
+`iri_base`, plus .html. Something shown on another page (a data governance
+process, a term lifecycle process) gets a redirect at its IRI instead.
+
 Only published terms reach the site (see `unpublished_reason`): a term exists
 once a creation of it is recorded, unless that creation was rejected.
 Links from a published term to an unpublished one are left off, and each
@@ -26,6 +30,7 @@ from collections.abc import Callable
 
 from . import dgo
 from .models import viewmodel as vm
+from .namespaces import Namespaces
 from .semantic import ClassInfo
 
 
@@ -42,20 +47,12 @@ m = _ActiveModel()
 BOUNDARY_ORDER = {"Drafted": 0, "SubmittedForReview": 1, "Approved": 2, "Rejected": 2}
 PROCESS_ORDER = {"Creation": 0, "Modification": 1, "Deprecation": 2}
 
-# Where each kind of page lives.
-DIRS = {
-    "glossary": "glossaries",
-    "domain": "domains",
-    "subject_area": "areas",
-    "term": "terms",
-    "council": "councils",
-    "person": "people",
-    "organization": "organizations",
-    "data_store": "stores",
-    "data_set": "datasets",
-    "data_element": "elements",
-}
+# Where the data governance processes are shown; each has an anchor there.
+PROCESS_PAGE = "governance.html"
+# Where the classification levels are shown; each has an anchor there.
 CLASSIFICATION_PAGE = "classification.html"
+# Kinds shown on another page rather than their own; their IRIs redirect.
+SHOWN_ELSEWHERE = ("process", "classification")
 
 # The template list of each classification axis (DGO 0.2.0).
 CLASSIFICATION_LISTS = (
@@ -63,33 +60,14 @@ CLASSIFICATION_LISTS = (
     ("security_level", "security_levels"),
     ("regulatory_category", "regulations"),
 )
-PROCESS_PAGE = "governance.html"
-
-
-class Namespaces:
-    """Expands CURIEs with the implementer's prefixes (and dgo:)."""
-
-    def __init__(self, prefixes: dict[str, str]):
-        self.prefixes = {"dgo": dgo.DGO_NAMESPACE, **prefixes}
-
-    def expand(self, value: str) -> str:
-        if value.startswith(("http://", "https://")):
-            return value
-        prefix, _, local = value.partition(":")
-        return self.prefixes.get(prefix, "") + local
-
-
-def _slug(value: str) -> str:
-    local = re.split(r"[:/#]", value.rstrip("/"))[-1]
-    return re.sub(r"[^a-z0-9]+", "-", local.lower()).strip("-") or "item"
 
 
 class Deriver:
-    def __init__(self, rec: m.GovernanceRecord, prefixes: dict[str, str], *,
+    def __init__(self, rec: m.GovernanceRecord, ns: Namespaces, *,
                  sources: dict[str, str] | None = None, accents: dict[str, str] | None = None,
                  describe: Callable[[str], ClassInfo] | None = None):
         self.rec = rec
-        self.ns = Namespaces(prefixes)
+        self.ns = ns
         self.sources = sources or {}
         self.accents = accents or {}
         self.describe = describe or (lambda iri: ClassInfo(iri=iri))
@@ -140,41 +118,54 @@ class Deriver:
     # ------------------------------------------------------------ urls and refs
 
     def _assign_urls(self) -> None:
-        groups = [
-            ("glossary", self.rec.business_glossaries),
-            ("domain", self.rec.domains),
-            ("subject_area", self.rec.subject_areas),
-            ("term", self.rec.glossary_terms),
-            ("council", self.rec.councils),
-            ("person", self.rec.people),
-            ("organization", self.rec.organizations),
-            ("data_store", self.stores),
-            ("data_set", self.data_sets),
-            ("data_element", self.elements),
-        ]
-        for kind, items in groups:
-            taken: set[str] = set()
-            for obj in items or []:
-                slug = _slug(obj.id)
-                if slug in taken:  # same local name under another prefix
-                    slug = _slug(obj.id.replace(":", "-"))
-                taken.add(slug)
-                self.urls[obj.id] = f"{DIRS[kind]}/{slug}.html"
-        taken = set()
+        """Each page at its IRI; each process and classification level at its anchor
+        on the page that shows it."""
+        for list_name in type(self.rec).model_fields:
+            kind = self.ns.for_list(list_name)
+            if kind is None or kind.kind in SHOWN_ELSEWHERE:
+                continue
+            for obj in getattr(self.rec, list_name) or []:
+                self.urls[obj.id] = self.ns.page_path(self.ns.expand(obj.id))
         for proc in self.rec.processes or []:
-            slug = _slug(proc.id)
-            while slug in taken:
-                slug += "-x"
-            taken.add(slug)
-            self.urls[proc.id] = f"{PROCESS_PAGE}#{slug}"
-        taken = set()
+            self.urls[proc.id] = f"{PROCESS_PAGE}#{self.anchor(proc.id)}"
         for _, list_name in CLASSIFICATION_LISTS:
             for level in self.records(list_name):
-                slug = _slug(level.id)
-                while slug in taken:
-                    slug += "-x"
-                taken.add(slug)
-                self.urls[level.id] = f"{CLASSIFICATION_PAGE}#{slug}"
+                self.urls[level.id] = f"{CLASSIFICATION_PAGE}#{self.anchor(level.id)}"
+
+    def anchor(self, oid: str) -> str:
+        """An object's anchor on the page that shows it: its local name, made safe for an id."""
+        return re.sub(r"[^A-Za-z0-9_-]+", "-", self.ns.local(self.ns.expand(oid))).strip("-") or "item"
+
+    def redirects(self) -> list[vm.Redirect]:
+        """A page at the IRI of each thing shown on another page, leading to it.
+
+        IRIs that differ only in their fragment (`data:levels#low`, `data:levels#high`)
+        share one page, which sends each fragment to its own target."""
+        shown: list[tuple[object, str]] = []  # (object, where it is shown)
+        shown += [(proc, self.urls[proc.id]) for proc in self.rec.processes or []]
+        shown += [(lv, self.urls[lv.id]) for _, name in CLASSIFICATION_LISTS for lv in self.records(name)]
+        for proc in self.records("lifecycle_processes"):
+            owner = self.urls.get(proc.has_output)
+            if owner and (proc.has_output in self.published or proc.has_output in self.certifications):
+                shown.append((proc, f"{owner}#history"))
+        by_page: dict[str, list[tuple[object, str, str]]] = defaultdict(list)
+        for obj, target in shown:
+            iri = self.ns.expand(obj.id)
+            by_page[self.ns.page_path(iri)].append((obj, iri, target))
+        pages = []
+        for url, entries in by_page.items():
+            whole = [(obj, target) for obj, iri, target in entries if "#" not in iri]
+            fragments = [vm.RedirectFragment(fragment=iri.partition("#")[2], target=target)
+                         for _, iri, target in entries if "#" in iri]
+            if whole:  # the object at the document IRI itself
+                obj, target = whole[0]
+                about, label = obj.id, display_label(obj)
+            else:  # only fragments: with none given, go to the page that shows them
+                document = entries[0][1].partition("#")[0]
+                about, label, target = document, self.ns.canonical(document), fragments[0].target.partition("#")[0]
+            pages.append(vm.Redirect(about=about, iri=entries[0][1].partition("#")[0], url=url, label=label,
+                                     target=target, fragments=fragments))
+        return sorted(pages, key=lambda r: r.url)
 
     def ref(self, oid: str) -> vm.Ref:
         obj = self.idx[oid]
@@ -215,7 +206,7 @@ class Deriver:
         return sorted(out, key=lambda r: r.label.casefold()) if sort else out
 
     def page(self, obj) -> dict:
-        return {"about": obj.id, "iri": self.ns.expand(obj.id), "url": self.urls[obj.id],
+        return {"about": obj.id, "iri": self.ns.expand(obj.id), "url": self.urls.get(obj.id),
                 "label": display_label(obj)}
 
     # ------------------------------------------------------------ §5.1 rules
@@ -369,6 +360,48 @@ class Deriver:
         return sorted(out, key=lambda a: (a.domain.label.casefold(), a.subject_area.label.casefold()))
 
     # ------------------------------------------------------------ pages
+
+    def local_class_pages(self) -> list[vm.LocalClassPage]:
+        """A page for each local class, listing what in the data is declared one."""
+        used: dict[str, dict[str, vm.Ref]] = defaultdict(dict)  # class name -> about -> ref
+
+        def use(obj, about: str | None) -> None:
+            if about and dgo.kind_of(obj).local:
+                used[dgo.kind_of(obj).name].setdefault(about, self.ref(about))
+
+        for subject in [*self.terms, *self.stores, *self.data_sets, *self.elements]:
+            for role in subject.responsibilities or []:
+                use(role, subject.id)
+            for proc in self.processes_by_output.get(subject.id, []):
+                use(proc, subject.id)
+                for b in self.boundaries_by_process.get(proc.id, []):
+                    use(b, subject.id)
+        for _, list_name in CLASSIFICATION_LISTS:
+            for level in self.records(list_name):
+                use(level, level.id)
+        for role in self.rec.governance_roles or []:
+            use(role, role.role_of)
+        for role in self.rec.council_roles or []:
+            for c in self.rec.councils or []:
+                if role.realized_in and c.participates_in == role.realized_in:
+                    use(role, c.id)
+
+        classes = dgo.active().local_classes
+        by_name = {c.name: c for c in classes}
+        pages = []
+        for c in classes:
+            parent = by_name.get(c.is_a)
+            if parent:
+                parent_label, parent_iri, parent_url = parent.name, self.ns.expand(parent.id), self.urls[parent.id]
+            else:
+                k = dgo.kind(c.is_a)
+                parent_label, parent_iri, parent_url = k.name, k.iri, None
+            pages.append(vm.LocalClassPage(
+                about=c.id, iri=self.ns.expand(c.id), url=self.urls[c.id], label=c.name,
+                class_description=c.description, parent_label=parent_label, parent_iri=parent_iri,
+                parent_url=parent_url,
+                used_by=sorted(used[c.name].values(), key=lambda r: r.label.casefold())))
+        return sorted(pages, key=lambda p: p.label.casefold())
 
     def term_page(self, term) -> vm.TermPage:
         sa = self.idx[term.in_subject_area]
@@ -625,6 +658,8 @@ class Deriver:
             data_sets=set_pages,
             data_elements=element_pages,
             classification_levels=self.classification_levels(),
+            local_classes=self.local_class_pages(),
+            redirects=self.redirects(),
         )
 
 
@@ -729,7 +764,7 @@ def certification_state(d: Deriver, set_id: str) -> tuple[str, object]:
     return ("foundational" if not certs and foundational(d.idx[set_id]) else "not_certified"), None
 
 
-def derive(rec: m.GovernanceRecord, prefixes: dict[str, str], *,
+def derive(rec: m.GovernanceRecord, ns: Namespaces, *,
            sources: dict[str, str] | None = None, accents: dict[str, str] | None = None,
            describe: Callable[[str], ClassInfo] | None = None) -> vm.Site:
-    return Deriver(rec, prefixes, sources=sources, accents=accents, describe=describe).site()
+    return Deriver(rec, ns, sources=sources, accents=accents, describe=describe).site()

@@ -8,21 +8,21 @@
 # values (`value_of`), and its page lists them with their definitions.
 
 organizations:
-  - id: ex:spo
+  - id: organization:spo
     label: Sponsored Programs Office
     email: sponsoredprograms@example.org
 
 subject_areas:
-  - id: ex:sponsored-programs
+  - id: area:sponsored-programs
     label: Sponsored Programs
-    part_of: ex:research
+    part_of: domain:research
 
 definition_sources:
   - id: https://grants.nih.gov/grants/policy/nihgps/HTML5/section_7/7.3_direct_costs_and_indirect_costs.htm
     label: "NIH Grants Policy Statement 7.3: Direct Costs and Indirect Costs"
 
 glossary_terms:
-  - id: ex:direct-cost
+  - id: term:direct-cost
     label: direct cost
     pref_label: Direct Cost
     definition: >-
@@ -31,17 +31,17 @@ glossary_terms:
       or that can be directly assigned to such activities relatively easily
       with a high degree of accuracy.
     definition_source: https://grants.nih.gov/grants/policy/nihgps/HTML5/section_7/7.3_direct_costs_and_indirect_costs.htm
-    part_of: ex:business-glossary
-    in_subject_area: ex:sponsored-programs
+    part_of: glossary:business-glossary
+    in_subject_area: area:sponsored-programs
     broader:
-      - ex:project-cost
+      - term:project-cost
     responsibilities:
       - type: owner
-        role_of: ex:spo
+        role_of: https://w3id.org/northfield/organizations/spo   # a full IRI works too
       - type: steward
-        role_of: ex:research-committee
+        role_of: council:research-committee
 
-  - id: ex:indirect-cost
+  - id: term:indirect-cost
     label: indirect cost
     pref_label: Indirect Cost
     alt_labels:
@@ -50,91 +50,91 @@ glossary_terms:
       Necessary costs incurred for a common or joint purpose that cannot be
       readily identified with an individual project or program.
     definition_source: https://grants.nih.gov/grants/policy/nihgps/HTML5/section_7/7.3_direct_costs_and_indirect_costs.htm
-    part_of: ex:business-glossary
-    in_subject_area: ex:sponsored-programs
+    part_of: glossary:business-glossary
+    in_subject_area: area:sponsored-programs
     broader:
-      - ex:project-cost
+      - term:project-cost
     related:
-      - ex:direct-cost
+      - term:direct-cost
     responsibilities:
       - type: owner
-        role_of: ex:spo
+        role_of: organization:spo
       - type: data trustee           # a local subclass of steward (local-classes.yaml)
-        role_of: ex:research-committee
+        role_of: council:research-committee
 
-  - id: ex:sponsored-program-status
+  - id: term:sponsored-program-status
     label: sponsored program status
     pref_label: Sponsored Program Status
     definition: >-
       Where a sponsored program stands in its life, from award to closeout.
-    part_of: ex:business-glossary
-    in_subject_area: ex:sponsored-programs
+    part_of: glossary:business-glossary
+    in_subject_area: area:sponsored-programs
     responsibilities:
       - type: owner
-        role_of: ex:spo
+        role_of: organization:spo
 
-  - id: ex:sponsored-program-status-active
+  - id: term:sponsored-program-status-active
     label: active
     pref_label: Active
     definition: >-
       The award has been accepted and work on the program may be charged to it.
-    part_of: ex:business-glossary
-    in_subject_area: ex:sponsored-programs
-    value_of: ex:sponsored-program-status
+    part_of: glossary:business-glossary
+    in_subject_area: area:sponsored-programs
+    value_of: term:sponsored-program-status
 
-  - id: ex:sponsored-program-status-closed
+  - id: term:sponsored-program-status-closed
     label: closed
     pref_label: Closed
     definition: >-
       The period of performance has ended and every financial and technical
       report owed to the sponsor has been accepted.
-    part_of: ex:business-glossary
-    in_subject_area: ex:sponsored-programs
-    value_of: ex:sponsored-program-status
+    part_of: glossary:business-glossary
+    in_subject_area: area:sponsored-programs
+    value_of: term:sponsored-program-status
 
 lifecycle_processes:
-  - id: ex:direct-cost-creation
+  - id: process:direct-cost-creation
     type: creation
     label: Creation of the term "direct cost"
-    has_output: ex:direct-cost
-    part_of: ex:research-dg
-  - id: ex:indirect-cost-creation
+    has_output: term:direct-cost
+    part_of: process:research-dg
+  - id: process:indirect-cost-creation
     type: creation
     label: Creation of the term "indirect cost"
-    has_output: ex:indirect-cost
-    part_of: ex:research-dg
-  - id: ex:sponsored-program-status-creation
+    has_output: term:indirect-cost
+    part_of: process:research-dg
+  - id: process:sponsored-program-status-creation
     type: creation
     label: Creation of the term "sponsored program status"
-    has_output: ex:sponsored-program-status
-    part_of: ex:research-dg
-  - id: ex:sponsored-program-status-active-creation
+    has_output: term:sponsored-program-status
+    part_of: process:research-dg
+  - id: process:sponsored-program-status-active-creation
     type: creation
     label: Creation of the term "active"
-    has_output: ex:sponsored-program-status-active
-    part_of: ex:research-dg
-  - id: ex:sponsored-program-status-closed-creation
+    has_output: term:sponsored-program-status-active
+    part_of: process:research-dg
+  - id: process:sponsored-program-status-closed-creation
     type: creation
     label: Creation of the term "closed"
-    has_output: ex:sponsored-program-status-closed
-    part_of: ex:research-dg
+    has_output: term:sponsored-program-status-closed
+    part_of: process:research-dg
 
 status_boundaries:
   - type: drafted
-    part_of: ex:direct-cost-creation
+    part_of: process:direct-cost-creation
     occurred_on: "2026-09-10"
   - type: submitted for review           # "direct cost" is in review
-    part_of: ex:direct-cost-creation
+    part_of: process:direct-cost-creation
     occurred_on: "2026-09-17"
   - type: drafted           # "indirect cost" is only drafted
-    part_of: ex:indirect-cost-creation
+    part_of: process:indirect-cost-creation
     occurred_on: "2026-09-20"
   - type: drafted
-    part_of: ex:sponsored-program-status-creation
+    part_of: process:sponsored-program-status-creation
     occurred_on: "2026-09-22"
   - type: drafted
-    part_of: ex:sponsored-program-status-active-creation
+    part_of: process:sponsored-program-status-active-creation
     occurred_on: "2026-09-22"
   - type: drafted
-    part_of: ex:sponsored-program-status-closed-creation
+    part_of: process:sponsored-program-status-closed-creation
     occurred_on: "2026-09-22"

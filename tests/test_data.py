@@ -11,10 +11,10 @@ from rdflib import RDF, URIRef
 from dgo_atlas import config, dgo
 from dgo_atlas.build import build
 
-from .conftest import DGO_VERSION, EX, FIXTURES
+from .conftest import DGO_VERSION, FIXTURES, NS
 from .test_cli import dgo_atlas
 
-DATA = "https://w3id.org/dgo/data/"
+DATA = "https://w3id.org/northfield/data/"
 DGO = rdflib.Namespace("https://w3id.org/dgo/")
 OBO = rdflib.Namespace("http://purl.obolibrary.org/obo/")
 LINEAGE_QUERY = f"https://raw.githubusercontent.com/james-geiger/dgo/refs/tags/{DGO_VERSION}/docs/lineage.rq"
@@ -30,68 +30,68 @@ def page(pages, about):
 
 def test_foundational_and_lineage(variant):
     _, site = variant
-    source = page(site.data_sets, "ex:ctms-protocols")
+    source = page(site.data_sets, "data:ctms-protocols")
     assert source.foundational and not source.lineage
-    assert [r.about for r in source.derived_sets] == ["ex:warehouse-studies"]
-    dashboard = page(site.data_sets, "ex:study-dashboard")
+    assert [r.about for r in source.derived_sets] == ["data:warehouse-studies"]
+    dashboard = page(site.data_sets, "data:study-dashboard")
     assert not dashboard.foundational
     # Foundational data at the top, branching down to the data set itself.
     (root,) = dashboard.lineage
-    assert (root.about, root.certification) == ("ex:ctms-protocols", "foundational")
+    assert (root.about, root.certification) == ("data:ctms-protocols", "foundational")
     (warehouse,) = root.below
-    assert (warehouse.about, warehouse.certification) == ("ex:warehouse-studies", "certified")
+    assert (warehouse.about, warehouse.certification) == ("data:warehouse-studies", "certified")
     (current,) = warehouse.below
-    assert current.about == "ex:study-dashboard" and current.current and not current.below
+    assert current.about == "data:study-dashboard" and current.current and not current.below
 
 
 def test_domains_are_inferred_from_subject_areas(variant):
     _, site = variant
-    s = page(site.data_sets, "ex:warehouse-studies")
+    s = page(site.data_sets, "data:warehouse-studies")
     assert [a.label for a in s.subject_areas] == ["Clinical Research", "Sponsored Programs"]
     assert [d.label for d in s.domains] == ["Research"]
-    research = page(site.domains, "ex:research")
-    assert {r.about for r in research.data_sets} == {"ex:ctms-protocols", "ex:warehouse-studies", "ex:study-dashboard"}
+    research = page(site.domains, "domain:research")
+    assert {r.about for r in research.data_sets} == {"data:ctms-protocols", "data:warehouse-studies", "data:study-dashboard"}
 
 
 def test_elements_represent_terms(variant):
     deriver, site = variant
-    element = page(site.data_elements, "ex:ctms-open-date")
+    element = page(site.data_elements, "data:ctms-open-date")
     assert element.represents.label == "protocol open date"
-    assert page(site.data_elements, "ex:dashboard-status").represents is None
+    assert page(site.data_elements, "data:dashboard-status").represents is None
 
 
 def test_represents_an_unpublished_term_is_left_off(broken):
     from dgo_atlas.derive import Deriver
-    extra = ("data_elements:\n  - id: ex:orphan\n    label: orphan\n    part_of: ex:study-dashboard\n"
-             "    represents: ex:clinical-study\n")
+    extra = ("data_elements:\n  - id: data:orphan\n    label: orphan\n    part_of: data:study-dashboard\n"
+             "    represents: term:clinical-study\n")
     report = broken(extra={"orphan.yaml": extra})
     assert report.ok, report.errors
-    deriver = Deriver(report.record, EX)
-    assert page(deriver.site().data_elements, "ex:orphan").represents is None
-    assert "ex:orphan: represents ex:clinical-study, which is not published, so the link is left off" in deriver.notes
+    deriver = Deriver(report.record, NS)
+    assert page(deriver.site().data_elements, "data:orphan").represents is None
+    assert "data:orphan: represents term:clinical-study, which is not published, so the link is left off" in deriver.notes
 
 
 def test_certification(variant):
     deriver, site = variant
-    certified = page(site.data_sets, "ex:warehouse-studies")
+    certified = page(site.data_sets, "data:warehouse-studies")
     assert (certified.certification, str(certified.certified_on)) == ("certified", "2026-10-20")
     assert [c.label for c in certified.certifying_councils] == ["Research Data Governance Committee"]
     assert [(str(h.occurred_on), h.boundary_kind) for h in certified.history] == [
         ("2026-10-14", "drafted"), ("2026-10-16", "submitted_for_review"), ("2026-10-20", "approved")]
-    assert page(site.data_sets, "ex:study-dashboard").certification == "in_progress"
+    assert page(site.data_sets, "data:study-dashboard").certification == "in_progress"
     # Derived from nothing and never certified: foundational, not "not certified".
-    assert page(site.data_sets, "ex:ctms-protocols").certification == "foundational"
-    council = page(site.councils, "ex:research-committee")
+    assert page(site.data_sets, "data:ctms-protocols").certification == "foundational"
+    council = page(site.councils, "council:research-committee")
     # Listings put certified sets first.
-    assert [r.about for r in council.certified_sets] == ["ex:warehouse-studies", "ex:study-dashboard"]
+    assert [r.about for r in council.certified_sets] == ["data:warehouse-studies", "data:study-dashboard"]
     assert council.certified_sets[0].certification == "certified"
     # Certifications never touch term state, and the term history stays the term's.
-    assert "ex:warehouse-studies-certification" not in {h.process.about for t in site.terms for h in t.history or []}
+    assert "process:warehouse-studies-certification" not in {h.process.about for t in site.terms for h in t.history or []}
 
 
 def test_classification(variant):
     _, site = variant
-    element = page(site.data_elements, "ex:ctms-open-date")
+    element = page(site.data_elements, "data:ctms-open-date")
     # Its own sensitivity; the security level and regulatory category it lacks are its data set's.
     assert element.sensitivity.label == "Internal"
     assert element.security_level.label == "Role-based"
@@ -100,41 +100,41 @@ def test_classification(variant):
     assert levels[:3] == [("sensitivity_level", "Public", 1), ("sensitivity_level", "Internal", 2),
                           ("sensitivity_level", "Confidential", 3)]
     assert [lv.label for lv in site.classification_levels if lv.axis == "regulatory_category"] == ["FERPA", "PHI (HIPAA)"]
-    assert element.sensitivity.url == "classification.html#internal"
+    assert element.sensitivity.url == "classification.html#sensitivity-internal"
 
 
 def test_responsibilities_on_data(variant):
     _, site = variant
-    computing = page(site.agents, "ex:research-computing")
+    computing = page(site.agents, "organization:research-computing")
     assert [(r.role, r.subject.about) for r in computing.responsibilities] == [
-        ("custodian", "ex:ctms"), ("custodian", "ex:warehouse")]
-    price = page(site.agents, "ex:jordan-price")
+        ("custodian", "data:ctms"), ("custodian", "data:warehouse")]
+    price = page(site.agents, "person:jordan-price")
     (r,) = price.responsibilities
     assert (r.role, r.subject.about, r.subject.data_set.label) == (
-        "subject_matter_expert", "ex:warehouse-protocol-status", "Research studies")
+        "subject_matter_expert", "data:warehouse-protocol-status", "Research studies")
 
 
 # ---------------------------------------------------------------- validation
 
 
-DERIVED = "    derived_from:\n      - ex:ctms-protocols\n"
+DERIVED = "    derived_from:\n      - data:ctms-protocols\n"
 
 
 def test_derived_from_must_not_loop(broken):
-    loop = ("data_sets:\n  - id: ex:a\n    label: A\n    derived_from: [ex:b]\n"
-            "  - id: ex:b\n    label: B\n    derived_from: [ex:a]\n")
+    loop = ("data_sets:\n  - id: data:a\n    label: A\n    derived_from: [data:b]\n"
+            "  - id: data:b\n    label: B\n    derived_from: [data:a]\n")
     report = broken(extra={"loop.yaml": loop})
     assert any("derived_from loops back" in str(e) for e in report.errors), report.errors
 
 
 def test_derived_from_keeps_kinds_apart(broken):
-    extra = "data_sets:\n  - id: ex:a\n    label: A\n    derived_from: [ex:ctms-open-date]\n"
+    extra = "data_sets:\n  - id: data:a\n    label: A\n    derived_from: [data:ctms-open-date]\n"
     report = broken(extra={"mixed.yaml": extra})
     assert any("a data set can only be derived from another data set" in str(e) for e in report.errors), report.errors
 
 
 def test_certification_boundaries_follow_lifecycle_rules(broken):
-    late = ('status_boundaries:\n  - type: drafted\n    part_of: ex:warehouse-studies-certification\n'
+    late = ('status_boundaries:\n  - type: drafted\n    part_of: process:warehouse-studies-certification\n'
             '    occurred_on: "2026-11-01"\n')
     report = broken(extra={"late.yaml": late})
     assert any("status boundary after it closed on 2026-10-20" in str(e) for e in report.errors), report.errors
@@ -143,8 +143,8 @@ def test_certification_boundaries_follow_lifecycle_rules(broken):
 def test_severity_is_an_integer_and_element_warnings(broken):
     report = broken()
     assert report.ok, report.errors
-    louder = ("data_elements:\n  - id: ex:loud\n    label: loud\n    part_of: ex:study-dashboard\n"
-              "    sensitivity: ex:confidential\n")
+    louder = ("data_elements:\n  - id: data:loud\n    label: loud\n    part_of: data:study-dashboard\n"
+              "    sensitivity: data:sensitivity#confidential\n")
     report = broken(extra={"loud.yaml": louder})
     assert report.ok
     assert any("more severe than its data set's" in str(w) for w in report.warnings)
@@ -152,26 +152,26 @@ def test_severity_is_an_integer_and_element_warnings(broken):
 
 def test_data_set_takes_its_highest_common_denominator(broken):
     from dgo_atlas.derive import Deriver
-    louder = ("data_elements:\n  - id: ex:loud\n    label: loud\n    part_of: ex:study-dashboard\n"
-              "    sensitivity: ex:confidential\n    regulatory_categories: [ex:ferpa]\n")
+    louder = ("data_elements:\n  - id: data:loud\n    label: loud\n    part_of: data:study-dashboard\n"
+              "    sensitivity: data:sensitivity#confidential\n    regulatory_categories: [data:regulations#ferpa]\n")
     report = broken(extra={"loud.yaml": louder})
-    site = Deriver(report.record, EX).site()
-    dashboard = page(site.data_sets, "ex:study-dashboard")
+    site = Deriver(report.record, NS).site()
+    dashboard = page(site.data_sets, "data:study-dashboard")
     # Its own level is Internal; one element is Confidential, so the set is too.
     assert dashboard.sensitivity.label == "Confidential"
     assert dashboard.security_level.label == "Role-based"
     assert [r.label for r in dashboard.regulatory_categories] == ["FERPA"]
     # An element without its own level still takes the set's own, not the raised one.
-    assert page(site.data_elements, "ex:dashboard-status").sensitivity.label == "Internal"
+    assert page(site.data_elements, "data:dashboard-status").sensitivity.label == "Internal"
 
 
 def test_former_list_name_still_reads(broken):
-    old = ('term_status_boundaries:\n  - type: approved\n    part_of: ex:indirect-cost-creation\n'
+    old = ('term_status_boundaries:\n  - type: approved\n    part_of: process:indirect-cost-creation\n'
            '    occurred_on: "2026-09-30"\n')
     report = broken(extra={"old.yaml": old})
     assert report.ok, report.errors
     assert any("term_status_boundaries is now called status_boundaries" in str(w) for w in report.warnings)
-    assert any(b["part_of"] == "ex:indirect-cost-creation" and b["occurred_on"] == "2026-09-30"
+    assert any(b["part_of"] == "process:indirect-cost-creation" and b["occurred_on"] == "2026-09-30"
                for b in report.dataset.merged["status_boundaries"])
 
 
