@@ -30,6 +30,8 @@ glossary_terms:
     definition_source: https://grants.nih.gov/grants/policy/nihgps/HTML5/section_7/7.3_direct_costs_and_indirect_costs.htm
     part_of: ex:business-glossary
     in_subject_area: ex:sponsored-programs
+    broader:
+      - ex:project-cost
     responsibilities:
       - type: owner
         role_of: ex:spo
@@ -47,6 +49,8 @@ glossary_terms:
     definition_source: https://grants.nih.gov/grants/policy/nihgps/HTML5/section_7/7.3_direct_costs_and_indirect_costs.htm
     part_of: ex:business-glossary
     in_subject_area: ex:sponsored-programs
+    broader:
+      - ex:project-cost
     related:
       - ex:direct-cost
     responsibilities:

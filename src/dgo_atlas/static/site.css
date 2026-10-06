@@ -747,7 +747,8 @@ h2.subhead--term { font-size: 20px; letter-spacing: .03em; }
 .term-list { list-style: none; margin: 0; padding: 0; }
 /* A table has no bottom margin of its own (the term index's pager sits right
    under it), so the next section's heading makes the room. */
-.term-table + h2.subhead { margin-top: 44px; }
+.term-table + h2.subhead,
+.table-scroll + h2.subhead { margin-top: 44px; }
 .term-row {
   display: grid;
   grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 110px) 18px;
@@ -1048,6 +1049,18 @@ code.term-code {
 .panel-link:hover { color: var(--accent-text); text-decoration: none; }
 .panel-link__name { font-size: 14px; }
 .panel-link__rel { font-size: 12px; color: var(--ink-3); }
+/* The full hierarchy above a term, behind a toggle under its broader terms:
+   broadest first, each level hung off a rule, ending at the term itself. */
+.hierarchy { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line-2); }
+.hierarchy__toggle { cursor: pointer; font-size: 13px; color: var(--accent-text); list-style: none; }
+.hierarchy__toggle::-webkit-details-marker { display: none; }
+.hierarchy__hide,
+.hierarchy[open] .hierarchy__show { display: none; }
+.hierarchy[open] .hierarchy__hide { display: inline; }
+.hierarchy__tree { list-style: none; margin: 8px 0 0; padding: 0; }
+.hierarchy__tree ul { list-style: none; margin: 0 0 0 4px; padding: 0 0 0 10px; border-left: 1px solid var(--line); }
+.hierarchy__tree .panel-link { padding: 4px 0; }
+.panel-link--current .panel-link__name { font-weight: 600; }
 
 .toc-rail__label {
   font-family: var(--font-display);

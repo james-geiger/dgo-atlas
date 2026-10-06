@@ -3,7 +3,8 @@
 The variant is the handoff's example (Appendix C and its §5.3 variant) plus:
 a recorded creation for "clinical investigation", so the deprecated term is
 published; and two terms still in creation ("direct cost" in review,
-"indirect cost" drafted). "clinical study" has no creation, so it is derived
+"indirect cost" drafted), with "sponsored project cost" above them and
+"personnel cost" and "faculty salary" below. "clinical study" has no creation, so it is derived
 as unrecorded and left out.
 """
 
@@ -39,6 +40,9 @@ def test_states(variant):
         "ex:clinical-investigation": "deprecated",
         "ex:direct-cost": "proposed",
         "ex:indirect-cost": "proposed",
+        "ex:project-cost": "proposed",
+        "ex:personnel-cost": "proposed",
+        "ex:faculty-salary": "proposed",
     }
 
 
@@ -91,10 +95,11 @@ def test_council_seats(variant):
         "Data Governance at Northfield University",
     ]
     assert [t.label for t in council.governed_terms] == [
-        "clinical investigation", "Clinical Trial", "Direct Cost", "Indirect Cost"]
+        "clinical investigation", "Clinical Trial", "Direct Cost", "Faculty Salary", "Indirect Cost",
+        "Personnel Cost", "Sponsored Project Cost"]
     assert [(a.subject_area.label, a.term_count, [r.role_label for r in a.roles or []])
             for a in council.governed_areas] == [
-        ("Clinical Research", 2, ["steward"]), ("Sponsored Programs", 2, ["steward", "data trustee"])]
+        ("Clinical Research", 2, ["steward"]), ("Sponsored Programs", 5, ["steward", "data trustee"])]
     (member,) = [a for a in site.agents if a.label == "Morgan Ellis"]
     assert [s.council.label for s in member.memberships] == [council.label]
     assert member.job_title == "Director, Data Governance"
@@ -176,6 +181,36 @@ def test_variant_related_read_both_ways(variant):
     assert related(deriver.rec, study) == ["ex:clinical-trial"]
 
 
+def outline(nodes, depth=0):
+    """A hierarchy as indented lines: label, then * for this term, + for repeated."""
+    out = []
+    for n in nodes:
+        out.append("  " * depth + n.label + ("*" if n.current else "") + ("+" if n.repeated else ""))
+        out += outline(n.below or [], depth + 1)
+    return out
+
+
+def test_broader_terms_and_hierarchy(variant):
+    """cost-hierarchy.yaml: two broader terms that share a broader term."""
+    _, site = variant
+    salary = term(site, "faculty salary")
+    assert [b.label for b in salary.broader] == ["Personnel Cost"]
+    assert outline(salary.hierarchy) == [
+        "Sponsored Project Cost",
+        "  Direct Cost",
+        "    Personnel Cost",
+        "      Faculty Salary*",
+        "  Indirect Cost",
+        "    Personnel Cost+",  # reached again: not expanded twice
+    ]
+    personnel = term(site, "personnel cost")
+    assert [b.label for b in personnel.broader] == ["Direct Cost", "Indirect Cost"]
+    assert outline(personnel.hierarchy) == [  # a leaf reached twice is shown on both paths
+        "Sponsored Project Cost", "  Direct Cost", "    Personnel Cost*", "  Indirect Cost", "    Personnel Cost*"]
+    direct = term(site, "direct cost")  # its broader term is at the top: nothing more to show
+    assert [b.label for b in direct.broader] == ["Sponsored Project Cost"] and not direct.hierarchy
+
+
 # ---------------------------------------------------------------- publication
 
 
@@ -188,7 +223,7 @@ def test_unrecorded_term_is_not_published(variant):
 def test_links_to_unpublished_terms_are_left_off(variant):
     deriver, site = variant
     t = term(site, "clinical trial")
-    assert not t.broader and not t.ancestors and not t.related
+    assert not t.broader and not t.related
     assert "ex:clinical-trial: broader ex:clinical-study is not published, so the link is left off" in deriver.notes
     assert [a.label for a in site.subject_areas[0].terms] == ["clinical investigation", "Clinical Trial"]
 

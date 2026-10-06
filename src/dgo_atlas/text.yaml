@@ -121,7 +121,10 @@ term:
   domain: Domain
   subject_area: Subject area
   broader: Broader terms
-  all_broader: All broader terms
+  hierarchy: Show full hierarchy
+  hierarchy_hide: Hide full hierarchy
+  hierarchy_current: This term
+  hierarchy_repeated: shown above
   narrower: Narrower terms
   value_of: Value of
   values: Values

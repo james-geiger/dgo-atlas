@@ -200,7 +200,10 @@
 #   term.domain: Domain
 #   term.subject_area: Subject area
 #   term.broader: Broader terms
-#   term.all_broader: All broader terms
+#   term.hierarchy: Show full hierarchy
+#   term.hierarchy_hide: Hide full hierarchy
+#   term.hierarchy_current: This term
+#   term.hierarchy_repeated: shown above
 #   term.narrower: Narrower terms
 #   term.value_of: Value of
 #   term.values: Values

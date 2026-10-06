@@ -34,6 +34,13 @@ classes:
     description: A link to another page.
     slots: [about, url, label, state, kind]
 
+  HierarchyNode:
+    is_a: Ref
+    description: >-
+      One term in the hierarchy above a term, with the narrower terms that
+      lead down to it beneath.
+    slots: [below, repeated, current]
+
   GlossaryPage:
     is_a: Page
     slots: [domains, term_count]
@@ -73,7 +80,7 @@ classes:
       - successor
       - predecessors
       - broader
-      - ancestors
+      - hierarchy
       - narrower
       - related
       - value_of
@@ -209,11 +216,26 @@ slots:
     multivalued: true
     inlined_as_list: true
   broader: { range: Ref, multivalued: true, inlined_as_list: true }
-  ancestors:
-    description: Every term reached by walking broader, nearest first.
-    range: Ref
+  hierarchy:
+    description: >-
+      Every published term above this one, broadest first, branching down to
+      this term. Empty when no broader term has a broader term of its own.
+    range: HierarchyNode
     multivalued: true
     inlined_as_list: true
+  below:
+    description: The narrower terms on the way down to the term the hierarchy belongs to.
+    range: HierarchyNode
+    multivalued: true
+    inlined_as_list: true
+  repeated:
+    description: >-
+      Already shown higher in the same tree, so the terms beneath it are not
+      shown again.
+    range: boolean
+  current:
+    description: The term whose page this hierarchy is on.
+    range: boolean
   narrower:
     description: Terms whose broader includes this term.
     range: Ref

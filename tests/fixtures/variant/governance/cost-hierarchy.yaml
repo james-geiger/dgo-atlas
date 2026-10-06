@@ -1,0 +1,63 @@
+# Not in the handoff: a broader-term hierarchy more than one level deep.
+# "personnel cost" has two broader terms, "direct cost" and "indirect cost"
+# (sponsored-programs.yaml), and both of those have the broader term
+# "sponsored project cost". "faculty salary" sits under "personnel cost", so
+# its full hierarchy reaches "personnel cost" by two paths and expands it once.
+
+glossary_terms:
+  - id: ex:project-cost
+    label: sponsored project cost
+    pref_label: Sponsored Project Cost
+    definition: >-
+      Any cost charged to, or shared on, a sponsored project.
+    part_of: ex:business-glossary
+    in_subject_area: ex:sponsored-programs
+
+  - id: ex:personnel-cost
+    label: personnel cost
+    pref_label: Personnel Cost
+    definition: >-
+      Salary, wages and fringe benefits of people working on a sponsored
+      project, charged directly or recovered through the indirect cost rate.
+    part_of: ex:business-glossary
+    in_subject_area: ex:sponsored-programs
+    broader:
+      - ex:direct-cost
+      - ex:indirect-cost
+
+  - id: ex:faculty-salary
+    label: faculty salary
+    pref_label: Faculty Salary
+    definition: >-
+      The institutional base salary of faculty effort charged to a sponsored
+      project.
+    part_of: ex:business-glossary
+    in_subject_area: ex:sponsored-programs
+    broader:
+      - ex:personnel-cost
+
+term_creations:
+  - id: ex:project-cost-creation
+    label: Creation of the term "sponsored project cost"
+    has_output: ex:project-cost
+    part_of: ex:research-dg
+  - id: ex:personnel-cost-creation
+    label: Creation of the term "personnel cost"
+    has_output: ex:personnel-cost
+    part_of: ex:research-dg
+
+  - id: ex:faculty-salary-creation
+    label: Creation of the term "faculty salary"
+    has_output: ex:faculty-salary
+    part_of: ex:research-dg
+
+term_status_boundaries:
+  - type: drafted
+    part_of: ex:project-cost-creation
+    occurred_on: "2026-09-08"
+  - type: drafted
+    part_of: ex:personnel-cost-creation
+    occurred_on: "2026-09-21"
+  - type: drafted
+    part_of: ex:faculty-salary-creation
+    occurred_on: "2026-09-22"

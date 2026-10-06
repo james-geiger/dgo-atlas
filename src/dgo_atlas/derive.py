@@ -230,15 +230,44 @@ class Deriver:
                                          term=self.ref(term.id), bearer=self.ref(role.role_of)))
         return out
 
-    def ancestors(self, term) -> list[str]:
-        """Broader terms, walked through published terms only, nearest first."""
-        seen, todo = [], [t for t in term.broader or [] if t in self.published]
+    def above(self, tid) -> list[str]:
+        """A term's published broader terms."""
+        return [b for b in self.idx[tid].broader or [] if b in self.published]
+
+    def hierarchy(self, term) -> list[vm.HierarchyNode]:
+        """The terms above `term`, broadest first, branching down to it.
+
+        Empty when the broader terms are all at the top, since the broader
+        list already says everything. Where two paths meet, the shared term is
+        expanded the first time and marked repeated after that.
+        """
+        ancestors, todo = set(), self.above(term.id)
         while todo:
-            t = todo.pop(0)
-            if t not in seen:
-                seen.append(t)
-                todo += [b for b in self.idx[t].broader or [] if b in self.published]
-        return seen
+            t = todo.pop()
+            if t not in ancestors:
+                ancestors.add(t)
+                todo += self.above(t)
+        if all(not self.above(b) for b in self.above(term.id)):
+            return []
+        below = defaultdict(list)
+        for t in ancestors | {term.id}:
+            for b in self.above(t):
+                below[b].append(t)
+        seen = set()
+
+        def nodes(ids):
+            out = []
+            for ref in self.refs(ids):
+                node = vm.HierarchyNode(**ref.model_dump(), current=ref.about == term.id or None)
+                if ref.about in seen and below[ref.about]:
+                    node.repeated = True
+                else:
+                    seen.add(ref.about)
+                    node.below = nodes(below[ref.about])
+                out.append(node)
+            return out
+
+        return nodes(t for t in ancestors if not self.above(t))
 
     def semantic_type(self, term) -> vm.SemanticType | None:
         """The external class a term denotes (DGO 0.1.1), described by the class itself."""
@@ -311,7 +340,7 @@ class Deriver:
             successor=self.ref(successor[0]) if successor else None,
             predecessors=self.refs(t.id for t in self.terms if t.replaced_by == tid),
             broader=self.refs(self.linked(term, "broader", term.broader or [])),
-            ancestors=self.refs(self.ancestors(term), sort=False),
+            hierarchy=self.hierarchy(term),
             narrower=self.refs(t.id for t in self.terms if tid in (t.broader or [])),
             related=self.refs(self.linked(term, "related", related(self.rec, term))),
             value_of=self.ref(value_of[0]) if value_of else None,

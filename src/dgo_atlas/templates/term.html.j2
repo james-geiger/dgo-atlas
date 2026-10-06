@@ -1,5 +1,5 @@
 {% extends "base.html.j2" %}
-{% from "_macros.html.j2" import state_badge, bearer, link_panel %}
+{% from "_macros.html.j2" import state_badge, bearer, link_panel, broader_panel %}
 {#- One glossary term. Sections with no data are left out rather than shown
     empty: a blank panel reads as a site bug, its absence as "not recorded". -#}
 
@@ -119,10 +119,7 @@
       </dl>
     </div>
 
-    {{ link_panel(t("term.broader"), term.broader, rel) }}
-    {%- if term.ancestors and (term.ancestors | length) > (term.broader | length) %}
-    {{ link_panel(t("term.all_broader"), term.ancestors, rel) }}
-    {%- endif %}
+    {{ broader_panel(term, rel) }}
     {{ link_panel(t("term.narrower"), term.narrower, rel) }}
     {{ link_panel(t("term.value_of"), [term.value_of] if term.value_of else [], rel) }}
     {{ link_panel(t("term.values"), term.values, rel) }}

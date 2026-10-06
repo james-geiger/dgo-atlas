@@ -172,6 +172,22 @@ class Ref(ConfiguredBaseModel):
     kind: Optional[AgentKind] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Ref', 'AgentPage']} })
 
 
+class HierarchyNode(Ref):
+    """
+    One term in the hierarchy above a term, with the narrower terms that lead down to it beneath.
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://w3id.org/dgo-atlas/viewmodel'})
+
+    below: Optional[list[HierarchyNode]] = Field(default=None, description="""The narrower terms on the way down to the term the hierarchy belongs to.""", json_schema_extra = { "linkml_meta": {'domain_of': ['HierarchyNode']} })
+    repeated: Optional[bool] = Field(default=None, description="""Already shown higher in the same tree, so the terms beneath it are not shown again.""", json_schema_extra = { "linkml_meta": {'domain_of': ['HierarchyNode']} })
+    current: Optional[bool] = Field(default=None, description="""The term whose page this hierarchy is on.""", json_schema_extra = { "linkml_meta": {'domain_of': ['HierarchyNode']} })
+    about: str = Field(default=..., description="""The CURIE of the governed object this page or link is about.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref', 'SemanticType', 'Change']} })
+    url: Optional[str] = Field(default=None, description="""Site-relative path of the page, e.g. terms/clinical-trial.html.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref']} })
+    label: str = Field(default=..., description="""The display label.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref', 'SourceRef', 'SemanticType', 'Change']} })
+    state: Optional[TermState] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Ref', 'TermPage']} })
+    kind: Optional[AgentKind] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Ref', 'AgentPage']} })
+
+
 class GlossaryPage(Page):
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://w3id.org/dgo-atlas/viewmodel',
          'slot_usage': {'domains': {'inlined': True,
@@ -248,7 +264,7 @@ class TermPage(Page):
     successor: Optional[Ref] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['TermPage']} })
     predecessors: Optional[list[Ref]] = Field(default=None, description="""Terms whose replaced_by is this term.""", json_schema_extra = { "linkml_meta": {'domain_of': ['TermPage']} })
     broader: Optional[list[Ref]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['TermPage']} })
-    ancestors: Optional[list[Ref]] = Field(default=None, description="""Every term reached by walking broader, nearest first.""", json_schema_extra = { "linkml_meta": {'domain_of': ['TermPage']} })
+    hierarchy: Optional[list[HierarchyNode]] = Field(default=None, description="""Every published term above this one, broadest first, branching down to this term. Empty when no broader term has a broader term of its own.""", json_schema_extra = { "linkml_meta": {'domain_of': ['TermPage']} })
     narrower: Optional[list[Ref]] = Field(default=None, description="""Terms whose broader includes this term.""", json_schema_extra = { "linkml_meta": {'domain_of': ['TermPage']} })
     related: Optional[list[Ref]] = Field(default=None, description="""Related terms, read in both directions.""", json_schema_extra = { "linkml_meta": {'domain_of': ['TermPage']} })
     value_of: Optional[Ref] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['TermPage']} })
@@ -440,6 +456,7 @@ class ProcessPage(Page):
 Site.model_rebuild()
 Page.model_rebuild()
 Ref.model_rebuild()
+HierarchyNode.model_rebuild()
 GlossaryPage.model_rebuild()
 DomainPage.model_rebuild()
 SubjectAreaPage.model_rebuild()

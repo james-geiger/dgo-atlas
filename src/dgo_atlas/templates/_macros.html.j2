@@ -57,6 +57,56 @@
 </div>
 {%- endmacro %}
 
+{#- The immediate broader terms, then, behind a toggle, the whole hierarchy
+    above the term: broadest first, branching down to the term itself. A term
+    reached by a second path is not expanded again. -#}
+{% macro broader_panel(term, rel) -%}
+{%- if term.broader %}
+<div class="panel">
+  <h2 class="panel__label">{{ t("term.broader") }}</h2>
+  <ul class="panel-list">
+    {%- for r in term.broader %}
+    <li><a class="panel-link" href="{{ rel }}{{ r.url }}">
+      <div class="panel-link__name">{{ r.label }}</div>
+      {%- if r.state %}<div class="panel-link__rel">{{ r.state | state_label }}</div>{% endif %}
+    </a></li>
+    {%- endfor %}
+  </ul>
+  {%- if term.hierarchy %}
+  <details class="hierarchy">
+    <summary class="hierarchy__toggle">
+      <span class="hierarchy__show">{{ t("term.hierarchy") }}</span>
+      <span class="hierarchy__hide">{{ t("term.hierarchy_hide") }}</span>
+    </summary>
+    <ul class="hierarchy__tree">
+      {%- for n in term.hierarchy recursive %}
+      <li>
+        {%- if n.current %}
+        <div class="panel-link panel-link--current" aria-current="page">
+          <div class="panel-link__name">{{ n.label }}</div>
+          <div class="panel-link__rel">{{ t("term.hierarchy_current") }}</div>
+        </div>
+        {%- else %}
+        <a class="panel-link" href="{{ rel }}{{ n.url }}">
+          <div class="panel-link__name">{{ n.label }}</div>
+          <div class="panel-link__rel">
+            {%- if n.state %}{{ n.state | state_label }}{% endif %}
+            {%- if n.state and n.repeated %} &middot; {% endif %}
+            {%- if n.repeated %}{{ t("term.hierarchy_repeated") }}{% endif %}</div>
+        </a>
+        {%- endif %}
+        {%- if n.below %}
+        <ul>{{ loop(n.below) }}</ul>
+        {%- endif %}
+      </li>
+      {%- endfor %}
+    </ul>
+  </details>
+  {%- endif %}
+</div>
+{%- endif %}
+{%- endmacro %}
+
 {% macro link_panel(title, refs, rel, show_state=True) -%}
 {%- if refs %}
 <div class="panel">

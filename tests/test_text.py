@@ -80,7 +80,7 @@ def test_overrides_reach_pages_and_script(tmp_path):
     assert "Who&#39;s who" in term  # nav label, escaped
     assert "Adopted" in term
     assert '"copied": "Done!"' in term  # handed to site.js
-    assert "4 definitions" in (out / "terms" / "index.html").read_text()
+    assert "7 definitions" in (out / "terms" / "index.html").read_text()
 
 
 def test_content_file_sets_a_generated_page_header(tmp_path):
