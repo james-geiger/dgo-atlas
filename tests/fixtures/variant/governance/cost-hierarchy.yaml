@@ -51,7 +51,7 @@ term_creations:
     has_output: ex:faculty-salary
     part_of: ex:research-dg
 
-term_status_boundaries:
+status_boundaries:
   - type: drafted
     part_of: ex:project-cost-creation
     occurred_on: "2026-09-08"

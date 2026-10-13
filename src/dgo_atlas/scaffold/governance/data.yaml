@@ -1,0 +1,84 @@
+# The data behind the terms (DGO 0.2.0 and later): the systems that store it,
+# the data sets in them, their fields, how they are classified, and which are
+# certified. Delete this file if you only govern a glossary.
+#
+# A data store is the operational system, not its database design. A data
+# set's domain follows from its subject areas. A data set derived from no
+# other is foundational: raw data that others are built from, which is not
+# itself certified. Glossary terms point at the data that informs them with
+# `informed_by`; data never points at terms.
+
+sensitivity_levels:              # your own scheme; higher severity = more harm on disclosure
+  - id: org:internal
+    label: Internal
+    definition: data whose disclosure outside the organization would cause limited harm
+    severity: 1
+  - id: org:confidential
+    label: Confidential
+    definition: data whose disclosure would cause serious harm
+    severity: 2
+
+security_levels:                 # higher severity = stricter controls
+  - id: org:role-based
+    label: Role-based
+    definition: access is granted to roles approved by the data owner
+    severity: 1
+
+regulations: []                  # regulatory categories, e.g. PHI (HIPAA); unordered
+
+data_stores:
+  - id: org:trial-system
+    label: Clinical trial management system
+    responsibilities:
+      - type: custodian
+        role_of: org:research-office
+
+data_sets:
+  - id: org:trial-protocols      # no derived_from: foundational
+    label: Trial protocols
+    stored_in:
+      - org:trial-system
+    in_subject_area:
+      - org:clinical-research
+    sensitivity: org:confidential
+    security_level: org:role-based
+    responsibilities:
+      - type: owner
+        role_of: org:research-office
+
+  - id: org:trial-reporting      # built from the protocols, and certified below
+    label: Trial reporting
+    stored_in:
+      - org:trial-system
+    in_subject_area:
+      - org:clinical-research
+    derived_from:
+      - org:trial-protocols
+    sensitivity: org:confidential
+    security_level: org:role-based
+
+data_elements:                   # each is part of exactly one data set
+  - id: org:protocol-status
+    label: protocol status
+    part_of: org:trial-protocols
+  - id: org:reporting-status
+    label: protocol status
+    part_of: org:trial-reporting
+    derived_from:
+      - org:protocol-status
+
+# A certification is a process, like a term's creation: the data set is
+# certified once it reaches an approved status boundary, on that date.
+data_set_certifications:
+  - id: org:trial-reporting-certification
+    label: Certification of "Trial reporting"
+    has_output: org:trial-reporting
+    part_of: org:research-data-governance   # so certified by that process's council
+
+status_boundaries:
+  - type: drafted
+    part_of: org:trial-reporting-certification
+    occurred_on: "2026-01-12"
+  - type: approved
+    part_of: org:trial-reporting-certification
+    occurred_on: "2026-01-20"

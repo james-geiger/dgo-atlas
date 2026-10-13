@@ -133,7 +133,7 @@ term_deprecations:
     has_output: ex:clinical-investigation
     part_of: ex:research-dg                # deprecated once this process reaches its approved boundary
 
-term_status_boundaries:        # quote dates: LinkML validation rejects unquoted YAML dates
+status_boundaries:        # quote dates: LinkML validation rejects unquoted YAML dates
   - type: dgo:DGO_00000024           # drafted (proposed)
     part_of: ex:clinical-trial-creation
     occurred_on: "2026-09-25"

@@ -1,17 +1,12 @@
 {% extends "base.html.j2" %}
-{% from "_macros.html.j2" import link_panel %}
+{% from "_macros.html.j2" import data_set_rows, iri_row %}
 {#- One data governance council: its members and their seats, the governance
-    process it takes part in, and the subject areas of the terms it governs. -#}
+    processes it takes part in, and the subject areas of the terms it governs. -#}
 
 {% block content %}
 <div class="split">
   <article class="split__body split__body--wide">
-    <div class="eyebrow">{{ council_kind.name }}</div>
     <h1 class="page-title">{{ council.label }}</h1>
-    {%- if council.participates_in %}
-    {%- set process %}<a href="{{ rel }}{{ council.participates_in.url }}">{{ council.participates_in.label }}</a>{% endset %}
-    <p class="lede">{{ t("council.takes_part_in", process=process) }}</p>
-    {%- endif %}
 
     <h2 class="subhead">{{ t("council.members") }}</h2>
     {#- A real table: the rows aren't links (the name and the email each link
@@ -48,7 +43,7 @@
 
     {#- Terms are listed on their subject area's page; here each area appears once. #}
     <h2 class="subhead">{{ t("council.areas") }}</h2>
-    {%- set general = (council.responsibilities or []) | rejectattr("term") | list %}
+    {%- set general = (council.responsibilities or []) | rejectattr("subject") | list %}
     {%- if general %}
     <p class="council-roles">{{ t("council.general_roles") }}
       {%- for r in general %} <span class="badge badge--{{ r.role }}">{{ r.role_label }}</span>{% endfor %}</p>
@@ -72,16 +67,44 @@
       <div class="empty-state">{{ t("council.areas_empty") }}</div>
       {%- endfor %}
     </div>
+
+    {#- Data: the sets it certifies, then roles it holds on stores, sets and elements. #}
+    {%- set data_roles = (council.responsibilities or []) | selectattr("subject") | rejectattr("subject.state") | list %}
+    {%- if council.certified_sets or data_roles %}
+    <h2 class="subhead">{{ t("council.data") }}</h2>
+    <p class="subhead-note">{{ t("council.data_intro") }}</p>
+    {%- if council.certified_sets %}
+    <h3 class="fact__k">{{ t("council.certified_sets") }}</h3>
+    {{ data_set_rows(council.certified_sets, rel, lookup, "") }}
+    {%- endif %}
+    {%- if data_roles %}
+    {%- set holder = {"responsibilities": data_roles} %}
+    {% include "_responsibilities.html.j2" %}
+    {%- endif %}
+    {%- endif %}
   </article>
 
   <aside class="split__aside">
-    {{ link_panel(t("council.processes"), council.process_chain, rel, show_state=False) }}
+    {#- The process chain is innermost first; show it broadest first, each
+        process nested under the one it is part of. #}
+    {%- if council.process_chain %}
+    <div class="panel">
+      <h2 class="panel__label">{{ t("council.processes") }}</h2>
+      <ul class="hierarchy__tree">
+        {%- for r in council.process_chain | reverse %}
+        <li><a class="panel-link" href="{{ rel }}{{ r.url }}"><div class="panel-link__name">{{ r.label }}</div></a>
+        {%- if not loop.last %}<ul>{% endif %}
+        {%- endfor %}
+        {%- for r in council.process_chain %}{% if not loop.first %}</ul>{% endif %}</li>{% endfor %}
+      </ul>
+    </div>
+    {%- endif %}
     {%- if show_identifiers %}
     <div class="panel">
       <h2 class="panel__label">{{ t("council.identifier") }}</h2>
       <dl class="ref-list">
         <div class="ref-row"><dt class="ref-row__k">{{ t("council.id") }}</dt><dd><code class="ref-row__v">{{ council.about }}</code></dd></div>
-        <div class="ref-row"><dt class="ref-row__k">{{ t("council.iri") }}</dt><dd><code class="ref-row__v">{{ council.iri }}</code></dd></div>
+        {{ iri_row(council.iri, t("council.iri")) }}
       </dl>
     </div>
     {%- endif %}

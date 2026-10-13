@@ -42,7 +42,7 @@ RELEASE_URL = "https://raw.githubusercontent.com/james-geiger/dgo/refs/tags/{ver
 
 # Releases this version of DGO Atlas has been tested against. Others are used
 # if they have the classes below, with a warning.
-TESTED_VERSIONS = ("0.1.0", "0.1.1")
+TESTED_VERSIONS = ("0.1.0", "0.1.1", "0.2.0")
 
 # The placeholder in schema/template.yaml that the import location replaces.
 IMPORT_PLACEHOLDER = "DGO_IMPORT"
@@ -161,6 +161,7 @@ def _template(source: Source) -> Path:
     # release's prefixes (rdfs, skos, ro...) are declared here too, and so are
     # the prefixes of any local class ids.
     template["prefixes"] = {**release_prefixes(source.location), **dict(source.prefixes), **template["prefixes"]}
+    _fit_to_release(template, _release(source.location))
     directory = Path(tempfile.mkdtemp(prefix="dgo-atlas-"))
     if source.local_classes:
         extension = directory / "local-classes.yaml"
@@ -171,6 +172,26 @@ def _template(source: Source) -> Path:
     path = directory / TEMPLATE.name
     path.write_text(yaml.safe_dump(template, sort_keys=False), encoding="utf-8")
     return path
+
+
+def _fit_to_release(template: dict, release: SchemaView) -> None:
+    """Shape the template to what a release defines, so older releases still load.
+
+    A list whose class the release lacks (data_stores before DGO 0.2.0) is
+    left out. A slot the release defines itself (`description`, from 0.2.0)
+    is DGO's, so the template's own definition of it is dropped.
+    """
+    classes = set(release.all_classes()) | set(template["classes"])
+    root = template["classes"][ROOT_CLASS]
+    dropped = [s for s in root["slots"] if template["slots"][s]["range"] not in classes]
+    root["slots"] = [s for s in root["slots"] if s not in dropped]
+    for name in dropped + [s for s in template["slots"] if s in release.all_slots()]:
+        del template["slots"][name]
+
+
+def has_class(name: str) -> bool:
+    """Whether the active release defines a class (e.g. "data set", from DGO 0.2.0)."""
+    return name in _release(active().location).all_classes()
 
 
 def template_path() -> Path:

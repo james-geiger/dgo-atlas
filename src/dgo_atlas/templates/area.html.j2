@@ -1,5 +1,5 @@
 {% extends "base.html.j2" %}
-{% from "_macros.html.j2" import term_rows %}
+{% from "_macros.html.j2" import term_rows, data_set_rows %}
 {#- One subject area and every term classified under it. -#}
 
 {% block content %}
@@ -15,6 +15,11 @@
 
     <h2 class="subhead">{{ t("area.terms") }}</h2>
     {{ term_rows(area.terms or [], rel, t("area.empty")) }}
+
+    {%- if area.data_sets %}
+    <h2 class="subhead">{{ t("area.data_sets") }}</h2>
+    {{ data_set_rows(area.data_sets, rel, lookup, "") }}
+    {%- endif %}
   </article>
 
   <aside class="split__aside">

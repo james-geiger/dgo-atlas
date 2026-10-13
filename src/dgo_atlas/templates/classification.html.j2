@@ -1,0 +1,38 @@
+{% extends "base.html.j2" %}
+{#- The organization's classification scheme, by axis. Each level has an
+    anchor that data set and element pages link to. -#}
+
+{% block content %}
+<div class="split">
+  <article class="split__body">
+    {% include "_page_head.html.j2" %}
+    {#- What severity means is DGO's to say. #}
+    <p class="term-row__sub">{{ severity }}</p>
+    {%- for axis in axes %}
+    <h2 class="subhead" id="{{ axis.name | replace('_', '-') }}">{{ t("classification.axis." ~ axis.name) }}</h2>
+    <p class="term-row__sub">{{ axis.kind.description }}</p>
+    <div class="fact-box">
+      {%- for lv in axis.levels %}
+      <div class="fact-box__lead" id="{{ lv.url.split('#')[1] }}">
+        <h3 class="fact__k">{{ lv.label }}
+          {%- if lv.severity is not none %} <span class="term-row__sub">&middot; {{ t("classification.severity", n=lv.severity) }}</span>{% endif %}</h3>
+        {%- if lv.definition %}<p style="margin:4px 0 0;font-size:14.5px;color:var(--ink-2)">{{ lv.definition }}</p>{% endif %}
+      </div>
+      {%- else %}
+      <div class="empty-state">{{ t("classification.empty") }}</div>
+      {%- endfor %}
+    </div>
+    {%- endfor %}
+  </article>
+  <aside class="split__aside">
+    <nav class="toc-rail" aria-labelledby="toc-label">
+      <h2 class="toc-rail__label" id="toc-label">{{ t("how_to_read.on_this_page") }}</h2>
+      <ul>
+        {%- for axis in axes %}
+        <li><a href="#{{ axis.name | replace('_', '-') }}">{{ t("classification.axis." ~ axis.name) }}</a></li>
+        {%- endfor %}
+      </ul>
+    </nav>
+  </aside>
+</div>
+{% endblock %}

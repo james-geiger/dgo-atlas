@@ -14,7 +14,7 @@ term_creations:
     has_output: org:clinical-study
     part_of: org:research-data-governance
 
-term_status_boundaries:
+status_boundaries:
   - type: drafted              # the term shows as proposed until it is approved
     part_of: org:clinical-study-creation
     occurred_on: "2026-09-20"

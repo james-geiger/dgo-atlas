@@ -23,7 +23,8 @@ classes:
   Site:
     tree_root: true
     description: Every page of one site.
-    slots: [glossaries, domains, subject_areas, terms, councils, agents, processes]
+    slots: [glossaries, domains, subject_areas, terms, councils, agents, processes,
+            data_stores, data_sets, data_elements, classification_levels]
 
   Page:
     abstract: true
@@ -32,7 +33,10 @@ classes:
 
   Ref:
     description: A link to another page.
-    slots: [about, url, label, state, kind]
+    slots: [about, url, label, state, kind, certification, certified_on, data_set]
+    slot_usage:
+      data_set:
+        description: For a data element, the data set it is part of, to tell same-named elements apart.
 
   HierarchyNode:
     is_a: Ref
@@ -49,16 +53,22 @@ classes:
 
   DomainPage:
     is_a: Page
-    slots: [glossary, subject_areas, term_count, accent]
+    slots: [glossary, subject_areas, term_count, accent, data_sets]
     slot_usage:
       subject_areas: { range: Ref, inlined: true, inlined_as_list: true }
+      data_sets:
+        description: Data sets in the domain's subject areas (a data set's domains are inferred).
+        range: Ref
+        inlined: true
+        inlined_as_list: true
 
   SubjectAreaPage:
     is_a: Page
-    slots: [glossary, domain, terms, accent]
+    slots: [glossary, domain, terms, accent, data_sets]
     slot_usage:
       domain: { required: true }
       terms: { range: Ref, inlined: true, inlined_as_list: true }
+      data_sets: { range: Ref, inlined: true, inlined_as_list: true }
 
   TermPage:
     is_a: Page
@@ -85,6 +95,7 @@ classes:
       - related
       - value_of
       - values
+      - informed_by
       - source_file
     slot_usage:
       glossary: { required: true }
@@ -105,22 +116,27 @@ classes:
       label: { required: false }
 
   Responsibility:
-    description: A governance role held with respect to a term, and who bears it.
-    slots: [role, role_label, role_iri, term, bearer]
+    description: >-
+      A governance role held with respect to a term, data store, data set or
+      data element, and who bears it.
+    slots: [role, role_label, role_iri, subject, bearer]
 
   Change:
-    description: A term lifecycle process (creation, modification or deprecation).
+    description: >-
+      A lifecycle process: a term creation, modification or deprecation, or a
+      data set certification.
     slots: [about, label, process_kind, process_label, outcome]
 
   HistoryEntry:
-    description: One status boundary of one of the term's lifecycle processes.
+    description: One status boundary of one of a term's or data set's lifecycle processes.
     slots: [occurred_on, process, process_kind, process_label, boundary_kind, boundary_label]
     slot_usage:
       process: { range: Change, inlined: true }
 
   CouncilPage:
     is_a: Page
-    slots: [participates_in, process_chain, members, responsibilities, governed_terms, governed_areas]
+    slots: [participates_in, process_chain, members, responsibilities, governed_terms, governed_areas,
+            certified_sets]
     slot_usage:
       responsibilities: { range: Responsibility, inlined: true, inlined_as_list: true }
 
@@ -161,6 +177,80 @@ classes:
     slot_usage:
       councils: { range: Ref, inlined: true, inlined_as_list: true }
 
+  ElementGroup:
+    description: Data elements that inform a term, grouped by the data set they are part of.
+    slots: [data_set, data_elements]
+    slot_usage:
+      data_set: { required: true }
+      data_elements: { range: Ref, inlined: true, inlined_as_list: true }
+
+  ClassificationRef:
+    is_a: Ref
+    description: A classification level held by a data set or data element.
+    slots: [inherited]
+
+  DataStorePage:
+    is_a: Page
+    description: A system that carries data sets. It has no domain of its own.
+    slots: [description, data_sets, responsibilities]
+    slot_usage:
+      data_sets: { range: Ref, inlined: true, inlined_as_list: true }
+
+  DataSetPage:
+    is_a: Page
+    description: One data set with its lineage, classification and certification.
+    slots:
+      - description
+      - data_stores
+      - subject_areas
+      - domains
+      - data_elements
+      - foundational
+      - lineage
+      - derived_sets
+      - informed_terms
+      - sensitivity
+      - security_level
+      - regulatory_categories
+      - responsibilities
+      - certification
+      - certified_on
+      - certifying_councils
+      - history
+      - source_file
+    slot_usage:
+      data_stores: { range: Ref, inlined: true, inlined_as_list: true }
+      subject_areas: { range: Ref, inlined: true, inlined_as_list: true }
+      domains: { range: Ref, inlined: true, inlined_as_list: true }
+      data_elements: { range: Ref, inlined: true, inlined_as_list: true }
+      certification: { required: true }
+
+  DataElementPage:
+    is_a: Page
+    description: One field or column of a data set.
+    slots:
+      - description
+      - data_set
+      - sources
+      - derived_elements
+      - informed_terms
+      - sensitivity
+      - security_level
+      - regulatory_categories
+      - responsibilities
+      - source_file
+    slot_usage:
+      data_set: { required: true }
+
+  ClassificationLevel:
+    is_a: Page
+    description: >-
+      One level of the organization's classification scheme: a sensitivity
+      level, a security level or a regulatory category.
+    slots: [axis, definition, severity]
+    slot_usage:
+      definition: { required: false }
+
 slots:
   about:
     description: The CURIE of the governed object this page or link is about.
@@ -191,6 +281,10 @@ slots:
   councils: { range: CouncilPage, multivalued: true, inlined_as_list: true }
   agents: { range: AgentPage, multivalued: true, inlined_as_list: true }
   processes: { range: ProcessPage, multivalued: true, inlined_as_list: true }
+  data_stores: { range: DataStorePage, multivalued: true, inlined_as_list: true }
+  data_sets: { range: DataSetPage, multivalued: true, inlined_as_list: true }
+  data_elements: { range: DataElementPage, multivalued: true, inlined_as_list: true }
+  classification_levels: { range: ClassificationLevel, multivalued: true, inlined_as_list: true }
 
   term_count: { range: integer }
   glossary: { range: Ref, inlined: true }
@@ -224,7 +318,7 @@ slots:
     multivalued: true
     inlined_as_list: true
   below:
-    description: The narrower terms on the way down to the term the hierarchy belongs to.
+    description: The nodes on the way down to the one the hierarchy belongs to (a term, or a data set's lineage).
     range: HierarchyNode
     multivalued: true
     inlined_as_list: true
@@ -269,7 +363,10 @@ slots:
     description: The class IRI of the role kind (DGO's, or a local class's).
     range: uri
     required: true
-  term: { range: Ref, inlined: true }
+  subject:
+    description: What the role is held with respect to; a term, data store, data set or data element.
+    range: Ref
+    inlined: true
   bearer: { range: Ref, inlined: true, required: true }
 
   process_kind: { range: ProcessKind, required: true }
@@ -328,6 +425,70 @@ slots:
   job_title: {}
 
   parent: { range: Ref, inlined: true }
+
+  certification:
+    description: A data set's certification status (see derive.certification_state).
+    range: CertificationState
+  certified_on:
+    description: The date of the approved boundary of the data set's certification.
+    range: date
+  certifying_councils:
+    description: Councils governing the data set's certifications, through their governance processes.
+    range: Ref
+    multivalued: true
+    inlined_as_list: true
+  certified_sets:
+    description: Data sets whose certifications fall under this council.
+    range: Ref
+    multivalued: true
+    inlined_as_list: true
+  data_set: { range: Ref, inlined: true }
+  description: {}
+  foundational:
+    description: >-
+      Derived from no other data set: the raw data others are built from
+      (there is no field for it in DGO).
+    range: boolean
+  lineage:
+    description: >-
+      The foundational data sets this one comes from, topmost first,
+      branching down through each derived set to this one.
+    range: HierarchyNode
+    multivalued: true
+    inlined_as_list: true
+  derived_sets:
+    description: Data sets derived from this one.
+    range: Ref
+    multivalued: true
+    inlined_as_list: true
+  sources:
+    description: The data elements this one was derived from.
+    range: Ref
+    multivalued: true
+    inlined_as_list: true
+  derived_elements:
+    description: Data elements derived from this one.
+    range: Ref
+    multivalued: true
+    inlined_as_list: true
+  informed_terms:
+    description: Published glossary terms informed by this data (glossary terms' informed_by, read backwards).
+    range: Ref
+    multivalued: true
+    inlined_as_list: true
+  informed_by:
+    description: The data elements the term is informed by, grouped by data set.
+    range: ElementGroup
+    multivalued: true
+    inlined_as_list: true
+  sensitivity: { range: ClassificationRef, inlined: true }
+  security_level: { range: ClassificationRef, inlined: true }
+  regulatory_categories: { range: ClassificationRef, multivalued: true, inlined_as_list: true }
+  inherited:
+    description: Not set on the data element itself, so read from its data set.
+    range: boolean
+  axis: { range: ClassificationAxis, required: true }
+  severity: { range: integer }
   children: { range: Ref, multivalued: true, inlined_as_list: true }
 
 enums:
@@ -353,12 +514,31 @@ enums:
       term_creation: { meaning: dgo:DGO_00000021 }
       term_modification: { meaning: dgo:DGO_00000022 }
       term_deprecation: { meaning: dgo:DGO_00000031 }
+      data_set_certification: { meaning: dgo:DGO_00000039 }
   BoundaryKind:
     permissible_values:
       drafted: { meaning: dgo:DGO_00000024 }
       submitted_for_review: { meaning: dgo:DGO_00000025 }
       approved: { meaning: dgo:DGO_00000026 }
       rejected: { meaning: dgo:DGO_00000027 }
+  CertificationState:
+    description: A data set's certification status (rule in derive.certification_state).
+    permissible_values:
+      certified:
+        description: A certification of it reached an approved boundary.
+      in_progress:
+        description: A certification of it is still open.
+      foundational:
+        description: >-
+          Derived from no other data set, and no certification of it is
+          recorded. Foundational data is not expected to be certified.
+      not_certified:
+        description: No certification of it is recorded, or every one was rejected.
+  ClassificationAxis:
+    permissible_values:
+      sensitivity_level: { meaning: dgo:DGO_00000041 }
+      security_level: { meaning: dgo:DGO_00000042 }
+      regulatory_category: { meaning: dgo:DGO_00000043 }
   AgentKind:
     permissible_values:
       person: { meaning: dgo:DGO_00000003 }

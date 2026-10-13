@@ -27,7 +27,7 @@ from markupsafe import Markup
 from . import __version__, dgo
 from .config import Project
 from .content import ContentError, ContentPage
-from .derive import DIRS, PROCESS_PAGE
+from .derive import CLASSIFICATION_LISTS, CLASSIFICATION_PAGE, DIRS, PROCESS_PAGE
 from .models import viewmodel as vm
 from .resources import STATIC, TEMPLATES
 from .text import Text
@@ -51,12 +51,20 @@ ROLE_COLOURS = {
 # Published term states, in the order they are explained and counted.
 STATES = ("approved", "proposed", "deprecated")
 
+# Data set certification states, in the order they are explained.
+CERTIFICATION_STATES = ("certified", "in_progress", "not_certified", "foundational")
+
 # Glossary-term slots in the order a reader meets them on a term page. Their
 # labels are `field.<slot>` in the text catalog; descriptions come from DGO.
 # Slots the release lacks (semantic_type before 0.1.1) are left out.
 TERM_FIELDS = ["pref_label", "label", "alt_labels", "definition", "definition_source", "semantic_type",
                "part_of", "in_subject_area", "responsibilities", "broader", "related", "value_of",
-               "replaced_by", "id"]
+               "replaced_by", "informed_by", "id"]
+
+DATA_PAGE = "data.html"
+
+# Data-management kinds explained on "How to read a term" (DGO 0.2.0).
+DATA_KINDS = ("data store", "data set", "data element")
 
 # Generated pages whose header (and intro prose) a content file at the same
 # path may set, with the text-catalog section holding their defaults.
@@ -65,6 +73,8 @@ OVERRIDABLE = {
     "directory.html": "directory",
     PROCESS_PAGE: "governance",
     "how-to-read-a-term.html": "how_to_read",
+    DATA_PAGE: "data",
+    CLASSIFICATION_PAGE: "classification",
 }
 
 
@@ -171,7 +181,8 @@ class Renderer:
         self.lookup = {
             p.about: p
             for group in (site.glossaries, site.domains, site.subject_areas, site.terms,
-                          site.councils, site.agents, site.processes)
+                          site.councils, site.agents, site.processes,
+                          site.data_stores, site.data_sets, site.data_elements)
             for p in group or []
         }
         accents = iter(CARD_ACCENTS * 100)
@@ -258,6 +269,12 @@ class Renderer:
         glossary = [generated("terms/index.html", "nav.all_terms")]
         glossary += [NavItem(g.label, g.url) for g in self.site.glossaries or []]
         nav.append(NavGroup(glossary_label, glossary + items(glossary_label)))
+        if self.site.data_sets or self.site.data_stores:
+            data_label = self.plain("nav.data")
+            data = [generated(DATA_PAGE, "nav.data_sets")]
+            if self.site.classification_levels:
+                data.append(generated(CLASSIFICATION_PAGE, "nav.classification"))
+            nav.append(NavGroup(data_label, data + items(data_label)))
         governance = [generated(PROCESS_PAGE, "nav.governance_overview")]
         governance += [NavItem(c.label, c.url) for c in self.site.councils or []]
         governance.append(generated("directory.html", "nav.directory"))
@@ -294,7 +311,7 @@ class Renderer:
         lede = page.lede if page else self.cfg.description
         self.write(
             "index.html", "hub.html.j2",
-            page=page, hero_title=title, hero_lede=lede, stats=stats,
+            page=page, hero_title=title, hero_lede=lede, stats=stats, has_data=bool(self.site.data_sets),
             domains=self.site.domains or [], recent=recent,
             contacts=sorted(contacts.values(), key=lambda c: c["bearer"].label.casefold()),
             **self.context("index.html", title, description=lede),
@@ -341,7 +358,7 @@ class Renderer:
                    **self.context(a.url, a.label, breadcrumb=crumbs))
 
     def council_page(self, c: vm.CouncilPage) -> None:
-        self.write(c.url, "council.html.j2", council=c, council_kind=dgo.kind("data governance council"),
+        self.write(c.url, "council.html.j2", council=c,
                    **self.context(c.url, c.label, breadcrumb=[
                        {"label": self.plain("breadcrumb.governance"), "url": PROCESS_PAGE},
                        {"label": c.label, "url": None}]))
@@ -351,6 +368,48 @@ class Renderer:
                    **self.context(a.url, a.label, breadcrumb=[
                        {"label": self.plain("breadcrumb.directory"), "url": "directory.html"},
                        {"label": a.label, "url": None}]))
+
+    def data_index(self) -> None:
+        head = self.header(DATA_PAGE)
+        domains = {d.about: d for s in self.site.data_sets or [] for d in s.domains or []}
+        sets = [vm.Ref(about=s.about, url=s.url, label=s.label, certification=s.certification,
+                       certified_on=s.certified_on) for s in self.site.data_sets or []]
+        sets.sort(key=lambda r: (_enum(r.certification) != "certified", r.label.casefold()))
+        self.write(DATA_PAGE, "data.html.j2", head=head, data_sets=sets, stores=self.site.data_stores or [],
+                   domains=sorted(domains.values(), key=lambda d: d.label.casefold()),
+                   **self.context(DATA_PAGE, head["title"], description=head["lede"] or self.plain("data.description"),
+                                  breadcrumb=[{"label": self.plain("breadcrumb.data"), "url": None}]))
+
+    def data_store_page(self, s: vm.DataStorePage) -> None:
+        self.write(s.url, "data_store.html.j2", store=s, store_kind=dgo.kind("data store"),
+                   **self.context(s.url, s.label, description=s.description, breadcrumb=[
+                       {"label": self.plain("breadcrumb.data"), "url": DATA_PAGE},
+                       {"label": s.label, "url": None}]))
+
+    def data_set_page(self, s: vm.DataSetPage) -> None:
+        self.write(s.url, "data_set.html.j2", data_set=s, set_kind=dgo.kind("data set"),
+                   **self.context(s.url, s.label, description=s.description, breadcrumb=[
+                       {"label": self.plain("breadcrumb.data"), "url": DATA_PAGE},
+                       {"label": s.label, "url": None}]))
+
+    def data_element_page(self, e: vm.DataElementPage) -> None:
+        self.write(e.url, "data_element.html.j2", element=e, element_kind=dgo.kind("data element"),
+                   **self.context(e.url, f"{e.label} ({e.data_set.label})", description=e.description, breadcrumb=[
+                       {"label": self.plain("breadcrumb.data"), "url": DATA_PAGE},
+                       {"label": e.data_set.label, "url": e.data_set.url},
+                       {"label": e.label, "url": None}]))
+
+    def classification(self) -> None:
+        head = self.header(CLASSIFICATION_PAGE)
+        levels = self.site.classification_levels or []
+        axes = [{"name": axis, "kind": dgo.kind(axis.replace("_", " ")),
+                 "levels": [lv for lv in levels if _enum(lv.axis) == axis]} for axis, _ in CLASSIFICATION_LISTS]
+        self.write(CLASSIFICATION_PAGE, "classification.html.j2", head=head, axes=axes,
+                   severity=dgo.slot_description("severity", "sensitivity level"),
+                   **self.context(CLASSIFICATION_PAGE, head["title"],
+                                  description=head["lede"] or self.plain("classification.description"),
+                                  breadcrumb=[{"label": self.plain("breadcrumb.data"), "url": DATA_PAGE},
+                                              {"label": head["title"], "url": None}]))
 
     def directory(self) -> None:
         url = "directory.html"
@@ -377,13 +436,22 @@ class Renderer:
                   for name in TERM_FIELDS if name in term_slots]
         states = [{"name": s, "label": self.text(f"state.{s}.label"),
                    "description": self.text(f"state.{s}.description")} for s in STATES]
+        # From DGO 0.2.0, term processes and data set certifications share one
+        # abstract parent, and the data-management kinds exist.
+        data = dgo.has_class("data set")
+        lifecycle = "lifecycle process" if dgo.has_class("lifecycle process") else "term lifecycle process"
         self.write(
             url, "how_to_read.html.j2", head=head,
             fields=fields, states=states,
             roles=dgo.subkinds("governance role")[1:],
             council_roles=dgo.subkinds("council role")[1:],
-            processes=dgo.subkinds("term lifecycle process")[1:],
+            processes=[k for k in dgo.subkinds(lifecycle)[1:] if k.name != "term lifecycle process"],
             boundaries=dgo.subkinds("status boundary")[1:],
+            certification_states=[{"name": c, "label": self.text(f"certification.{c}.label"),
+                                   "description": self.text(f"certification.{c}.description")}
+                                  for c in CERTIFICATION_STATES] if data else [],
+            data_kinds=[dgo.kind(k) for k in DATA_KINDS] if data else [],
+            classification_kinds=dgo.subkinds("data classification") if data else [],
             **self.context(url, head["title"], breadcrumb=[{"label": head["title"], "url": None}],
                            description=head["lede"] or self.plain("how_to_read.description")),
         )
@@ -414,6 +482,16 @@ class Renderer:
             self.council_page(c)
         for a in self.site.agents or []:
             self.agent_page(a)
+        if self.site.data_sets or self.site.data_stores:
+            self.data_index()
+            if self.site.classification_levels:
+                self.classification()
+        for s in self.site.data_stores or []:
+            self.data_store_page(s)
+        for s in self.site.data_sets or []:
+            self.data_set_page(s)
+        for e in self.site.data_elements or []:
+            self.data_element_page(e)
         self.directory()
         self.governance()
         self.how_to_read()
@@ -448,6 +526,19 @@ class Renderer:
             for p in group or []:
                 entries.append({"kind": kind, "title": p.label, "alt": [], "url": p.url,
                                 "meta": self.plain(f"search.{kind}"), "text": p.label})
+        for s in self.site.data_sets or []:
+            state = self.plain(f"certification.{_enum(s.certification)}.label")
+            entries.append({"kind": "data_set", "title": s.label, "alt": [], "url": s.url,
+                            "meta": " · ".join([self.plain("search.data_set"), state]),
+                            "text": " ".join(x for x in [s.label, s.description] if x)})
+        for s in self.site.data_stores or []:
+            entries.append({"kind": "data_store", "title": s.label, "alt": [], "url": s.url,
+                            "meta": self.plain("search.data_store"),
+                            "text": " ".join(x for x in [s.label, s.description] if x)})
+        for e in self.site.data_elements or []:
+            entries.append({"kind": "data_element", "title": e.label, "alt": [], "url": e.url,
+                            "meta": " · ".join([self.plain("search.data_element"), e.data_set.label]),
+                            "text": " ".join(x for x in [e.label, e.description, e.data_set.label] if x)})
         for a in self.site.agents or []:
             entries.append({"kind": "agent", "title": a.label, "alt": [], "url": a.url,
                             "meta": " · ".join(x for x in [a.job_title, a.email] if x)

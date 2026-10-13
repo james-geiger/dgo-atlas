@@ -13,7 +13,7 @@
 # # schema is imported from the DGO repository's dist/dgo.yaml at that tag.
 # # Quote it, or YAML may read it as a number. (required; shown is the newest
 # # release this version of DGO Atlas is tested with)
-# dgo_version: "0.1.1"
+# dgo_version: "0.2.0"
 
 # # Import DGO from here instead of the release URL: a URL, or a path relative
 # # to dgo-atlas.yaml, to a single-file DGO schema (for a mirror, a fork, or
@@ -102,7 +102,7 @@
 # text:
 #   site.skip_link: Skip to content
 #   site.menu: Menu
-#   site.search_placeholder: Search terms, people, councils
+#   site.search_placeholder: Search terms, data, people, councils
 #   site.search_label: Search the glossary
 #   site.search_results: Search results
 #   site.search_shortcut: Ctrl K
@@ -125,8 +125,13 @@
 #   nav.directory: People & organizations
 #   nav.governance_overview: How governance is organized
 #   nav.how_to_read: How to read a term
+#   nav.data: Data
+#   nav.data_sets: Data sets
+#   nav.classification: Classification
 #
 #   breadcrumb.terms: Terms
+#   breadcrumb.data: Data
+#   breadcrumb.classification: Classification
 #   breadcrumb.governance: Governance
 #   breadcrumb.directory: People & organizations
 #
@@ -138,6 +143,10 @@
 #   count.domain.other: "{n} domains"
 #   count.member.one: "{n} member"
 #   count.member.other: "{n} members"
+#   count.data_set.one: "{n} data set"
+#   count.data_set.other: "{n} data sets"
+#   count.data_element.one: "{n} data element"
+#   count.data_element.other: "{n} data elements"
 #
 #   state.approved.label: Approved
 #   state.approved.description: Its creation was approved by the responsible council. Build on it.
@@ -149,7 +158,18 @@
 #   state.deprecated.description: A deprecation of it was approved. Use its successor, if it names one.
 #   state.deprecated.definition: Definition (deprecated)
 #
+#   certification.certified.label: Certified
+#   certification.certified.description: A certification of it was approved by the responsible council. Consumers can rely on it.
+#   certification.in_progress.label: Certification in progress
+#   certification.in_progress.description: A certification of it is under way and not yet decided.
+#   certification.foundational.label: Foundational
+#   certification.foundational.description: "Derived from no other data set: the raw data others are built from, such as a table in an operational system. Foundational data isn't certified; the data sets built from it are."
+#   certification.not_certified.label: Not certified
+#   certification.not_certified.description: No approved certification is recorded for it.
+#   certification.certified_on: Certified {date}
+#
 #   home.browse_terms: Browse the terms
+#   home.browse_data: Browse available data
 #   home.how_to_read: How to read a term
 #   home.stat_approved: Approved terms
 #   home.stat_subject_areas: Subject areas
@@ -212,6 +232,8 @@
 #   term.identifier: Identifier
 #   term.source: Source
 #   term.term_id: Term ID
+#   term.informed_by: Informed by data
+#   term.informed_by_intro: The data elements whose values determine this term.
 #   term.iri: IRI
 #   term.copy_iri: Copy IRI
 #   term.class: Class
@@ -224,6 +246,8 @@
 #   domain.part_of: Part of {glossary}
 #   domain.subject_areas: Subject areas
 #   domain.empty: No subject areas are part of this domain yet.
+#   domain.data_sets: Data sets
+#   domain.data_sets_intro: Data sets in this domain's subject areas.
 #
 #   area.eyebrow: Subject area
 #   area.in_domain: In {domain}
@@ -232,8 +256,8 @@
 #   area.column_state: State
 #   area.empty: No terms are classified under this subject area yet.
 #   area.by_state: By state
+#   area.data_sets: Data sets
 #
-#   council.takes_part_in: Takes part in {process}.
 #   council.members: Members
 #   council.members_empty: No members are recorded for this council.
 #   council.column_name: Name
@@ -245,6 +269,9 @@
 #   council.areas_intro: The subject areas holding the terms this council governs, with the roles it holds on them. Open an area to see its terms.
 #   council.areas_empty: No term lifecycle process falls under this council yet.
 #   council.general_roles: "Also holds, for no particular term:"
+#   council.data: Data
+#   council.data_intro: Data sets whose certification falls to this council, and the data it holds roles on.
+#   council.certified_sets: Certifications
 #   council.processes: Governance processes
 #   council.identifier: Identifier
 #   council.id: ID
@@ -263,7 +290,7 @@
 #   agent.iri: IRI
 #
 #   responsibilities.heading: Responsible for
-#   responsibilities.column_term: Term
+#   responsibilities.column_term: Applies to
 #   responsibilities.column_role: Role
 #   responsibilities.column_state: State
 #   responsibilities.no_term: Not tied to a term
@@ -275,6 +302,74 @@
 #   directory.column_roles: Roles
 #   directory.column_seats: Council seats
 #   directory.empty: No people or organizations are recorded yet.
+#
+#   data.eyebrow: Data
+#   data.title: Data sets
+#   data.lede: The governed data sets, the systems that store them, and where each one comes from. Certified data sets are listed first.
+#   data.description: Every governed data set, with its certification, store and lineage.
+#   data.filter_all: All
+#   data.filter_certified: Certified
+#   data.column_data_set: Data set
+#   data.column_store: Stored in
+#   data.column_certification: Certification
+#   data.empty: No data sets match that filter.
+#   data.stores: Data stores
+#   data.stores_intro: A data store is the operational system that holds data sets, not the logical database. It has no domain of its own; its data sets do.
+#   data.stores_empty: No data stores are recorded yet.
+#   data.pages: Data set index pages
+#
+#   data_store.data_sets: Data sets stored here
+#   data_store.data_sets_empty: No data sets are stored in this system yet.
+#   data_store.responsibility: Responsibility
+#   data_store.responsibility_empty: No responsibilities are recorded for this data store.
+#
+#   data_set.back: All data sets
+#   data_set.elements: Data elements
+#   data_set.elements_empty: No data elements are recorded for this data set.
+#   data_set.column_element: Element
+#   data_set.column_sensitivity: Sensitivity
+#   data_set.lineage: Lineage
+#   data_set.lineage_intro: Where this data comes from, starting at the foundational data.
+#   data_set.lineage_current: This data set
+#   data_set.derived_sets: Derived data sets
+#   data_set.terms: Terms this data informs
+#   data_set.terms_intro: Glossary terms informed by this data set's elements. Terms point at the data, not the other way round.
+#   data_set.column_term: Term
+#   data_set.column_informed_by: Informed by
+#   data_set.column_state: State
+#   data_set.history: Certification history
+#   data_set.history_empty: No certification is recorded for this data set.
+#   data_set.stored_in: Stored in
+#   data_set.filed_under: Filed under
+#   data_set.subject_areas: Subject areas
+#   data_set.domains: Domains
+#   data_set.domains_note: Its domains follow from its subject areas.
+#   data_set.classification: Classification
+#   data_set.responsibility: Responsibility
+#   data_set.responsibility_empty: No responsibilities are recorded for this data set.
+#   data_set.certified_by: Certification falls to
+#   data_set.repeated: shown above
+#
+#   data_element.part_of: Part of {data_set}
+#   data_element.derived_from: Derived from
+#   data_element.derived_elements: Derived into
+#   data_element.terms: Terms this element informs
+#   data_element.responsibility: Responsibility
+#   data_element.responsibility_empty: No responsibilities are recorded for this data element.
+#
+#   classification.eyebrow: Data
+#   classification.title: Classification
+#   classification.lede: How the organization classifies its data, level by level.
+#   classification.description: The organization's sensitivity levels, security levels and regulatory categories.
+#   classification.sensitivity: Sensitivity
+#   classification.security_level: Security
+#   classification.regulatory_categories: Regulatory
+#   classification.severity: Severity {n}
+#   classification.inherited: from its data set
+#   classification.axis.sensitivity_level: Sensitivity levels
+#   classification.axis.security_level: Security levels
+#   classification.axis.regulatory_category: Regulatory categories
+#   classification.empty: None are defined.
 #
 #   governance.eyebrow: Governance
 #   governance.title: How governance is organized
@@ -298,6 +393,11 @@
 #   how_to_read.roles: Who is responsible
 #   how_to_read.roles_intro: A role is borne by a person, an organization or a council. The role isn't the person, and a term's page lists who currently holds each role.
 #   how_to_read.council_roles: Council seats
+#   how_to_read.certification: Data set certification
+#   how_to_read.certification_intro: Certification is a process, not a flag. A data set certification moves through the same dated steps as a term's lifecycle, and the data set is certified once one reaches an approved step, on that step's date.
+#   how_to_read.data: Data
+#   how_to_read.data_intro: Data stores hold data sets, which are made of data elements. Terms are informed by data elements, and data sets are derived from one another.
+#   how_to_read.classification: Classification
 #   how_to_read.fields: Every field on a term
 #   how_to_read.required: required
 #   how_to_read.no_description: No description in DGO.
@@ -308,6 +408,7 @@
 #   field.definition: Definition
 #   field.definition_source: Definition source
 #   field.semantic_type: Denotes
+#   field.informed_by: Informed by data
 #   field.part_of: Glossary
 #   field.in_subject_area: Subject area
 #   field.responsibilities: Responsibility
@@ -322,6 +423,9 @@
 #   search.domain: Domain
 #   search.glossary: Glossary
 #   search.council: Council
+#   search.data_set: Data set
+#   search.data_store: Data store
+#   search.data_element: Data element
 #   search.guide: Guide
 #
 #   content.on_this_page: On this page
@@ -343,6 +447,10 @@
 #   js.count_one: "{n} term"
 #   js.count_other: "{n} terms"
 #   js.count_range: Showing {start}–{end} of {total} terms
+#   js.count_data_set_none: No data sets
+#   js.count_data_set_one: "{n} data set"
+#   js.count_data_set_other: "{n} data sets"
+#   js.count_data_set_range: Showing {start}–{end} of {total} data sets
 #   js.page_status: Page {page} of {pages}
 #   js.copied: Copied
 #   js.copy_fallback: Press Ctrl+C to copy

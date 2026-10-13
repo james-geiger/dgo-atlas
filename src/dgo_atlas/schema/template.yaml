@@ -47,7 +47,15 @@ classes:
       - term_creations
       - term_modifications
       - term_deprecations
+      - status_boundaries
       - term_status_boundaries
+      - data_stores
+      - data_sets
+      - data_elements
+      - data_set_certifications
+      - sensitivity_levels
+      - security_levels
+      - regulations
       - local_classes
 
   LocalClass:
@@ -141,10 +149,60 @@ slots:
     range: term deprecation
     multivalued: true
     inlined_as_list: true
+  status_boundaries:
+    description: >-
+      Dated status boundaries of term lifecycle processes and data set
+      certifications; `type` picks the kind. Quote the dates.
+    slot_uri: dgoatlas:status_boundaries
+    range: status boundary
+    multivalued: true
+    inlined_as_list: true
   term_status_boundaries:
-    description: Dated status boundaries; `type` picks the kind. Quote the dates.
+    description: The former name of status_boundaries; still read.
+    deprecated: Use status_boundaries.
     slot_uri: dgoatlas:term_status_boundaries
     range: status boundary
+    multivalued: true
+    inlined_as_list: true
+  data_stores:
+    description: Systems that carry data sets. Lists of this kind need DGO 0.2.0 or later.
+    slot_uri: dgoatlas:data_stores
+    range: data store
+    multivalued: true
+    inlined_as_list: true
+  data_sets:
+    slot_uri: dgoatlas:data_sets
+    range: data set
+    multivalued: true
+    inlined_as_list: true
+  data_elements:
+    description: Fields or columns; each is part_of exactly one data set.
+    slot_uri: dgoatlas:data_elements
+    range: data element
+    multivalued: true
+    inlined_as_list: true
+  data_set_certifications:
+    description: Certifications of data sets; their status boundaries go in status_boundaries.
+    slot_uri: dgoatlas:data_set_certifications
+    range: data set certification
+    multivalued: true
+    inlined_as_list: true
+  sensitivity_levels:
+    description: The organization's sensitivity levels, ordered by severity.
+    slot_uri: dgoatlas:sensitivity_levels
+    range: sensitivity level
+    multivalued: true
+    inlined_as_list: true
+  security_levels:
+    description: The organization's security levels, ordered by severity.
+    slot_uri: dgoatlas:security_levels
+    range: security level
+    multivalued: true
+    inlined_as_list: true
+  regulations:
+    description: The regulatory categories data may fall under.
+    slot_uri: dgoatlas:regulations
+    range: regulatory category
     multivalued: true
     inlined_as_list: true
   local_classes:
@@ -163,6 +221,7 @@ slots:
       another local class, by name or id.
     slot_uri: dgoatlas:is_a
     required: true
+  # DGO 0.2.0 defines `description` itself; dgo.use() then drops this one.
   description:
     description: What makes something a member of this class.
     slot_uri: dgoatlas:description

@@ -1,5 +1,5 @@
 {% extends "base.html.j2" %}
-{% from "_macros.html.j2" import state_badge, bearer, link_panel, broader_panel %}
+{% from "_macros.html.j2" import state_badge, bearer, link_panel, broader_panel, certification_badge, iri_row %}
 {#- One glossary term. Sections with no data are left out rather than shown
     empty: a blank panel reads as a site bug, its absence as "not recorded". -#}
 
@@ -56,6 +56,23 @@
     {%- if term.predecessors %}
     {%- set predecessors %}{% for p in term.predecessors %}<a href="{{ rel }}{{ p.url }}">{{ p.label }}</a>{% if not loop.last %}, {% endif %}{% endfor %}{% endset %}
     <p class="term-row__sub">{{ t("term.replaces", terms=predecessors) }}</p>
+    {%- endif %}
+
+    {#- Terminology flows up from the data: the term names the elements that
+        determine it, grouped by the data set each is part of. #}
+    {%- if term.informed_by %}
+    <h2 class="subhead subhead--term" id="informed-by">{{ t("term.informed_by") }}</h2>
+    <p class="subhead-note">{{ t("term.informed_by_intro") }}</p>
+    {%- for g in term.informed_by %}
+    <div class="element-group">
+      <p class="element-group__set"><a href="{{ rel }}{{ g.data_set.url }}">{{ g.data_set.label }}</a> {{ certification_badge(g.data_set) }}</p>
+      <ul class="panel-list">
+        {%- for e in g.data_elements or [] %}
+        <li><a class="panel-link" href="{{ rel }}{{ e.url }}"><div class="panel-link__name">{{ e.label }}</div></a></li>
+        {%- endfor %}
+      </ul>
+    </div>
+    {%- endfor %}
     {%- endif %}
 
     <h2 class="subhead subhead--term" id="history">{{ t("term.history") }}</h2>
@@ -138,15 +155,7 @@
           <dt class="ref-row__k">{{ t("term.term_id") }}</dt>
           <dd><code class="ref-row__v">{{ term.about }}</code></dd>
         </div>
-        <div class="ref-row">
-          <dt class="ref-row__k">{{ t("term.iri") }}</dt>
-          <dd>
-            <code class="permalink" id="permalink-value">{{ term.iri }}</code>
-            <button class="permalink__copy" type="button"
-                    data-copy-target="permalink-value"
-                    data-copy-label="{{ t("term.copy_iri") }}">{{ t("term.copy_iri") }}</button>
-          </dd>
-        </div>
+        {{ iri_row(term.iri, t("term.iri")) }}
         <div class="ref-row">
           <dt class="ref-row__k">{{ t("term.class") }}</dt>
           <dd><a class="ref-row__v" href="{{ term_kind.iri }}" rel="noopener"><code>{{ term_kind.curie }}</code></a></dd>

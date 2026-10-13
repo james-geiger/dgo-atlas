@@ -9,7 +9,7 @@ from dgo_atlas.validate import validate
 
 FIXTURES = Path(__file__).parent / "fixtures"
 EX = {"ex": "https://w3id.org/dgo/data/", "bfo": "http://purl.obolibrary.org/obo/BFO_"}  # the variant's prefixes
-DGO_VERSION = "0.1.1"  # imported from the DGO repository; the tests need network access
+DGO_VERSION = "0.2.0"  # imported from the DGO repository; the tests need network access
 
 
 @pytest.fixture(scope="session", autouse=True)

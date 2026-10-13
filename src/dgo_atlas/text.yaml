@@ -15,7 +15,7 @@
 site:
   skip_link: Skip to content
   menu: Menu
-  search_placeholder: Search terms, people, councils
+  search_placeholder: Search terms, data, people, councils
   search_label: Search the glossary
   search_results: Search results
   # The key hint shown in the search box. The shortcut is Ctrl+K (⌘K on a Mac).
@@ -41,9 +41,14 @@ nav:
   directory: People & organizations
   governance_overview: How governance is organized
   how_to_read: How to read a term
+  data: Data
+  data_sets: Data sets
+  classification: Classification
 
 breadcrumb:
   terms: Terms
+  data: Data
+  classification: Classification
   governance: Governance
   directory: People & organizations
 
@@ -52,6 +57,8 @@ count:
   subject_area: {one: "{n} subject area", other: "{n} subject areas"}
   domain: {one: "{n} domain", other: "{n} domains"}
   member: {one: "{n} member", other: "{n} members"}
+  data_set: {one: "{n} data set", other: "{n} data sets"}
+  data_element: {one: "{n} data element", other: "{n} data elements"}
 
 state:
   approved:
@@ -67,8 +74,25 @@ state:
     description: A deprecation of it was approved. Use its successor, if it names one.
     definition: Definition (deprecated)
 
+# A data set's certification status (derived; see derive.certification_state).
+certification:
+  certified:
+    label: Certified
+    description: A certification of it was approved by the responsible council. Consumers can rely on it.
+  in_progress:
+    label: Certification in progress
+    description: A certification of it is under way and not yet decided.
+  foundational:
+    label: Foundational
+    description: "Derived from no other data set: the raw data others are built from, such as a table in an operational system. Foundational data isn't certified; the data sets built from it are."
+  not_certified:
+    label: Not certified
+    description: No approved certification is recorded for it.
+  certified_on: Certified {date}
+
 home:
   browse_terms: Browse the terms
+  browse_data: Browse available data
   how_to_read: How to read a term
   stat_approved: Approved terms
   stat_subject_areas: Subject areas
@@ -133,6 +157,8 @@ term:
   identifier: Identifier
   source: Source
   term_id: Term ID
+  informed_by: Informed by data
+  informed_by_intro: The data elements whose values determine this term.
   iri: IRI
   copy_iri: Copy IRI
   class: Class
@@ -147,6 +173,8 @@ domain:
   part_of: Part of {glossary}
   subject_areas: Subject areas
   empty: No subject areas are part of this domain yet.
+  data_sets: Data sets
+  data_sets_intro: Data sets in this domain's subject areas.
 
 area:
   eyebrow: Subject area
@@ -156,9 +184,9 @@ area:
   column_state: State
   empty: No terms are classified under this subject area yet.
   by_state: By state
+  data_sets: Data sets
 
 council:
-  takes_part_in: Takes part in {process}.
   members: Members
   members_empty: No members are recorded for this council.
   column_name: Name
@@ -172,6 +200,9 @@ council:
     it holds on them. Open an area to see its terms.
   areas_empty: No term lifecycle process falls under this council yet.
   general_roles: "Also holds, for no particular term:"
+  data: Data
+  data_intro: Data sets whose certification falls to this council, and the data it holds roles on.
+  certified_sets: Certifications
   processes: Governance processes
   identifier: Identifier
   id: ID
@@ -192,7 +223,7 @@ agent:
 
 responsibilities:
   heading: Responsible for
-  column_term: Term
+  column_term: Applies to
   column_role: Role
   column_state: State
   no_term: Not tied to a term
@@ -205,6 +236,84 @@ directory:
   column_roles: Roles
   column_seats: Council seats
   empty: No people or organizations are recorded yet.
+
+data:
+  eyebrow: Data
+  title: Data sets
+  lede: >-
+    The governed data sets, the systems that store them, and where each one
+    comes from. Certified data sets are listed first.
+  description: Every governed data set, with its certification, store and lineage.
+  filter_all: All
+  filter_certified: Certified
+  column_data_set: Data set
+  column_store: Stored in
+  column_certification: Certification
+  empty: No data sets match that filter.
+  stores: Data stores
+  stores_intro: >-
+    A data store is the operational system that holds data sets, not the
+    logical database. It has no domain of its own; its data sets do.
+  stores_empty: No data stores are recorded yet.
+  pages: Data set index pages
+
+data_store:
+  data_sets: Data sets stored here
+  data_sets_empty: No data sets are stored in this system yet.
+  responsibility: Responsibility
+  responsibility_empty: No responsibilities are recorded for this data store.
+
+data_set:
+  back: All data sets
+  elements: Data elements
+  elements_empty: No data elements are recorded for this data set.
+  column_element: Element
+  column_sensitivity: Sensitivity
+  lineage: Lineage
+  lineage_intro: Where this data comes from, starting at the foundational data.
+  lineage_current: This data set
+  derived_sets: Derived data sets
+  terms: Terms this data informs
+  terms_intro: Glossary terms informed by this data set's elements. Terms point at the data, not the other way round.
+  column_term: Term
+  column_informed_by: Informed by
+  column_state: State
+  history: Certification history
+  history_empty: No certification is recorded for this data set.
+  stored_in: Stored in
+  filed_under: Filed under
+  subject_areas: Subject areas
+  domains: Domains
+  domains_note: Its domains follow from its subject areas.
+  classification: Classification
+  responsibility: Responsibility
+  responsibility_empty: No responsibilities are recorded for this data set.
+  certified_by: Certification falls to
+  repeated: shown above
+
+data_element:
+  part_of: Part of {data_set}
+  derived_from: Derived from
+  derived_elements: Derived into
+  terms: Terms this element informs
+  responsibility: Responsibility
+  responsibility_empty: No responsibilities are recorded for this data element.
+
+classification:
+  eyebrow: Data
+  title: Classification
+  lede: How the organization classifies its data, level by level.
+  description: The organization's sensitivity levels, security levels and regulatory categories.
+  sensitivity: Sensitivity
+  security_level: Security
+  regulatory_categories: Regulatory
+  severity: Severity {n}
+  inherited: from its data set
+  axis:
+    sensitivity_level: Sensitivity levels
+    security_level: Security levels
+    regulatory_category: Regulatory categories
+  empty: None are defined.
 
 governance:
   eyebrow: Governance
@@ -240,6 +349,16 @@ how_to_read:
     A role is borne by a person, an organization or a council. The role isn't
     the person, and a term's page lists who currently holds each role.
   council_roles: Council seats
+  certification: Data set certification
+  certification_intro: >-
+    Certification is a process, not a flag. A data set certification moves
+    through the same dated steps as a term's lifecycle, and the data set is
+    certified once one reaches an approved step, on that step's date.
+  data: Data
+  data_intro: >-
+    Data stores hold data sets, which are made of data elements. Terms are
+    informed by data elements, and data sets are derived from one another.
+  classification: Classification
   fields: Every field on a term
   required: required
   no_description: No description in DGO.
@@ -252,6 +371,7 @@ field:
   definition: Definition
   definition_source: Definition source
   semantic_type: Denotes
+  informed_by: Informed by data
   part_of: Glossary
   in_subject_area: Subject area
   responsibilities: Responsibility
@@ -267,6 +387,9 @@ search:
   domain: Domain
   glossary: Glossary
   council: Council
+  data_set: Data set
+  data_store: Data store
+  data_element: Data element
   guide: Guide
 
 content:
@@ -294,6 +417,10 @@ js:
   count_one: "{n} term"
   count_other: "{n} terms"
   count_range: Showing {start}–{end} of {total} terms
+  count_data_set_none: No data sets
+  count_data_set_one: "{n} data set"
+  count_data_set_other: "{n} data sets"
+  count_data_set_range: Showing {start}–{end} of {total} data sets
   page_status: Page {page} of {pages}
   copied: Copied
   copy_fallback: Press Ctrl+C to copy

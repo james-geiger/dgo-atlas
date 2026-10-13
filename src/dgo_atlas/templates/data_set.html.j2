@@ -1,0 +1,142 @@
+{% extends "base.html.j2" %}
+{% from "_macros.html.j2" import certification_badge, classification_panel,
+   responsibility_panel, identifier_panel, link_panel, data_set_rows, cell_label, state_badge %}
+{#- One data set: certification, elements, lineage back to the sources of
+    truth, the terms its data informs, and its classification. Domains and
+    whether it is foundational are derived, never written in the data. -#}
+
+{% block content %}
+{%- set c = data_set.certification | enum %}
+<div class="split">
+  <article class="split__body split__body--wide">
+    <a class="back-link" href="{{ rel }}data.html"><span aria-hidden="true">&larr;</span> {{ t("data_set.back") }}</a>
+    <h1 class="page-title page-title--term">{{ data_set.label }}</h1>
+
+    <div class="term-meta">
+      {{ certification_badge(data_set, always=True, status=True) }}
+      <a class="tag-type" href="{{ set_kind.iri }}" rel="noopener" title="{{ t("term.kind_title") }}">{{ set_kind.name }}</a>
+    </div>
+
+    {%- if data_set.description %}<p class="lede">{{ data_set.description }}</p>{% endif %}
+
+    <h2 class="subhead" id="elements">{{ t("data_set.elements") }}</h2>
+    <div class="term-table">
+      {%- if data_set.data_elements %}
+      <div class="term-row term-row--head" aria-hidden="true">
+        <div>{{ t("data_set.column_element") }}</div><div></div><div>{{ t("data_set.column_sensitivity") }}</div><div></div>
+      </div>
+      <ul class="term-list">
+        {%- for r in data_set.data_elements %}
+        {%- set e = lookup.get(r.about) %}
+        <li><a class="term-row" href="{{ rel }}{{ r.url }}">
+          <span class="term-row__name">{{ r.label }}</span>
+          <span class="term-row__sub">{{ e.description or "" }}</span>
+          <span class="term-row__sub">{{ cell_label("data_set.column_sensitivity") }}{{ e.sensitivity.label if e.sensitivity else "—" }}</span>
+          <span class="term-row__chev" aria-hidden="true">&rsaquo;</span>
+        </a></li>
+        {%- endfor %}
+      </ul>
+      {%- else %}
+      <div class="empty-state">{{ t("data_set.elements_empty") }}</div>
+      {%- endif %}
+    </div>
+
+    {%- if data_set.lineage %}
+    <h2 class="subhead" id="lineage">{{ t("data_set.lineage") }}</h2>
+    <p class="subhead-note">{{ t("data_set.lineage_intro") }}</p>
+    {#- The same tree as a term's hierarchy: foundational data at the top,
+        branching down through each derived set to this one. #}
+    <ul class="hierarchy__tree lineage">
+      {%- for n in data_set.lineage recursive %}
+      <li>
+        {%- if n.current %}
+        <div class="panel-link panel-link--current" aria-current="page">
+          <div class="panel-link__name">{{ n.label }}</div>
+          <div class="panel-link__rel">{{ t("data_set.lineage_current") }}</div>
+        </div>
+        {%- else %}
+        <a class="panel-link" href="{{ rel }}{{ n.url }}">
+          <div class="panel-link__name">{{ n.label }}</div>
+          <div class="panel-link__rel">
+            {%- if n.certification %}{{ t("certification." ~ (n.certification | enum) ~ ".label") }}{% endif %}
+            {%- if n.certification and n.repeated %} &middot; {% endif %}
+            {%- if n.repeated %}{{ t("data_set.repeated") }}{% endif %}</div>
+        </a>
+        {%- endif %}
+        {%- if n.below %}
+        <ul>{{ loop(n.below) }}</ul>
+        {%- endif %}
+      </li>
+      {%- endfor %}
+    </ul>
+    {%- endif %}
+
+    {%- if data_set.derived_sets %}
+    <h2 class="subhead">{{ t("data_set.derived_sets") }}</h2>
+    {{ data_set_rows(data_set.derived_sets, rel, lookup, "") }}
+    {%- endif %}
+
+    {%- if data_set.informed_terms %}
+    <h2 class="subhead" id="terms">{{ t("data_set.terms") }}</h2>
+    <p class="subhead-note">{{ t("data_set.terms_intro") }}</p>
+    {#- Each term with the elements of this set that inform it, read from the
+        term's own informed_by. #}
+    <div class="term-table">
+      <div class="term-row term-row--head" aria-hidden="true">
+        <div>{{ t("data_set.column_term") }}</div><div>{{ t("data_set.column_informed_by") }}</div><div>{{ t("data_set.column_state") }}</div><div></div>
+      </div>
+      <ul class="term-list">
+        {%- for r in data_set.informed_terms %}
+        {%- set term = lookup.get(r.about) %}
+        {%- set groups = (term.informed_by or []) | selectattr("data_set.about", "equalto", data_set.about) | list %}
+        <li><a class="term-row" href="{{ rel }}{{ r.url }}">
+          <span class="term-row__name{% if (r.state | enum) == 'deprecated' %} term-row__name--deprecated{% endif %}">{{ r.label }}</span>
+          <span class="term-row__sub">{{ cell_label("data_set.column_informed_by") }}
+            {%- for g in groups %}{{ (g.data_elements or []) | map(attribute="label") | join(", ") }}{% endfor %}</span>
+          <span>{{ cell_label("data_set.column_state") }}{{ state_badge(r.state) }}</span>
+          <span class="term-row__chev" aria-hidden="true">&rsaquo;</span>
+        </a></li>
+        {%- endfor %}
+      </ul>
+    </div>
+    {%- endif %}
+
+    {%- if c != "foundational" %}
+    <h2 class="subhead subhead--term" id="history">{{ t("data_set.history") }}</h2>
+    {%- endif %}
+    {%- if data_set.history %}
+    <ol class="history">
+      {%- for h in data_set.history | reverse %}
+      <li class="history__entry">
+        <div class="history__dot" aria-hidden="true"></div>
+        <div class="history__meta">{{ h.occurred_on }} &middot; {{ h.process_label }} &middot; {{ h.process.label }}</div>
+        <div class="history__what">{{ h.boundary_label | capitalize }}</div>
+      </li>
+      {%- endfor %}
+    </ol>
+    {%- elif c != "foundational" %}
+    <p class="history__empty">{{ t("data_set.history_empty") }}</p>
+    {%- endif %}
+  </article>
+
+  <aside class="split__aside">
+    {{ responsibility_panel(data_set, rel, lookup, t("data_set.responsibility_empty")) }}
+    {{ link_panel(t("data_set.certified_by"), data_set.certifying_councils, rel, show_state=False) }}
+    {{ link_panel(t("data_set.stored_in"), data_set.data_stores, rel, show_state=False) }}
+    {%- if data_set.subject_areas %}
+    <div class="panel">
+      <h2 class="panel__label">{{ t("data_set.filed_under") }}</h2>
+      <dl class="kv-list">
+        <div class="kv"><dt class="kv__k">{{ t("data_set.domains") }}</dt><dd class="kv__v">
+          {%- for r in data_set.domains or [] %}<a href="{{ rel }}{{ r.url }}">{{ r.label }}</a>{% if not loop.last %}, {% endif %}{% endfor %}</dd></div>
+        <div class="kv"><dt class="kv__k">{{ t("data_set.subject_areas") }}</dt><dd class="kv__v">
+          {%- for r in data_set.subject_areas %}<a href="{{ rel }}{{ r.url }}">{{ r.label }}</a>{% if not loop.last %}, {% endif %}{% endfor %}</dd></div>
+      </dl>
+      <p class="term-row__sub" style="margin:8px 0 0">{{ t("data_set.domains_note") }}</p>
+    </div>
+    {%- endif %}
+    {{ classification_panel(data_set, rel) }}
+    {{ identifier_panel(data_set, set_kind, show_identifiers, repo_blob_url) }}
+  </aside>
+</div>
+{% endblock %}

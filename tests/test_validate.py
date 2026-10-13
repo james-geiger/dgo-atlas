@@ -33,7 +33,7 @@ def test_unquoted_date(broken):
     report = broken(('occurred_on: "2026-09-25"', "occurred_on: 2026-09-25"))
     assert report.stage == "shape"
     msg = one(report, "unquoted date")
-    assert "term_status_boundaries[0].occurred_on" in msg
+    assert "status_boundaries[0].occurred_on" in msg
     assert len(report.errors) == 1  # the linkml error on the same object is folded in
 
 
@@ -51,12 +51,12 @@ def test_type_by_class_name_is_rewritten_to_the_curie(broken):
                     ("type: dgo:DGO_00000012       # owner\n        role_of: ex:cto",
                      "type: owner\n        role_of: ex:cto"))
     assert report.ok, messages(report)
-    created = [b["type"] for b in report.dataset.merged["term_status_boundaries"]
+    created = [b["type"] for b in report.dataset.merged["status_boundaries"]
                if b["part_of"] == "ex:clinical-trial-creation"]
     assert created == ["dgo:DGO_00000024", "dgo:DGO_00000025", "dgo:DGO_00000026"]
     (trial,) = [t for t in report.dataset.merged["glossary_terms"] if t["id"] == "ex:clinical-trial"]
     assert trial["responsibilities"][0]["type"] == "dgo:DGO_00000012"  # nested roles too
-    loaded = [type(b).__name__ for b in report.record.term_status_boundaries if b.part_of == "ex:clinical-trial-creation"]
+    loaded = [type(b).__name__ for b in report.record.status_boundaries if b.part_of == "ex:clinical-trial-creation"]
     assert loaded == ["Drafted", "SubmittedForReview", "Approved"]
 
 
@@ -150,7 +150,7 @@ def test_two_creations_of_one_term(broken):
 
 
 def test_boundary_after_close(broken):
-    extra = ("term_status_boundaries:\n  - type: dgo:DGO_00000025\n"
+    extra = ("status_boundaries:\n  - type: dgo:DGO_00000025\n"
              "    part_of: ex:clinical-trial-creation\n    occurred_on: \"2026-12-01\"\n")
     report = broken(extra={"more.yaml": extra})
     one(report, "after it closed on 2026-09-28")

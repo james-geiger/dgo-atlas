@@ -1,5 +1,6 @@
-{#- Responsibilities held by one bearer, grouped by term. Expects `holder`. -#}
-{%- from "_macros.html.j2" import cell_label %}
+{#- Responsibilities held by one bearer: on terms, data stores, data sets
+    and data elements. Expects `holder`. -#}
+{%- from "_macros.html.j2" import cell_label, certification_badge %}
 {%- if holder.responsibilities %}
 <h2 class="subhead">{{ t("responsibilities.heading") }}</h2>
 <div class="term-table">
@@ -8,11 +9,12 @@
   </div>
   <ul class="term-list">
     {%- for r in holder.responsibilities %}
-    {%- if r.term %}
-    <li><a class="term-row" href="{{ rel }}{{ r.term.url }}">
-      <span class="term-row__name">{{ r.term.label }}</span>
+    {%- if r.subject %}
+    <li><a class="term-row" href="{{ rel }}{{ r.subject.url }}">
+      <span class="term-row__name">{{ r.subject.label }}{% if r.subject.data_set %} <span class="term-row__sub">({{ r.subject.data_set.label }})</span>{% endif %}</span>
       <span>{{ cell_label("responsibilities.column_role") }}<span class="badge badge--{{ r.role }}">{{ r.role_label }}</span></span>
-      <span class="term-row__sub">{{ cell_label("responsibilities.column_state") }}{{ r.term.state | state_label }}</span>
+      <span class="term-row__sub">{{ cell_label("responsibilities.column_state") }}
+        {%- if r.subject.state %}{{ r.subject.state | state_label }}{% else %}{{ certification_badge(r.subject) }}{% endif %}</span>
       <span class="term-row__chev" aria-hidden="true">&rsaquo;</span>
     </a></li>
     {%- else %}

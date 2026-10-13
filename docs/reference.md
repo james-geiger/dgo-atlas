@@ -37,7 +37,7 @@ test fails if it drifts.
 DGO is not bundled. Each project names a DGO release in `dgo-atlas.yaml`:
 
 ```yaml
-dgo_version: "0.1.1"
+dgo_version: "0.2.0"
 ```
 
 The authoring template imports that release's single-file schema straight
@@ -53,6 +53,60 @@ time.
   derivation depends on (`dgo.REQUIRED_CLASSES`), and fails clearly if not.
   It warns about releases this version of DGO Atlas hasn't been tested with
   (`dgo.TESTED_VERSIONS`, which `dgo-atlas --version` lists).
+- **Older releases.** The template is fitted to the release (`dgo._fit_to_release`):
+  a list whose class the release lacks, such as `data_sets` before 0.2.0, is
+  left out, so a 0.1.x project builds as before.
+- **Version.** The version shown on the site is `dgo_version`. DGO Atlas never
+  reads it from the release, whose own `version` (and `owl:versionInfo`) still
+  says 0.1.0 at the 0.2.0 tag.
+
+## Data management (DGO 0.2.0)
+
+From DGO 0.2.0 a project can also govern its data. The lists are
+`data_stores`, `data_sets`, `data_elements`, `data_set_certifications`,
+`sensitivity_levels`, `security_levels` and `regulations`; the variant
+fixture's `governance/data.yaml` uses each. The site reads them like this:
+
+- **Stores, sets, elements.** A data store is the operational system, not the
+  logical database, and has no domain. A data set's domains are inferred from
+  its subject areas. Each data element is part of one data set; the same
+  attribute in another set is another element, linked by `derived_from`.
+- **Terms flow up from the data.** A glossary term lists the elements that
+  determine it in `informed_by`. Data set and element pages read that
+  backwards; elements never name terms.
+- **Foundational** data sets have no `derived_from` (`derive.foundational`):
+  raw data others are built from, such as a table in an operational system.
+  There is no field for it. They are not expected to be certified, so an
+  uncertified foundational set shows "Foundational" where others show their
+  certification. A data set page shows its lineage back to foundational data.
+- **Certification** is a process, not a flag. A data set certification has
+  the set as `has_output`, is `part_of` a governance process (which decides the
+  council), and moves through the same status boundaries as a term. The set is
+  certified once one reaches an approved boundary, on that date
+  (`derive.certification_state`). Certified sets carry a badge in every
+  listing, come first, and can be filtered on the data index (`data.html`,
+  `?filter=certified` preselects it). The home page links to the data index.
+- **Classification** levels are the organization's own instances, shown on
+  `classification.html`, ordered by `severity`. A data element without its own
+  level shows its data set's, marked as inherited. Validation warns when an
+  element is more severe than its set.
+- **Responsibilities** on stores, sets and elements appear on the bearer's
+  page alongside their terms.
+
+### Moving a project to DGO 0.2.0
+
+YAML is unchanged apart from one list name, so existing data validates:
+
+- **`term_status_boundaries` → `status_boundaries`.** The old name still
+  reads, with a warning; rename it when convenient. The list now also holds
+  data set certification boundaries.
+- **Exports change IRIs.** In `dgo-atlas convert` output, `definition_source`
+  is now `dgo:DGO_00000050` (was `dcterms:source`) and `replaced_by` is
+  `dgo:DGO_00000051` (was `dcterms:isReplacedBy`), both annotation
+  properties. Data sets are typed `IAO_0001000` (data collection). Update any
+  RDF or SPARQL that reads the old predicates.
+- **Lineage query.** DGO's `docs/lineage.rq` runs over `dgo-atlas convert -t ttl`
+  output as is; a test checks that its rows agree with the site.
 
 ## What it ships
 
@@ -179,19 +233,26 @@ prefix.
    - A semantic type must be a full IRI or use a declared prefix.
    - `broader` must not form a cycle.
    - A term can have at most one creation.
-   - No status boundary may come after a process closes.
+   - No status boundary may come after a process closes; this holds for data
+     set certifications too.
+   - `derived_from` must not loop, and links sets to sets and elements to
+     elements.
+   - `severity` is the one integer field; a data element more severe than its
+     data set is a warning.
 5. **Derive.** Validated data is loaded into the generated pydantic model and
    turned into a view-model `Site`: state, domain, governing councils,
    history, pending changes, narrower terms, both-way `related`, council
    seats, organization members (and, read back, what each agent is a member
-   of). Each semantic type is shown by what its class calls itself: its
+   of). With data: inferred domains, foundational sets, lineage, the terms each
+   data set informs, and certification status. Each semantic type is shown by what its class calls itself: its
    label and ontology are read from the EBI Ontology Lookup Service or,
    failing that, from the IRI dereferenced as RDF
    (`semantic.py`). A class neither describes is shown by its IRI, with a
    build note. The result is re-validated against `viewmodel.yaml`.
 6. **Render.** Jinja templates render the site: terms, subject areas,
    domains, glossaries, councils, people and organizations, the governance
-   process tree, a "How to read a term" page built from DGO's descriptions,
+   process tree, data stores, sets and elements, the data index and the
+   classification scheme, a "How to read a term" page built from DGO's descriptions,
    and authored Markdown. Kinds (glossary term, owner, approved…) link to
    their DGO class IRIs; the site does not restate the ontology.
 7. **Link check.** Every internal link must resolve.
@@ -235,11 +296,14 @@ uv sync
 uv run pytest
 ```
 
-The tests need network access: they import DGO 0.1.1 from its release URL. They cover:
+The tests need network access: they import DGO 0.2.0 from its release URL. They cover:
 - the expected page facts on the variant fixture (`tests/fixtures/variant`: the
   handoff's example with its §5.3 variant, a deprecated term, and terms in
   review and drafted);
 - which terms are published;
+- data management (`tests/test_data.py`): lineage, certification, inferred
+  domains, a 0.1.1 build of the fixture, and DGO's lineage query over the
+  RDF export;
 - each validator rule;
 - loading DGO: the release URL, a local `dgo_source`, an unknown release, and
   a release missing classes;
@@ -302,6 +366,8 @@ changes expected in DGO each have one home here:
 | a new class with a `type` slot (e.g. data classification) | nothing: `dgo.typed_bases()` finds it, and local classes can extend it |
 | a class renamed or removed that a local `is_a` names | the implementer's `local_classes`: the read stage reports each one |
 | a new term slot | `viewmodel.yaml`, `derive.term_page`, `templates/term.html.j2` |
+| a new data-management class or slot | `template.yaml` (a list, if it needs one), `derive.py` data pages, `templates/data_*.html.j2` |
+| a template list renamed | `loader.RENAMED`, so the old name still reads |
 | `in_subject_area` multivalued | `derive.term_page` and the placement templates |
 | the state rule confirmed or changed | `derive.term_state` |
 
@@ -317,13 +383,13 @@ changes expected in DGO each have one home here:
   this package changes.
 - **Wording.** Templates contain no literal copy. Every string comes from
   `src/dgo_atlas/text.yaml` through `t(key)`, and implementers override any
-  key with `text:` in `dgo-atlas.yaml` (`dgo-atlas text` lists them). The four
+  key with `text:` in `dgo-atlas.yaml` (`dgo-atlas text` lists them). The
   generated index pages also take their header and intro prose from a content
   file at the same path. DGO's own class names (owner, drafted…) and
   descriptions are shown as DGO has them. `tests/test_text.py` fails if a
   template uses a key the catalog doesn't have.
 - **Identifier panel.** `show_identifiers: false` in `dgo-atlas.yaml` hides the
-  id, IRI and DGO class on term, council and people pages, for sites that
+  id, IRI and DGO class on term, council, people and data pages, for sites that
   don't use IRIs. The "View source" link stays.
 - **No history from git.** A term's history comes only from its status
   boundaries.

@@ -1,0 +1,22 @@
+{% extends "base.html.j2" %}
+{% from "_macros.html.j2" import data_set_rows, responsibility_panel, identifier_panel %}
+{#- One data store: the operational system, the data sets it holds, and who
+    is responsible for it. A store has no domain; its data sets do. -#}
+
+{% block content %}
+<div class="split">
+  <article class="split__body split__body--wide">
+    <div class="eyebrow">{{ store_kind.name }}</div>
+    <h1 class="page-title">{{ store.label }}</h1>
+    {%- if store.description %}<p class="lede">{{ store.description }}</p>{% endif %}
+
+    <h2 class="subhead">{{ t("data_store.data_sets") }}</h2>
+    {{ data_set_rows(store.data_sets or [], rel, lookup, t("data_store.data_sets_empty")) }}
+  </article>
+
+  <aside class="split__aside">
+    {{ responsibility_panel(store, rel, lookup, t("data_store.responsibility_empty")) }}
+    {{ identifier_panel(store, store_kind, show_identifiers, repo_blob_url) }}
+  </aside>
+</div>
+{% endblock %}

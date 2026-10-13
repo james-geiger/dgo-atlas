@@ -40,7 +40,7 @@ m = _ActiveModel()
 
 # Same-day tie-break for status boundaries: drafted < submitted < approved/rejected.
 BOUNDARY_ORDER = {"Drafted": 0, "SubmittedForReview": 1, "Approved": 2, "Rejected": 2}
-PROCESS_ORDER = {"TermCreation": 0, "TermModification": 1, "TermDeprecation": 2}
+PROCESS_ORDER = {"TermCreation": 0, "TermModification": 1, "TermDeprecation": 2, "DataSetCertification": 3}
 
 # Where each kind of page lives.
 DIRS = {
@@ -51,7 +51,18 @@ DIRS = {
     "council": "councils",
     "person": "people",
     "organization": "organizations",
+    "data_store": "stores",
+    "data_set": "datasets",
+    "data_element": "elements",
 }
+CLASSIFICATION_PAGE = "classification.html"
+
+# The template list of each classification axis (DGO 0.2.0).
+CLASSIFICATION_LISTS = (
+    ("sensitivity_level", "sensitivity_levels"),
+    ("security_level", "security_levels"),
+    ("regulatory_category", "regulations"),
+)
 PROCESS_PAGE = "governance.html"
 
 
@@ -84,19 +95,27 @@ class Deriver:
         self.describe = describe or (lambda iri: ClassInfo(iri=iri))
         self.idx = index(rec)
         self.urls: dict[str, str] = {}
+        # Data management (DGO 0.2.0); empty on earlier releases.
+        self.stores = self.records("data_stores")
+        self.data_sets = self.records("data_sets")
+        self.elements = self.records("data_elements")
         self._assign_urls()
 
         self.terms = list(rec.glossary_terms or [])
+        self.certifications_by_set: dict[str, list] = defaultdict(list)
+        for cert in self.records("data_set_certifications"):
+            self.certifications_by_set[cert.has_output].append(cert)
         self.processes_by_term: dict[str, list[m.TermLifecycleProcess]] = defaultdict(list)
         for obj in self.idx.values():
             if isinstance(obj, m.TermLifecycleProcess):
                 self.processes_by_term[obj.has_output].append(obj)
         self.boundaries_by_process: dict[str, list[m.StatusBoundary]] = defaultdict(list)
-        for b in rec.term_status_boundaries or []:
+        for b in rec.status_boundaries or []:
             self.boundaries_by_process[b.part_of].append(b)
         for bs in self.boundaries_by_process.values():
             bs.sort(key=lambda b: (str(b.occurred_on), BOUNDARY_ORDER[dgo.dgo_kind(b).model_class]))
         self.states = {t.id: term_state(self, t.id) for t in self.terms}
+        self.certifications = {s.id: certification_state(self, s.id) for s in self.data_sets}
         self.notes: list[str] = []
         self.published: set[str] = set()
         for t in self.terms:
@@ -106,6 +125,10 @@ class Deriver:
             else:
                 self.published.add(t.id)
         self.terms = [t for t in self.terms if t.id in self.published]
+
+    def records(self, list_name: str) -> list:
+        """A template list, or nothing on a release that lacks its class."""
+        return list(getattr(self.rec, list_name, None) or [])
 
     # ------------------------------------------------------------ urls and refs
 
@@ -118,6 +141,9 @@ class Deriver:
             ("council", self.rec.councils),
             ("person", self.rec.people),
             ("organization", self.rec.organizations),
+            ("data_store", self.stores),
+            ("data_set", self.data_sets),
+            ("data_element", self.elements),
         ]
         for kind, items in groups:
             taken: set[str] = set()
@@ -134,6 +160,14 @@ class Deriver:
                 slug += "-x"
             taken.add(slug)
             self.urls[proc.id] = f"{PROCESS_PAGE}#{slug}"
+        taken = set()
+        for _, list_name in CLASSIFICATION_LISTS:
+            for level in self.records(list_name):
+                slug = _slug(level.id)
+                while slug in taken:
+                    slug += "-x"
+                taken.add(slug)
+                self.urls[level.id] = f"{CLASSIFICATION_PAGE}#{slug}"
 
     def ref(self, oid: str) -> vm.Ref:
         obj = self.idx[oid]
@@ -144,12 +178,19 @@ class Deriver:
             kind = vm.AgentKind.organization
         elif isinstance(obj, m.DataGovernanceCouncil):
             kind = vm.AgentKind.council
+        certification = self.certifications.get(oid)
+        data_set = None
+        if oid in self.urls and type(obj).__name__ == "DataElement":
+            data_set = self.ref(obj.part_of)
         return vm.Ref(
             about=oid,
             url=self.urls.get(oid),
             label=display_label(obj),
             state=self.states.get(oid) if isinstance(obj, m.GlossaryTerm) else None,
             kind=kind,
+            certification=certification[0] if certification else None,
+            certified_on=certification[1] if certification else None,
+            data_set=data_set,
         )
 
     def linked(self, term, slot: str, ids) -> list[str]:
@@ -191,9 +232,10 @@ class Deriver:
         return sorted(self.processes_by_term.get(term_id, []),
                       key=lambda p: (PROCESS_ORDER[dgo.dgo_kind(p).model_class], p.id))
 
-    def history(self, term_id: str) -> list[vm.HistoryEntry]:
+    def history(self, term_id: str, processes=None) -> list[vm.HistoryEntry]:
+        """Every boundary of a term's lifecycle processes (or of `processes`), oldest first."""
         rows = []
-        for proc in self._processes(term_id):
+        for proc in self._processes(term_id) if processes is None else processes:
             change = self.change(proc)
             for b in self.boundaries_by_process.get(proc.id, []):
                 kind, base = dgo.kind_of(b), dgo.dgo_kind(b)
@@ -220,14 +262,15 @@ class Deriver:
             out |= {c.id for c in self.rec.councils or [] if c.participates_in in chain}
         return sorted(out)
 
-    def responsibilities(self, term) -> list[vm.Responsibility]:
+    def responsibilities(self, subject) -> list[vm.Responsibility]:
+        """Roles held with respect to a term, data store, data set or data element."""
         out = []
-        for role in term.responsibilities or []:
+        for role in subject.responsibilities or []:
             if not role.role_of:
                 continue
             kind = dgo.kind_of(role)
             out.append(vm.Responsibility(role=dgo.dgo_kind(role).slug, role_label=kind.name, role_iri=kind.iri,
-                                         term=self.ref(term.id), bearer=self.ref(role.role_of)))
+                                         subject=self.ref(subject.id), bearer=self.ref(role.role_of)))
         return out
 
     def above(self, tid) -> list[str]:
@@ -241,24 +284,32 @@ class Deriver:
         list already says everything. Where two paths meet, the shared term is
         expanded the first time and marked repeated after that.
         """
-        ancestors, todo = set(), self.above(term.id)
-        while todo:
-            t = todo.pop()
-            if t not in ancestors:
-                ancestors.add(t)
-                todo += self.above(t)
         if all(not self.above(b) for b in self.above(term.id)):
             return []
+        return self.tree(term.id, self.above)
+
+    def tree(self, start: str, above: Callable[[str], list[str]]) -> list[vm.HierarchyNode]:
+        """Everything above `start` (by `above`), topmost first, branching down to it.
+
+        Where two paths meet, the shared node is expanded the first time and
+        marked repeated after that.
+        """
+        ancestors, todo = set(), list(above(start))
+        while todo:
+            t = todo.pop()
+            if t not in ancestors and t != start:
+                ancestors.add(t)
+                todo += above(t)
         below = defaultdict(list)
-        for t in ancestors | {term.id}:
-            for b in self.above(t):
+        for t in ancestors | {start}:
+            for b in above(t):
                 below[b].append(t)
         seen = set()
 
         def nodes(ids):
             out = []
             for ref in self.refs(ids):
-                node = vm.HierarchyNode(**ref.model_dump(), current=ref.about == term.id or None)
+                node = vm.HierarchyNode(**ref.model_dump(), current=ref.about == start or None)
                 if ref.about in seen and below[ref.about]:
                     node.repeated = True
                 else:
@@ -267,7 +318,7 @@ class Deriver:
                 out.append(node)
             return out
 
-        return nodes(t for t in ancestors if not self.above(t))
+        return nodes(t for t in ancestors if not above(t))
 
     def semantic_type(self, term) -> vm.SemanticType | None:
         """The external class a term denotes (DGO 0.1.1), described by the class itself."""
@@ -296,14 +347,14 @@ class Deriver:
     def governed_areas(self, term_pages, governed: set[str], held) -> list[vm.GovernedArea]:
         """The subject areas of a council's terms (governed or held a role on), with the
         roles it holds there, so its page links to each area once instead of listing terms."""
-        mine = governed | {r.term.about for r in held if r.term}
+        mine = governed | {r.subject.about for r in held if r.subject}
         areas = {}  # area id -> (page of the first term seen, term count, roles by class IRI)
         for page in term_pages:
             if page.about not in mine:
                 continue
             first, n, roles = areas.get(page.subject_area.about, (page, 0, {}))
             for r in held:
-                if r.term and r.term.about == page.about:
+                if r.subject and r.subject.about == page.about:
                     roles.setdefault(r.role_iri, vm.RoleKind(role=r.role, role_label=r.role_label, role_iri=r.role_iri))
             areas[page.subject_area.about] = (first, n + 1, roles)
         out = [vm.GovernedArea(subject_area=p.subject_area, domain=p.domain, term_count=n, roles=list(roles.values()))
@@ -345,8 +396,122 @@ class Deriver:
             related=self.refs(self.linked(term, "related", related(self.rec, term))),
             value_of=self.ref(value_of[0]) if value_of else None,
             values=self.refs(t.id for t in self.terms if t.value_of == tid),
+            informed_by=self.element_groups(getattr(term, "informed_by", None) or []),
             source_file=self.sources.get(tid),
         )
+
+    # ------------------------------------------------------------ data management (DGO 0.2.0)
+
+    def element_groups(self, element_ids) -> list[vm.ElementGroup]:
+        """Data elements grouped under the data set each is part of."""
+        groups = defaultdict(list)
+        for e in element_ids:
+            groups[self.idx[e].part_of].append(e)
+        out = [vm.ElementGroup(data_set=self.ref(s), data_elements=self.refs(es)) for s, es in groups.items()]
+        return sorted(out, key=lambda g: g.data_set.label.casefold())
+
+    def informed_terms(self, element_ids) -> list[vm.Ref]:
+        """Published terms informed by any of the elements (informed_by, read backwards)."""
+        ids = set(element_ids)
+        return self.refs(t.id for t in self.terms if ids & set(getattr(t, "informed_by", None) or []))
+
+    def lineage(self, set_id: str) -> list[vm.HierarchyNode]:
+        """The foundational sets a data set comes from, branching down through
+        each derived set to it. Empty for a foundational set."""
+        if not self.idx[set_id].derived_from:
+            return []
+        return self.tree(set_id, lambda s: list(self.idx[s].derived_from or []))
+
+    def classification(self, obj, fallback=None) -> dict:
+        """An object's sensitivity, security level and regulatory categories, as ClassificationRefs.
+
+        A data element without its own reads its data set's (`fallback`), marked inherited.
+        """
+        def one(level, inherited=False):
+            return vm.ClassificationRef(**self.ref(level).model_dump(), inherited=inherited or None) if level else None
+
+        out = {}
+        for slot in ("sensitivity", "security_level"):
+            own = getattr(obj, slot, None)
+            outer = getattr(fallback, slot, None) if fallback is not None else None
+            out[slot] = one(own) if own else one(outer, inherited=True)
+        own = list(obj.regulatory_categories or [])
+        outer = list(fallback.regulatory_categories or []) if fallback is not None and not own else []
+        out["regulatory_categories"] = [one(r) for r in sorted(own, key=self._label)] + \
+            [one(r, inherited=True) for r in sorted(outer, key=self._label)]
+        return out
+
+    def _label(self, oid: str) -> str:
+        return display_label(self.idx[oid]).casefold()
+
+    def certifying_councils(self, set_id: str) -> list[str]:
+        out = set()
+        for cert in self.certifications_by_set.get(set_id, []):
+            chain = self.process_chain(cert.part_of)
+            out |= {c.id for c in self.rec.councils or [] if c.participates_in in chain}
+        return sorted(out)
+
+    def data_set_page(self, s) -> vm.DataSetPage:
+        areas = list(s.in_subject_area or [])
+        domains = sorted({self.idx[a].part_of for a in areas})
+        elements = [e.id for e in self.elements if e.part_of == s.id]
+        state, certified_on = self.certifications[s.id]
+        certs = sorted(self.certifications_by_set.get(s.id, []), key=lambda c: c.id)
+        return vm.DataSetPage(
+            **self.page(s),
+            description=getattr(s, "description", None),
+            data_stores=self.refs(s.stored_in or []),
+            subject_areas=self.refs(areas),
+            domains=self.refs(domains),
+            data_elements=self.refs(elements),
+            foundational=foundational(s),
+            lineage=self.lineage(s.id),
+            derived_sets=self.refs(d.id for d in self.data_sets if s.id in (d.derived_from or [])),
+            informed_terms=self.informed_terms(elements),
+            **self.classification(s),
+            responsibilities=self.responsibilities(s),
+            certification=state,
+            certified_on=certified_on,
+            certifying_councils=self.refs(self.certifying_councils(s.id)),
+            history=self.history(s.id, certs),
+            source_file=self.sources.get(s.id),
+        )
+
+    def data_element_page(self, e) -> vm.DataElementPage:
+        return vm.DataElementPage(
+            **self.page(e),
+            description=getattr(e, "description", None),
+            data_set=self.ref(e.part_of),
+            sources=self.refs(e.derived_from or []),
+            derived_elements=self.refs(d.id for d in self.elements if e.id in (d.derived_from or [])),
+            informed_terms=self.informed_terms([e.id]),
+            **self.classification(e, self.idx[e.part_of]),
+            responsibilities=self.responsibilities(e),
+            source_file=self.sources.get(e.id),
+        )
+
+    def data_store_page(self, store) -> vm.DataStorePage:
+        return vm.DataStorePage(
+            **self.page(store),
+            description=getattr(store, "description", None),
+            data_sets=self.data_set_refs(s.id for s in self.data_sets if store.id in (s.stored_in or [])),
+            responsibilities=self.responsibilities(store),
+        )
+
+    def data_set_refs(self, ids) -> list[vm.Ref]:
+        """Data sets for a listing: certified first, then by label."""
+        return sorted(self.refs(ids), key=lambda r: (r.certification != vm.CertificationState.certified,
+                                                     r.label.casefold()))
+
+    def classification_levels(self) -> list[vm.ClassificationLevel]:
+        out = []
+        for axis, list_name in CLASSIFICATION_LISTS:
+            levels = self.records(list_name)
+            levels.sort(key=lambda lv: (lv.severity if lv.severity is not None else 0, lv.label.casefold())
+                        if axis != "regulatory_category" else (0, lv.label.casefold()))
+            out += [vm.ClassificationLevel(**self.page(lv), axis=axis, definition=lv.definition,
+                                           severity=getattr(lv, "severity", None)) for lv in levels]
+        return out
 
     def site(self) -> vm.Site:
         rec = self.rec
@@ -362,12 +527,20 @@ class Deriver:
                 domains_in_glossary[d.part_of].append(d.id)
 
         term_pages = sorted((self.term_page(t) for t in self.terms), key=lambda p: p.label.casefold())
+        set_pages = sorted((self.data_set_page(s) for s in self.data_sets), key=lambda p: p.label.casefold())
+        element_pages = sorted((self.data_element_page(e) for e in self.elements),
+                               key=lambda p: (p.data_set.label.casefold(), p.label.casefold()))
+        store_pages = sorted((self.data_store_page(s) for s in self.stores), key=lambda p: p.label.casefold())
+        sets_in_area = defaultdict(list)
+        for s in self.data_sets:
+            for a in s.in_subject_area or []:
+                sets_in_area[a].append(s.id)
         governed = defaultdict(set)
         for page in term_pages:
             for c in page.governing_councils or []:
                 governed[c.about].add(page.about)
         held = defaultdict(list)  # bearer id -> responsibilities
-        for page in term_pages:
+        for page in [*term_pages, *store_pages, *set_pages, *element_pages]:
             for r in page.responsibilities or []:
                 held[r.bearer.about].append(r)
         for role in rec.governance_roles or []:
@@ -386,7 +559,8 @@ class Deriver:
             vm.DomainPage(**self.page(d), glossary=self.ref(d.part_of) if d.part_of else None,
                           subject_areas=self.refs(areas_in_domain[d.id]),
                           term_count=sum(len(terms_in_area[a]) for a in areas_in_domain[d.id]),
-                          accent=self.accents.get(d.id))
+                          accent=self.accents.get(d.id),
+                          data_sets=self.data_set_refs({s for a in areas_in_domain[d.id] for s in sets_in_area[a]}))
             for d in rec.domains or []
         ]
         areas = []
@@ -396,6 +570,7 @@ class Deriver:
                 **self.page(sa), domain=self.ref(domain.id),
                 glossary=self.ref(domain.part_of) if domain.part_of else None,
                 terms=self.refs(terms_in_area[sa.id]),
+                data_sets=self.data_set_refs(sets_in_area[sa.id]),
                 accent=self.accents.get(sa.id) or self.accents.get(domain.id)))
         councils = []
         for c in rec.councils or []:
@@ -406,7 +581,9 @@ class Deriver:
                 members=self.seats(c),
                 responsibilities=held.get(c.id, []),
                 governed_terms=self.refs(governed[c.id]),
-                governed_areas=self.governed_areas(term_pages, governed[c.id], held.get(c.id, []))))
+                governed_areas=self.governed_areas(term_pages, governed[c.id], held.get(c.id, [])),
+                certified_sets=self.data_set_refs(p.about for p in set_pages
+                                                  if c.id in {r.about for r in p.certifying_councils or []})))
         agents = []
         # Organization membership (has_member on organizations, from DGO 0.1.1).
         org_members = {o.id: list(getattr(o, "has_member", None) or []) for o in rec.organizations or []}
@@ -437,6 +614,10 @@ class Deriver:
             councils=sorted(councils, key=by_label),
             agents=sorted(agents, key=by_label),
             processes=processes,
+            data_stores=store_pages,
+            data_sets=set_pages,
+            data_elements=element_pages,
+            classification_levels=self.classification_levels(),
         )
 
 
@@ -500,6 +681,39 @@ def term_state(d: Deriver, term_id: str) -> str:
     if not created:
         return "unrecorded"
     return {"approved": "approved", "rejected": "rejected"}.get(d.outcome(created[0]), "proposed")
+
+
+def foundational(data_set) -> bool:
+    """A data set derived from no other is foundational: the raw data others are
+    built from, such as a table in an operational system. DGO has no field for it."""
+    return not data_set.derived_from
+
+
+def certification_state(d: Deriver, set_id: str) -> tuple[str, object]:
+    """A data set's certification status, and its certification date.
+
+    1. certified: a certification of it reached an approved boundary; the date
+       is that boundary's (the latest, if it was certified more than once).
+    2. in_progress: otherwise, a certification of it is still open.
+    3. foundational: otherwise, none is recorded and the set is foundational
+       (derived from no other). Foundational data is not expected to be
+       certified; what is built from it is.
+    4. not_certified: otherwise.
+
+    Certification is a process, not a flag, so nothing is read from the set itself.
+    """
+    approved, open_ = [], False
+    for cert in d.certifications_by_set.get(set_id, []):
+        outcome = d.outcome(cert)
+        if outcome == "approved":
+            approved.append(d.boundaries_by_process[cert.id][-1].occurred_on)
+        open_ |= outcome == "open"
+    if approved:
+        return "certified", max(approved, key=str)
+    if open_:
+        return "in_progress", None
+    certs = d.certifications_by_set.get(set_id)
+    return ("foundational" if not certs and foundational(d.idx[set_id]) else "not_certified"), None
 
 
 def derive(rec: m.GovernanceRecord, prefixes: dict[str, str], *,

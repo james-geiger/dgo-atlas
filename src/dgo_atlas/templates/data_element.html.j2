@@ -1,0 +1,49 @@
+{% extends "base.html.j2" %}
+{% from "_macros.html.j2" import certification_badge, classification_panel, responsibility_panel,
+   identifier_panel, link_panel, term_rows %}
+{#- One data element: the data set it is part of, where it was derived from
+    and into, and the terms it informs. Classification it doesn't carry
+    itself is read from its data set. -#}
+
+{% block content %}
+<div class="split">
+  <article class="split__body split__body--wide">
+    {%- set ds = lookup.get(element.data_set.about) %}
+    <a class="back-link" href="{{ rel }}{{ element.data_set.url }}"><span aria-hidden="true">&larr;</span> {{ element.data_set.label }}</a>
+    <h1 class="page-title page-title--term">{{ element.label }}</h1>
+    <div class="term-meta">
+      {%- set data_set %}<a href="{{ rel }}{{ element.data_set.url }}">{{ element.data_set.label }}</a>{% endset %}
+      <span class="term-row__sub">{{ t("data_element.part_of", data_set=data_set) }}</span>
+      {{ certification_badge(element.data_set) }}
+      <a class="tag-type" href="{{ element_kind.iri }}" rel="noopener" title="{{ t("term.kind_title") }}">{{ element_kind.name }}</a>
+    </div>
+    {%- if element.description %}<p class="lede">{{ element.description }}</p>{% endif %}
+
+    {%- if element.informed_terms %}
+    <h2 class="subhead" id="terms">{{ t("data_element.terms") }}</h2>
+    {{ term_rows(element.informed_terms, rel, "") }}
+    {%- endif %}
+  </article>
+
+  <aside class="split__aside">
+    {{ responsibility_panel(element, rel, lookup, t("data_element.responsibility_empty")) }}
+    {%- for title, refs in ((t("data_element.derived_from"), element.sources), (t("data_element.derived_elements"), element.derived_elements)) %}
+    {%- if refs %}
+    <div class="panel">
+      <h2 class="panel__label">{{ title }}</h2>
+      <ul class="panel-list">
+        {%- for r in refs %}
+        <li><a class="panel-link" href="{{ rel }}{{ r.url }}">
+          <div class="panel-link__name">{{ r.label }}</div>
+          {%- if r.data_set %}<div class="panel-link__rel">{{ r.data_set.label }}</div>{% endif %}
+        </a></li>
+        {%- endfor %}
+      </ul>
+    </div>
+    {%- endif %}
+    {%- endfor %}
+    {{ classification_panel(element, rel) }}
+    {{ identifier_panel(element, element_kind, show_identifiers, repo_blob_url) }}
+  </aside>
+</div>
+{% endblock %}

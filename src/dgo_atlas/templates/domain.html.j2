@@ -1,4 +1,5 @@
 {% extends "base.html.j2" %}
+{% from "_macros.html.j2" import data_set_rows %}
 {#- One domain and its subject areas. -#}
 
 {% block content %}
@@ -22,5 +23,11 @@
     <div class="empty-state">{{ t("domain.empty") }}</div>
     {%- endfor %}
   </div>
+
+  {%- if domain.data_sets %}
+  <h2 class="subhead">{{ t("domain.data_sets") }}</h2>
+  <p class="subhead-note">{{ t("domain.data_sets_intro") }}</p>
+  {{ data_set_rows(domain.data_sets, rel, lookup, "") }}
+  {%- endif %}
 </div>
 {% endblock %}

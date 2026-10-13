@@ -43,6 +43,7 @@ def test_states(variant):
         "ex:project-cost": "proposed",
         "ex:personnel-cost": "proposed",
         "ex:faculty-salary": "proposed",
+        "ex:open-study": "approved",
     }
 
 
@@ -96,10 +97,10 @@ def test_council_seats(variant):
     ]
     assert [t.label for t in council.governed_terms] == [
         "clinical investigation", "Clinical Trial", "Direct Cost", "Faculty Salary", "Indirect Cost",
-        "Personnel Cost", "Sponsored Project Cost"]
+        "open study", "Personnel Cost", "Sponsored Project Cost"]
     assert [(a.subject_area.label, a.term_count, [r.role_label for r in a.roles or []])
             for a in council.governed_areas] == [
-        ("Clinical Research", 2, ["steward"]), ("Sponsored Programs", 5, ["steward", "data trustee"])]
+        ("Clinical Research", 3, ["steward"]), ("Sponsored Programs", 5, ["steward", "data trustee"])]
     (member,) = [a for a in site.agents if a.label == "Morgan Ellis"]
     assert [s.council.label for s in member.memberships] == [council.label]
     assert member.job_title == "Director, Data Governance"
@@ -225,14 +226,14 @@ def test_links_to_unpublished_terms_are_left_off(variant):
     t = term(site, "clinical trial")
     assert not t.broader and not t.related
     assert "ex:clinical-trial: broader ex:clinical-study is not published, so the link is left off" in deriver.notes
-    assert [a.label for a in site.subject_areas[0].terms] == ["clinical investigation", "Clinical Trial"]
+    assert [a.label for a in site.subject_areas[0].terms] == ["clinical investigation", "Clinical Trial", "open study"]
 
 
 def _creation(term_id, *boundaries):
     lines = ["term_creations:", f"  - id: {term_id}-creation", "    label: Creation",
              f"    has_output: {term_id}", "    part_of: ex:research-dg"]
     if boundaries:
-        lines.append("term_status_boundaries:")
+        lines.append("status_boundaries:")
         for kind, date in boundaries:
             lines += [f"  - type: {kind}", f"    part_of: {term_id}-creation", f'    occurred_on: "{date}"']
     return "\n".join(lines) + "\n"

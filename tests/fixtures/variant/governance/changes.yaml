@@ -12,7 +12,7 @@ term_modifications:
     has_output: ex:clinical-trial
     part_of: ex:research-dg
 
-term_status_boundaries:
+status_boundaries:
   - type: dgo:DGO_00000024           # drafted
     part_of: ex:clinical-trial-modification-2
     occurred_on: "2026-11-01"

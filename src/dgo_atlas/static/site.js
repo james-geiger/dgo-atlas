@@ -268,6 +268,9 @@
        count of the list in step with what is on screen. */
     var rows = Array.prototype.slice.call(document.querySelectorAll(".term-list > li[data-domain]"));
     var countEl = document.querySelector("[data-term-count]");
+    /* What the list counts: terms, or (on the data index) data sets. */
+    var noun = countEl && countEl.getAttribute("data-count-noun");
+    var COUNT = noun ? "count_" + noun + "_" : "count_";
     var emptyEl = document.querySelector("[data-empty]");
     var table = document.querySelector(".term-table");
     var pager = document.querySelector("[data-pager]");
@@ -294,7 +297,12 @@
     function keeps(row) {
       if (activeFilter === "all") return true;
       if (activeFilter === "attention") return row.hasAttribute("data-attention");
-      return "domain:" + row.getAttribute("data-domain") === activeFilter;
+      if (activeFilter === "certified") return row.hasAttribute("data-certified");
+      /* A data set may be in several domains: data-domain lists them all. */
+      var domains = (row.getAttribute("data-domain") || "").split(" ");
+      return domains.some(function (d) {
+        return "domain:" + d === activeFilter;
+      });
     }
 
     function render() {
@@ -319,11 +327,11 @@
 
       if (countEl) {
         if (total === 0) {
-          countEl.textContent = T("count_none");
+          countEl.textContent = T(COUNT + "none");
         } else if (total <= pageSize) {
-          countEl.textContent = T(total === 1 ? "count_one" : "count_other", { n: total });
+          countEl.textContent = T(total === 1 ? COUNT + "one" : COUNT + "other", { n: total });
         } else {
-          countEl.textContent = T("count_range", { start: start + 1, end: end, total: total });
+          countEl.textContent = T(COUNT + "range", { start: start + 1, end: end, total: total });
         }
       }
 
@@ -349,16 +357,29 @@
       }
     }
 
-    filterBarEl.addEventListener("click", function (event) {
-      var button = event.target.closest("[data-filter]");
-      if (!button) return;
+    function choose(button) {
       activeFilter = button.getAttribute("data-filter");
       page = 1;
       filterBarEl.querySelectorAll("[data-filter]").forEach(function (b) {
         b.setAttribute("aria-pressed", String(b === button));
       });
       render();
+    }
+
+    filterBarEl.addEventListener("click", function (event) {
+      var button = event.target.closest("[data-filter]");
+      if (button) choose(button);
     });
+
+    /* ?filter=certified (linked from the home page) starts on that pill. */
+    var wanted = new URLSearchParams(window.location.search).get("filter");
+    var preset = wanted && filterBarEl.querySelector('[data-filter="' + CSS.escape(wanted) + '"]');
+    if (preset) {
+      activeFilter = wanted;
+      filterBarEl.querySelectorAll("[data-filter]").forEach(function (b) {
+        b.setAttribute("aria-pressed", String(b === preset));
+      });
+    }
 
     if (pagerPrev) {
       pagerPrev.addEventListener("click", function () {

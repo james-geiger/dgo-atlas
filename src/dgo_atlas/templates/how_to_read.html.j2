@@ -40,12 +40,34 @@
     <p style="color:var(--ink-2)">{{ t("how_to_read.lifecycle_steps") }}</p>
     {{ kinds(boundaries) }}
 
+    {%- if certification_states %}
+    <h2 class="subhead" id="certification">{{ t("how_to_read.certification") }}</h2>
+    <p style="color:var(--ink-2)">{{ t("how_to_read.certification_intro") }}</p>
+    <div class="fact-box">
+      {%- for s in certification_states %}
+      <div class="fact-box__lead">
+        <span class="badge badge--{{ s.name }}">{{ s.label }}</span>
+        <p style="margin:8px 0 0;font-size:14.5px;color:var(--ink-2)">{{ s.description }}</p>
+      </div>
+      {%- endfor %}
+    </div>
+    {%- endif %}
+
     <h2 class="subhead" id="roles">{{ t("how_to_read.roles") }}</h2>
     <p style="color:var(--ink-2)">{{ t("how_to_read.roles_intro") }}</p>
     {{ kinds(roles) }}
 
     <h2 class="subhead" id="council-roles">{{ t("how_to_read.council_roles") }}</h2>
     {{ kinds(council_roles) }}
+
+    {%- if data_kinds %}
+    <h2 class="subhead" id="data">{{ t("how_to_read.data") }}</h2>
+    <p style="color:var(--ink-2)">{{ t("how_to_read.data_intro") }}</p>
+    {{ kinds(data_kinds) }}
+
+    <h2 class="subhead" id="classification">{{ t("how_to_read.classification") }}</h2>
+    {{ kinds(classification_kinds) }}
+    {%- endif %}
 
     <h2 class="subhead" id="fields">{{ t("how_to_read.fields") }}</h2>
     <div class="fact-box">
@@ -66,8 +88,15 @@
       <ul>
         <li><a href="#state">{{ t("how_to_read.state") }}</a></li>
         <li><a href="#lifecycle">{{ t("how_to_read.lifecycle") }}</a></li>
+        {%- if certification_states %}
+        <li><a href="#certification">{{ t("how_to_read.certification") }}</a></li>
+        {%- endif %}
         <li><a href="#roles">{{ t("how_to_read.roles") }}</a></li>
         <li><a href="#council-roles">{{ t("how_to_read.council_roles") }}</a></li>
+        {%- if data_kinds %}
+        <li><a href="#data">{{ t("how_to_read.data") }}</a></li>
+        <li><a href="#classification">{{ t("how_to_read.classification") }}</a></li>
+        {%- endif %}
         <li><a href="#fields">{{ t("how_to_read.fields") }}</a></li>
       </ul>
     </nav>

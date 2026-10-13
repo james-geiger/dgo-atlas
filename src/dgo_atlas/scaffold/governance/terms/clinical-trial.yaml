@@ -30,7 +30,7 @@ term_creations:
     part_of: org:research-data-governance
 
 # Quote every date, or it is read as a date and rejected.
-term_status_boundaries:
+status_boundaries:
   - type: drafted
     part_of: org:clinical-trial-creation
     occurred_on: "2026-09-01"

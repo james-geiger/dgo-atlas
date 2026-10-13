@@ -11,6 +11,9 @@
   {%- if hero_lede %}<p class="lede">{{ hero_lede }}</p>{% endif %}
   <div class="button-row">
     <a class="btn btn--primary" href="{{ rel }}terms/index.html">{{ t("home.browse_terms") }}</a>
+    {%- if has_data %}
+    <a class="btn btn--secondary" href="{{ rel }}data.html">{{ t("home.browse_data") }}</a>
+    {%- endif %}
     <a class="btn btn--secondary" href="{{ rel }}how-to-read-a-term.html">{{ t("home.how_to_read") }}</a>
   </div>
 </div>

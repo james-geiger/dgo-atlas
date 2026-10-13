@@ -10,6 +10,9 @@ position it came from so problems can be reported where they were written.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+
+# Former list names, still read: merged into the current list.
+RENAMED = {"term_status_boundaries": "status_boundaries"}
 from pathlib import Path
 
 import yaml
@@ -39,6 +42,8 @@ class Dataset:
     merged: dict[str, list] = field(default_factory=dict)
     # id(obj) of every merged top-level object -> where it was written
     origins: dict[int, Origin] = field(default_factory=dict)
+    # (file, message) for each deprecated list name in use
+    deprecations: list[tuple[str, str]] = field(default_factory=list)
 
     def origin(self, obj) -> Origin | None:
         return self.origins.get(id(obj))
@@ -79,7 +84,10 @@ def merge(dataset: Dataset) -> Dataset:
         for list_name, items in (source.data or {}).items():
             if not isinstance(items, list):
                 continue
-            bucket = merged.setdefault(list_name, [])
+            if list_name in RENAMED:
+                dataset.deprecations.append((source.rel, f"{list_name} is now called {RENAMED[list_name]}; "
+                                                         "rename it (the old name still works)"))
+            bucket = merged.setdefault(RENAMED.get(list_name, list_name), [])
             for index, item in enumerate(items):
                 bucket.append(item)
                 dataset.origins[id(item)] = Origin(source.rel, list_name, index)

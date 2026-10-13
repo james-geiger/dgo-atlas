@@ -7,8 +7,8 @@ Stages, stopping after the first that finds errors:
    written as a class name (`approved`, `submitted for review`, or a local
    class's name) is rewritten to that class's CURIE, so every later stage,
    the site and the exports see exactly that value.
-2. **Scalars.** DGO has no boolean, number or date slots, so any such value is
-   an authoring slip: an unquoted date, or a YAML boolean such as `on` or
+2. **Scalars.** DGO has no boolean or date slots and only integer ones
+   (`severity`), so any other such value is an authoring slip: an unquoted date, or a YAML boolean such as `on` or
    `no`. (`label` has no range in DGO, so linkml-validate would accept
    `label: yes` as a boolean.)
 3. **Shape.** Each file is validated against the authoring template, the same
@@ -168,9 +168,20 @@ def _scalar_problems(data, parts: list[str]) -> list[tuple[list[str], str]]:
                             "yes/no/on/off/true/false as booleans; quote the value.")))
     elif isinstance(data, (datetime.date, datetime.datetime)):
         out.append((parts, f'is an unquoted date. Quote it: "{data.isoformat()}".'))
+    elif isinstance(data, int) and _integer_slot(parts):
+        pass
     elif isinstance(data, (int, float)):
         out.append((parts, f"was read as the number {data}; quote it if it is text."))
     return out
+
+
+def _integer_slot(parts: list[str]) -> bool:
+    """Whether the value at a path is in a slot DGO gives an integer range (`severity`)."""
+    cls = _class_at(parts[:-1]) if len(parts) > 1 else None
+    sv = dgo.view()
+    if cls is None or parts[-1] not in sv.class_slots(cls):
+        return False
+    return sv.induced_slot(parts[-1], cls).range == "integer"
 
 
 # ---------------------------------------------------------------- stage 3
@@ -324,7 +335,7 @@ def _graph_problems(dataset: Dataset, prefixes: dict[str, str]) -> tuple[list[Pr
 
     # Lifecycle processes and their boundaries.
     boundaries: dict[str, list[dict]] = defaultdict(list)
-    for b in merged.get("term_status_boundaries") or []:
+    for b in merged.get("status_boundaries") or []:
         boundaries[b["part_of"]].append(b)
     creations: dict[str, list[dict]] = defaultdict(list)
     for proc in merged.get("term_creations") or []:
@@ -337,7 +348,7 @@ def _graph_problems(dataset: Dataset, prefixes: dict[str, str]) -> tuple[list[Pr
     # By DGO kind, so a local subclass of approved closes a process too.
     closing = {"approved", "rejected"}
     approved_deprecations = set()
-    for list_name in ("term_creations", "term_modifications", "term_deprecations"):
+    for list_name in ("term_creations", "term_modifications", "term_deprecations", "data_set_certifications"):
         for proc in merged.get(list_name) or []:
             bs = boundaries.get(proc["id"], [])
             if not bs:
@@ -358,7 +369,50 @@ def _graph_problems(dataset: Dataset, prefixes: dict[str, str]) -> tuple[list[Pr
             warnings.append(Problem(where(term), "has replaced_by but no approved term deprecation, "
                                                  "so it is not shown as deprecated"))
 
+    _data_problems(merged, index, where, errors, warnings)
     return errors, warnings
+
+
+def _data_problems(merged: dict, index: dict, where, errors: list[Problem], warnings: list[Problem]) -> None:
+    """Rules on data sets and data elements (DGO 0.2.0) that DGO's ranges don't state."""
+    for list_name, kind in (("data_sets", "data set"), ("data_elements", "data element")):
+        items = merged.get(list_name) or []
+        derived = {obj["id"]: list(obj.get("derived_from") or []) for obj in items}
+        for obj in items:
+            at, oid = where(obj), obj["id"]
+            for source in derived[oid]:
+                if source == oid:
+                    errors.append(Problem(at, "derived_from points at itself"))
+                elif source in index and not _is_a(index[source][0], kind):
+                    errors.append(Problem(at, f"derived_from: {source} is a {index[source][0]}, but a "
+                                              f"{kind} can only be derived from another {kind}"))
+        for start in derived:
+            seen, todo = set(), [d for d in derived[start] if d != start]
+            while todo:
+                d = todo.pop()
+                if d == start:
+                    errors.append(Problem(where(index[start][1]), "derived_from loops back to this " + kind))
+                    break
+                if d not in seen:
+                    seen.add(d)
+                    todo += derived.get(d, [])
+
+    # An element marked more severe than its own data set is probably mislabelled.
+    for element in merged.get("data_elements") or []:
+        data_set = index.get(element.get("part_of"), (None, {}))[1]
+        for slot in ("sensitivity", "security_level"):
+            own, outer = _severity(index, element.get(slot)), _severity(index, data_set.get(slot))
+            if own is not None and outer is not None and own > outer:
+                warnings.append(Problem(where(element), f"{slot} {element[slot]} is more severe than its "
+                                                         f"data set's ({data_set[slot]})"))
+
+
+def _is_a(cls: str, ancestor: str) -> bool:
+    return ancestor in dgo.view().class_ancestors(cls)
+
+
+def _severity(index: dict, level: str | None) -> int | None:
+    return index[level][1].get("severity") if level in index else None
 
 
 def _top_allowed(ref) -> list[str]:
@@ -411,6 +465,7 @@ def validate(data_dir: Path, root: Path, prefixes: dict[str, str]) -> Report:
 
     report.stage = "graph"
     merge(dataset)
+    report.warnings += [Problem(where, message) for where, message in dataset.deprecations]
     errors, warnings = _graph_problems(dataset, prefixes)
     report.errors += errors
     report.warnings += warnings

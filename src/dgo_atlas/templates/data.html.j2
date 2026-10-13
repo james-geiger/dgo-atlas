@@ -1,0 +1,37 @@
+{% extends "base.html.j2" %}
+{% from "_macros.html.j2" import data_set_rows %}
+{#- Every data set, certified first, filterable by domain and certification,
+    then the data stores that hold them. Filtering is progressive, as on the
+    term index: with JavaScript off every data set is listed. -#}
+
+{% block content %}
+<div style="max-width:980px">
+  {% include "_page_head.html.j2" %}
+
+  <div class="filter-bar" data-filter-bar>
+    <button class="pill" type="button" data-filter="all" aria-pressed="true">{{ t("data.filter_all") }}</button>
+    <button class="pill" type="button" data-filter="certified" aria-pressed="false">{{ t("data.filter_certified") }}</button>
+    {%- for d in domains %}
+    <button class="pill" type="button" data-filter="domain:{{ d.about }}" aria-pressed="false">{{ d.label }}</button>
+    {%- endfor %}
+    <span class="filter-bar__count" data-term-count data-count-noun="data_set" role="status">{{ count("data_set", data_sets | length) }}</span>
+  </div>
+
+  {{ data_set_rows(data_sets, rel, lookup, t("data.empty"), filterable=True) }}
+
+  <h2 class="subhead" id="stores">{{ t("data.stores") }}</h2>
+  <p class="subhead-note">{{ t("data.stores_intro") }}</p>
+  <div class="area-grid">
+    {%- for s in stores %}
+    <a class="area-card" href="{{ rel }}{{ s.url }}">
+      <div class="area-card__bar" style="background:var(--slate)"></div>
+      <div class="area-card__name">{{ s.label }}</div>
+      {%- if s.description %}<p>{{ s.description }}</p>{% endif %}
+      <div class="area-card__meta"><span>{{ count("data_set", (s.data_sets or []) | length) }}</span></div>
+    </a>
+    {%- else %}
+    <div class="empty-state">{{ t("data.stores_empty") }}</div>
+    {%- endfor %}
+  </div>
+</div>
+{% endblock %}

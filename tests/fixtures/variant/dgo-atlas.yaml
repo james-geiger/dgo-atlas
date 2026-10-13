@@ -4,7 +4,7 @@
 
 # The Data Governance Ontology release to use. Its schema is imported from
 # https://raw.githubusercontent.com/james-geiger/dgo/refs/tags/<version>/dist/dgo.yaml
-dgo_version: "0.1.1"
+dgo_version: "0.2.0"
 # dgo_source: path/to/dgo.yaml   # a local copy or mirror instead, e.g. for offline builds
 
 title: Research Data Governance

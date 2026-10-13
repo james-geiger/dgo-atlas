@@ -122,3 +122,128 @@
 </div>
 {%- endif %}
 {%- endmacro %}
+
+{#- A data set's certification status (derive.certification_state). In
+    listings only an actual status is shown; `always` shows "not certified" too. -#}
+{% macro certification_badge(ref, always=False, status=False) -%}
+{%- set c = ref.certification | enum if ref.certification else "" %}
+{%- if c and (always or c != "not_certified") -%}
+<span class="badge badge--{{ c }}{% if status %} badge--status{% endif %}"
+  {%- if c == "certified" and ref.certified_on %} title="{{ t("certification.certified_on", date=ref.certified_on) }}"{% endif %}>
+  {{- t("certification." ~ c ~ ".label") }}</span>
+{%- endif %}
+{%- endmacro %}
+
+{#- Data sets as rows: name, where they are stored, certification. With
+    `filterable`, each row carries what site.js filters on. -#}
+{% macro data_set_rows(refs, rel, lookup, empty, filterable=False) -%}
+<div class="term-table">
+  {%- if refs %}
+  <div class="term-row term-row--data term-row--head" aria-hidden="true">
+    <div>{{ t("data.column_data_set") }}</div><div>{{ t("data.column_store") }}</div><div>{{ t("data.column_certification") }}</div><div></div>
+  </div>
+  <ul class="term-list">
+    {%- for r in refs %}
+    {%- set p = lookup.get(r.about) %}
+    <li{% if filterable %} data-domain="{{ (p.domains or []) | map(attribute="about") | join(" ") }}"
+        {%- if (r.certification | enum) == "certified" %} data-certified{% endif %}{% endif %}>
+      <a class="term-row term-row--data" href="{{ rel }}{{ r.url }}">
+        <span class="term-row__name">{{ r.label }}</span>
+        <span class="term-row__sub">{{ cell_label("data.column_store") }}
+          {%- if p %}{{ (p.data_stores or []) | map(attribute="label") | join(", ") }}{% endif %}</span>
+        <span>{{ cell_label("data.column_certification") }}{{ certification_badge(r) }}</span>
+        <span class="term-row__chev" aria-hidden="true">&rsaquo;</span>
+      </a>
+    </li>
+    {%- endfor %}
+  </ul>
+  {%- endif %}
+  {%- if filterable %}
+  <div class="empty-state" data-empty{% if refs %} hidden{% endif %}>{{ empty }}</div>
+  {%- elif not refs %}
+  <div class="empty-state">{{ empty }}</div>
+  {%- endif %}
+</div>
+{%- endmacro %}
+
+{#- A classification level, linked to its entry on the classification page;
+    marked when a data element reads it from its data set. -#}
+{% macro classification_link(ref, rel) -%}
+<a href="{{ rel }}{{ ref.url }}">{{ ref.label }}</a>
+{%- if ref.inherited %} <span class="term-row__sub">({{ t("classification.inherited") }})</span>{% endif %}
+{%- endmacro %}
+
+{#- Sensitivity, security and regulatory categories of a data set or element,
+    laid out like the identifier panel. -#}
+{% macro classification_panel(page, rel) -%}
+{%- if page.sensitivity or page.security_level or page.regulatory_categories %}
+<div class="panel">
+  <h2 class="panel__label">{{ t("data_set.classification") }}</h2>
+  <dl class="ref-list">
+    {%- if page.sensitivity %}
+    <div class="ref-row"><dt class="ref-row__k">{{ t("classification.sensitivity") }}</dt><dd class="ref-row__v">{{ classification_link(page.sensitivity, rel) }}</dd></div>
+    {%- endif %}
+    {%- if page.security_level %}
+    <div class="ref-row"><dt class="ref-row__k">{{ t("classification.security_level") }}</dt><dd class="ref-row__v">{{ classification_link(page.security_level, rel) }}</dd></div>
+    {%- endif %}
+    {%- if page.regulatory_categories %}
+    <div class="ref-row"><dt class="ref-row__k">{{ t("classification.regulatory_categories") }}</dt><dd class="ref-row__v">
+      {%- for r in page.regulatory_categories %}{{ classification_link(r, rel) }}{% if not loop.last %}, {% endif %}{% endfor %}</dd></div>
+    {%- endif %}
+  </dl>
+  <a class="link-cta ref-source" href="{{ rel }}classification.html">{{ t("classification.title") }} <span aria-hidden="true">&rarr;</span></a>
+</div>
+{%- endif %}
+{%- endmacro %}
+
+{#- Who holds which role over a data store, set or element, as on a term page. -#}
+{% macro responsibility_panel(page, rel, lookup, empty) -%}
+<div class="panel">
+  <h2 class="panel__label">{{ t("data_set.responsibility") }}</h2>
+  {%- for r in page.responsibilities or [] %}
+  <div class="person">
+    <div class="avatar avatar--sm" style="background:{{ r.role | role_colour }}" aria-hidden="true">{{ r.bearer.label | initials }}</div>
+    <div style="min-width:0">
+      <span class="badge badge--{{ r.role }}">{{ r.role_label }}</span>
+      {{ bearer(r.bearer, rel, lookup) }}
+    </div>
+  </div>
+  {%- else %}
+  <div class="empty-state">{{ empty }}</div>
+  {%- endfor %}
+</div>
+{%- endmacro %}
+
+{#- An IRI row with a copy button; site.js wires data-copy-target. -#}
+{% macro iri_row(iri, label) -%}
+<div class="ref-row">
+  <dt class="ref-row__k">{{ label }}</dt>
+  <dd>
+    <code class="permalink" id="permalink-value">{{ iri }}</code>
+    <button class="permalink__copy" type="button"
+            data-copy-target="permalink-value"
+            data-copy-label="{{ t("term.copy_iri") }}">{{ t("term.copy_iri") }}</button>
+  </dd>
+</div>
+{%- endmacro %}
+
+{#- The id, IRI and DGO class of a page, when show_identifiers is on, and a source link. -#}
+{% macro identifier_panel(page, kind, show_identifiers, repo_blob_url) -%}
+{%- set source = page.source_file if page.source_file is defined else None %}
+{%- set view_source = repo_blob_url and source %}
+{%- if show_identifiers or view_source %}
+<div class="panel">
+  <h2 class="panel__label">{{ t("term.identifier") if show_identifiers else t("term.source") }}</h2>
+  {%- if show_identifiers %}
+  <dl class="ref-list">
+    <div class="ref-row"><dt class="ref-row__k">{{ t("council.id") }}</dt><dd><code class="ref-row__v">{{ page.about }}</code></dd></div>
+    {{ iri_row(page.iri, t("term.iri")) }}
+    <div class="ref-row"><dt class="ref-row__k">{{ t("term.class") }}</dt><dd><a class="ref-row__v" href="{{ kind.iri }}" rel="noopener"><code>{{ kind.curie }}</code></a></dd></div>
+  </dl>
+  {%- endif %}
+  {%- if view_source %}
+  <a class="link-cta ref-source" href="{{ repo_blob_url }}{{ source }}" rel="noopener">{{ t("term.view_source") }} <span aria-hidden="true">&rarr;</span></a>
+  {%- endif %}
+</div>
+{%- endif %}
+{%- endmacro %}

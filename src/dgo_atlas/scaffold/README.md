@@ -28,7 +28,9 @@ Each governance file is a mapping of lists: `processes`, `councils`,
 `people`, `organizations`, `council_roles`, `governance_roles`,
 `business_glossaries`, `domains`, `subject_areas`, `glossary_terms`,
 `definition_sources`, `term_creations`, `term_modifications`,
-`term_deprecations` and `term_status_boundaries`. The site's
+`term_deprecations` and `status_boundaries`, and, with DGO 0.2.0 or later,
+`data_stores`, `data_sets`, `data_elements`, `data_set_certifications`,
+`sensitivity_levels`, `security_levels` and `regulations`. The site's
 "How to read a term" page describes every field of a term.
 
 ## Changing the site's wording
@@ -103,6 +105,7 @@ accepted in `type` too.
 | governance role | `steward` | `dgo:DGO_00000013` |
 | governance role | `custodian` | `dgo:DGO_00000014` |
 | governance role | `subject matter expert` | `dgo:DGO_00000015` |
+| council role | `member` | `dgo:DGO_00000035` |
 | council role | `chair` | `dgo:DGO_00000006` |
 | council role | `security steward` | `dgo:DGO_00000007` |
 | council role | `ethics steward` | `dgo:DGO_00000008` |

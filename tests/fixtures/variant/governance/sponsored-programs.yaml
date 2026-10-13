@@ -69,7 +69,7 @@ term_creations:
     has_output: ex:indirect-cost
     part_of: ex:research-dg
 
-term_status_boundaries:
+status_boundaries:
   - type: drafted
     part_of: ex:direct-cost-creation
     occurred_on: "2026-09-10"

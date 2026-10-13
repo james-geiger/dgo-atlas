@@ -1,5 +1,5 @@
 {% extends "base.html.j2" %}
-{% from "_macros.html.j2" import contact, link_panel, cell_label %}
+{% from "_macros.html.j2" import contact, link_panel, cell_label, iri_row %}
 {#- A person or organization: contact details, an organization's members,
     council seats, and the terms they hold a governance role for. -#}
 
@@ -56,7 +56,7 @@
       <h2 class="panel__label">{{ t("agent.identifier") }}</h2>
       <dl class="ref-list">
         <div class="ref-row"><dt class="ref-row__k">{{ t("agent.id") }}</dt><dd><code class="ref-row__v">{{ agent.about }}</code></dd></div>
-        <div class="ref-row"><dt class="ref-row__k">{{ t("agent.iri") }}</dt><dd><code class="ref-row__v">{{ agent.iri }}</code></dd></div>
+        {{ iri_row(agent.iri, t("agent.iri")) }}
       </dl>
     </div>
     {%- endif %}

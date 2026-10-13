@@ -6,7 +6,7 @@
 # schema is imported from
 # https://raw.githubusercontent.com/james-geiger/dgo/refs/tags/<version>/dist/dgo.yaml
 # Change it deliberately: a new release may change what your data must say.
-dgo_version: "0.1.1"
+dgo_version: "0.2.0"
 # dgo_source: vendor/dgo.yaml   # a local copy or mirror instead, e.g. for offline builds
 
 title: Data Governance
