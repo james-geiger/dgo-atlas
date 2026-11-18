@@ -6,8 +6,7 @@
 # set's domain follows from its subject areas. A data set derived from no
 # other is foundational: raw data that others are built from, which is not
 # itself certified. A data element `represents` the glossary term whose
-# definition gives its values their meaning, one term per element; the term's
-# page then lists the elements that represent it.
+# definition gives its values their meaning, one term per element.
 
 sensitivity_levels:              # your own scheme; higher severity = more harm on disclosure
   - id: org:internal

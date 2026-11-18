@@ -95,7 +95,6 @@ classes:
       - related
       - value_of
       - values
-      - represented_by
       - source_file
     slot_usage:
       glossary: { required: true }
@@ -176,13 +175,6 @@ classes:
     slots: [parent, children, councils]
     slot_usage:
       councils: { range: Ref, inlined: true, inlined_as_list: true }
-
-  ElementGroup:
-    description: Data elements that represent a term, grouped by the data set they are part of.
-    slots: [data_set, data_elements]
-    slot_usage:
-      data_set: { required: true }
-      data_elements: { range: Ref, inlined: true, inlined_as_list: true }
 
 
   DataStorePage:
@@ -472,13 +464,6 @@ slots:
       values their meaning (DGO's represents).
     range: Ref
     inlined: true
-  represented_by:
-    description: >-
-      Data elements that represent the term, grouped by data set. Derived from
-      the elements' represents; the term itself records nothing.
-    range: ElementGroup
-    multivalued: true
-    inlined_as_list: true
   sensitivity: { range: Ref, inlined: true }
   security_level: { range: Ref, inlined: true }
   regulatory_categories: { range: Ref, multivalued: true, inlined_as_list: true }

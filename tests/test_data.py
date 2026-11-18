@@ -57,12 +57,6 @@ def test_elements_represent_terms(variant):
     element = page(site.data_elements, "ex:ctms-open-date")
     assert element.represents.label == "protocol open date"
     assert page(site.data_elements, "ex:dashboard-status").represents is None
-    # The term page reads represents backwards, grouped by data set.
-    (term,) = [t for t in site.terms if t.about == "ex:protocol-status"]
-    assert [(g.data_set.label, [e.about for e in g.data_elements]) for g in term.represented_by] == [
-        ("Research studies", ["ex:warehouse-protocol-status"]),
-        ("Trial management protocols", ["ex:ctms-protocol-status"]),
-    ]
 
 
 def test_represents_an_unpublished_term_is_left_off(broken):
@@ -153,6 +147,21 @@ def test_severity_is_an_integer_and_element_warnings(broken):
     report = broken(extra={"loud.yaml": louder})
     assert report.ok
     assert any("more severe than its data set's" in str(w) for w in report.warnings)
+
+
+def test_data_set_takes_its_highest_common_denominator(broken):
+    from dgo_atlas.derive import Deriver
+    louder = ("data_elements:\n  - id: ex:loud\n    label: loud\n    part_of: ex:study-dashboard\n"
+              "    sensitivity: ex:confidential\n    regulatory_categories: [ex:ferpa]\n")
+    report = broken(extra={"loud.yaml": louder})
+    site = Deriver(report.record, EX).site()
+    dashboard = page(site.data_sets, "ex:study-dashboard")
+    # Its own level is Internal; one element is Confidential, so the set is too.
+    assert dashboard.sensitivity.label == "Confidential"
+    assert dashboard.security_level.label == "Role-based"
+    assert [r.label for r in dashboard.regulatory_categories] == ["FERPA"]
+    # An element without its own level still takes the set's own, not the raised one.
+    assert page(site.data_elements, "ex:dashboard-status").sensitivity.label == "Internal"
 
 
 def test_former_list_name_still_reads(broken):

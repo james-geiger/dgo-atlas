@@ -76,10 +76,8 @@ fixture's `governance/data.yaml` uses each. The site reads them like this:
   meaning (a `tot_dir_cost` column represents "direct cost"). The element page
   shows the term and its definition, and the term each element it was derived
   from or into represents, so a change of meaning along a lineage shows. A
-  data set page's element table has a Represents column. A term page lists the
-  elements that represent it, worked out from the elements; nothing is
-  recorded on the term. A link to an unpublished term is left off, with a
-  build note.
+  data set page's element table has a Represents column, linked to the
+  term. A link to an unpublished term is left off, with a build note.
 - **Foundational** data sets have no `derived_from` (`derive.foundational`):
   raw data others are built from, such as a table in an operational system.
   There is no field for it. They are not expected to be certified, so an
@@ -94,8 +92,12 @@ fixture's `governance/data.yaml` uses each. The site reads them like this:
   `?filter=certified` preselects it). The home page links to the data index.
 - **Classification** levels are the organization's own instances, shown on
   `classification.html`, ordered by `severity`. A data element without its own
-  level shows its data set's. Validation warns when an
-  element is more severe than its set.
+  level shows its data set's. A data set is shown at its highest common
+  denominator (`derive.set_classification`): the most severe sensitivity and
+  security level of the set and its elements, and every regulatory category
+  any of them falls under. It appears in a strip under the set's title and as
+  a column in data set listings. Validation warns when an element is more
+  severe than its set, since the set's own level is then likely out of date.
 - **Responsibilities** on stores, sets and elements appear on the bearer's
   page alongside their terms.
 

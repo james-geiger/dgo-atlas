@@ -16,7 +16,6 @@
       {%- set data_set %}<a href="{{ rel }}{{ element.data_set.url }}">{{ element.data_set.label }}</a>{% endset %}
       <span class="term-row__sub">{{ t("data_element.part_of", data_set=data_set) }}</span>
       {{ certification_badge(element.data_set) }}
-      <a class="tag-type" href="{{ element_kind.iri }}" rel="noopener" title="{{ t("term.kind_title") }}">{{ element_kind.name }}</a>
     </div>
     {%- if element.description %}<p class="lede">{{ element.description }}</p>{% endif %}
 

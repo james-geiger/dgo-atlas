@@ -124,7 +124,6 @@ term:
   back: All terms
   recorded_as: Recorded as “{name}”
   also_called: Also called {names}
-  kind_title: What kind of thing this is, in the Data Governance Ontology
   drawn_from: Drawn from {source}
   deprecated: Deprecated
   deprecated_use: Use {successor} instead.
@@ -137,11 +136,9 @@ term:
   responsibility: Responsibility
   responsibility_empty: No responsibilities are recorded for this term.
   suggest_change: Suggest a change
-  governed_by: Governed by
   denotes: Denotes
   denotes_title: What kind of thing the term refers to, as a class in an external ontology
   filed_under: Filed under
-  glossary: Glossary
   domain: Domain
   subject_area: Subject area
   broader: Broader terms
@@ -155,14 +152,9 @@ term:
   column_value: Value
   column_state: State
   related: Related terms
-  replaced_by: Replaced by
   identifier: Identifier
   source: Source
   term_id: Term ID
-  represented_by: Represented by
-  represented_by_intro: >-
-    Data elements whose values this term gives meaning to, grouped by data set.
-    Worked out from each element; nothing is recorded on the term.
   iri: IRI
   copy_iri: Copy IRI
   class: Class
@@ -252,6 +244,7 @@ data:
   filter_certified: Certified
   column_data_set: Data set
   column_store: Stored in
+  column_sensitivity: Sensitivity
   column_certification: Certification
   empty: No data sets match that filter.
   stores: Data stores
@@ -275,7 +268,6 @@ data_set:
   column_represents: Represents
   # The accessible name of the arrow link that opens an element from its row.
   open_element: Open {name}
-  column_sensitivity: Sensitivity
   lineage: Lineage
   lineage_intro: Where this data comes from, starting at the foundational data.
   lineage_current: This data set
@@ -286,7 +278,6 @@ data_set:
   filed_under: Filed under
   subject_areas: Subject areas
   domains: Domains
-  domains_note: Its domains follow from its subject areas.
   classification: Classification
   responsibility: Responsibility
   responsibility_empty: No responsibilities are recorded for this data set.

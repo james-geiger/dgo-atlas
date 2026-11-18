@@ -404,19 +404,10 @@ class Deriver:
             related=self.refs(self.linked(term, "related", related(self.rec, term))),
             value_of=self.ref(value_of[0]) if value_of else None,
             values=self.refs(t.id for t in self.terms if t.value_of == tid),
-            represented_by=self.element_groups(e.id for e in self.elements if self.represents(e) == tid),
             source_file=self.sources.get(tid),
         )
 
     # ------------------------------------------------------------ data management (DGO 0.2.0)
-
-    def element_groups(self, element_ids) -> list[vm.ElementGroup]:
-        """Data elements grouped under the data set each is part of."""
-        groups = defaultdict(list)
-        for e in element_ids:
-            groups[self.idx[e].part_of].append(e)
-        out = [vm.ElementGroup(data_set=self.ref(s), data_elements=self.refs(es)) for s, es in groups.items()]
-        return sorted(out, key=lambda g: g.data_set.label.casefold())
 
     def represents(self, element) -> str | None:
         """The published term a data element represents, if any."""
@@ -444,6 +435,20 @@ class Deriver:
         out["regulatory_categories"] = [self.ref(r) for r in sorted(categories, key=self._label)]
         return out
 
+    def set_classification(self, s, elements: list) -> dict:
+        """A data set is classified at its highest common denominator: the most
+        severe sensitivity and security level of itself and its elements, and
+        every regulatory category any of them falls under."""
+        out = {}
+        for slot in ("sensitivity", "security_level"):
+            levels = [lv for lv in [getattr(s, slot, None)] + [getattr(e, slot, None) for e in elements]
+                      if lv in self.idx]
+            top = max(levels, key=lambda lv: getattr(self.idx[lv], "severity", None) or 0, default=None)
+            out[slot] = self.ref(top) if top else None
+        categories = {r for o in [s, *elements] for r in (o.regulatory_categories or [])}
+        out["regulatory_categories"] = [self.ref(r) for r in sorted(categories, key=self._label)]
+        return out
+
     def _label(self, oid: str) -> str:
         return display_label(self.idx[oid]).casefold()
 
@@ -457,7 +462,8 @@ class Deriver:
     def data_set_page(self, s) -> vm.DataSetPage:
         areas = list(s.in_subject_area or [])
         domains = sorted({self.idx[a].part_of for a in areas})
-        elements = [e.id for e in self.elements if e.part_of == s.id]
+        members = [e for e in self.elements if e.part_of == s.id]
+        elements = [e.id for e in members]
         state, certified_on = self.certifications[s.id]
         certs = sorted(self.certifications_by_set.get(s.id, []), key=lambda c: c.id)
         return vm.DataSetPage(
@@ -470,7 +476,7 @@ class Deriver:
             foundational=foundational(s),
             lineage=self.lineage(s.id),
             derived_sets=self.refs(d.id for d in self.data_sets if s.id in (d.derived_from or [])),
-            **self.classification(s),
+            **self.set_classification(s, members),
             responsibilities=self.responsibilities(s),
             certification=state,
             certified_on=certified_on,

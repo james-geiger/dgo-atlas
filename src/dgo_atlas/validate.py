@@ -404,7 +404,8 @@ def _data_problems(merged: dict, index: dict, where, errors: list[Problem], warn
             own, outer = _severity(index, element.get(slot)), _severity(index, data_set.get(slot))
             if own is not None and outer is not None and own > outer:
                 warnings.append(Problem(where(element), f"{slot} {element[slot]} is more severe than its "
-                                                         f"data set's ({data_set[slot]})"))
+                                                         f"data set's ({data_set[slot]}), so the data set is shown "
+                                                         f"at {element[slot]}"))
 
 
 def _is_a(cls: str, ancestor: str) -> bool:
