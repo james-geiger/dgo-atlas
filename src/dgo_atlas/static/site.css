@@ -1260,3 +1260,23 @@ a.tag-type:hover { text-decoration: none; border-color: var(--accent-line); }
 .represents__term { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; font-family: var(--font-display); font-size: 18px; letter-spacing: .02em; }
 .class-row { display: flex; flex-wrap: wrap; gap: 6px; }
 .term-row__badges { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+
+/* Data set element rows: plain, selectable text, with the description under
+   the cells and a caret link (the row's only link) in the last cell. The row
+   doesn't highlight on hover, since only the caret is clickable. */
+.term-row--element {
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 110px) 32px;
+}
+.term-row--element:hover { background: none; }
+.row-link {
+  width: 32px; height: 32px; display: grid; place-items: center;
+  font-size: 18px; color: var(--ink-2); text-decoration: none;
+  border: 1px solid transparent; border-radius: 2px;
+}
+.row-link:hover { border-color: var(--line-strong); color: var(--ink); text-decoration: none; }
+.row-detail { grid-column: 1 / -1; margin: 0; font-size: 14px; color: var(--ink-2); }
+@media (max-width: 720px) {
+  .term-row--element { grid-template-columns: minmax(0, 1fr) auto; }
+  /* Keep the caret beside the name; the other cells flow beneath. */
+  .term-row--element .row-link { grid-row: 1; grid-column: 2; }
+}

@@ -109,6 +109,7 @@ data_sets:
 data_elements:                   # each element is part of exactly one data set
   - id: ex:ctms-protocol-status
     label: protocol status
+    description: The protocol's current status code as entered by the study coordinator.
     part_of: ex:ctms-protocols
     represents: ex:protocol-status   # one term per column: what its values mean
   - id: ex:ctms-open-date
@@ -118,6 +119,9 @@ data_elements:                   # each element is part of exactly one data set
     sensitivity: ex:internal     # an element may carry its own, lower, level
   - id: ex:warehouse-protocol-status
     label: protocol status
+    description: >-
+      The protocol's status, mapped from the trial management system's codes to
+      the glossary's status values and refreshed nightly.
     part_of: ex:warehouse-studies
     represents: ex:protocol-status   # same meaning downstream
     derived_from:
@@ -127,6 +131,7 @@ data_elements:                   # each element is part of exactly one data set
         role_of: ex:jordan-price
   - id: ex:warehouse-open-date
     label: open date
+    description: The date the protocol opened to accrual; empty until it opens.
     part_of: ex:warehouse-studies
     represents: ex:protocol-open-date
     derived_from:

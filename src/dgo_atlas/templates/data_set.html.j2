@@ -20,23 +20,27 @@
 
     {%- if data_set.description %}<p class="lede">{{ data_set.description }}</p>{% endif %}
 
+    {#- Rows are plain text, so names and descriptions can be selected; the
+        caret at the end is the row's one link, to the element's page. #}
     <h2 class="subhead" id="elements">{{ t("data_set.elements") }}</h2>
     <div class="term-table">
       {%- if data_set.data_elements %}
-      <div class="term-row term-row--head" aria-hidden="true">
+      <div class="term-row term-row--element term-row--head" aria-hidden="true">
         <div>{{ t("data_set.column_element") }}</div><div>{{ t("data_set.column_represents") }}</div><div>{{ t("data_set.column_sensitivity") }}</div><div></div>
       </div>
       <ul class="term-list">
         {%- for r in data_set.data_elements %}
         {%- set e = lookup.get(r.about) %}
-        <li><a class="term-row" href="{{ rel }}{{ r.url }}">
+        <li class="term-row term-row--element">
           <span class="term-row__name">{{ r.label }}</span>
-          {#- The row links to the element, so the term is plain text here; the
-              element page links to it. #}
+          {#- The term is plain text here; the element page links to it. #}
           <span class="term-row__sub">{{ cell_label("data_set.column_represents") }}{{ e.represents.label if e.represents else "—" }}</span>
           <span class="term-row__sub">{{ cell_label("data_set.column_sensitivity") }}{{ e.sensitivity.label if e.sensitivity else "—" }}</span>
-          <span class="term-row__chev" aria-hidden="true">&rsaquo;</span>
-        </a></li>
+          <a class="row-link" href="{{ rel }}{{ r.url }}" aria-label="{{ t("data_set.open_element", name=r.label) }}"><span aria-hidden="true">&rsaquo;</span></a>
+          {%- if e.description %}
+          <p class="row-detail">{{ e.description }}</p>
+          {%- endif %}
+        </li>
         {%- endfor %}
       </ul>
       {%- else %}

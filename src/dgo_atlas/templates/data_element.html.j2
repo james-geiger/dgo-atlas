@@ -35,7 +35,7 @@
   </article>
 
   <aside class="split__aside">
-    {{ responsibility_panel(element, rel, lookup, t("data_element.responsibility_empty")) }}
+    {{ responsibility_panel(element, rel, lookup) }}
     {%- for title, refs in ((t("data_element.derived_from"), element.sources), (t("data_element.derived_elements"), element.derived_elements)) %}
     {%- if refs %}
     <div class="panel">

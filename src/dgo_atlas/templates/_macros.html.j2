@@ -194,8 +194,10 @@
 {%- endif %}
 {%- endmacro %}
 
-{#- Who holds which role over a data store, set or element, as on a term page. -#}
-{% macro responsibility_panel(page, rel, lookup, empty) -%}
+{#- Who holds which role over a data store, set or element, as on a term page.
+    With no `empty` message, a page with no roles gets no panel at all. -#}
+{% macro responsibility_panel(page, rel, lookup, empty=None) -%}
+{%- if page.responsibilities or empty %}
 <div class="panel">
   <h2 class="panel__label">{{ t("data_set.responsibility") }}</h2>
   {%- for r in page.responsibilities or [] %}
@@ -210,6 +212,7 @@
   <div class="empty-state">{{ empty }}</div>
   {%- endfor %}
 </div>
+{%- endif %}
 {%- endmacro %}
 
 {#- An IRI row with a copy button; site.js wires data-copy-target. -#}
