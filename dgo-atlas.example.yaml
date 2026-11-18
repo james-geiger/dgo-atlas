@@ -227,6 +227,8 @@
 #   term.narrower: Narrower terms
 #   term.value_of: Value of
 #   term.values: Values
+#   term.column_value: Value
+#   term.column_state: State
 #   term.related: Related terms
 #   term.replaced_by: Replaced by
 #   term.identifier: Identifier

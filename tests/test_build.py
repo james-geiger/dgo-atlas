@@ -63,6 +63,16 @@ def test_term_page_shows_what_it_denotes(site):
     assert "<code>bfo:0000015</code>" in html
 
 
+def test_term_values_lead_the_body(site):
+    """A code list's values sit in the article with their definitions, not in the sidebar."""
+    page = read(site, "terms/sponsored-program-status.html")
+    body, aside = page.split('<aside class="split__aside">')
+    assert 'id="values"' in body
+    assert "may be charged to it" in body  # the "active" value's definition
+    assert "sponsored-program-status-closed.html" in body
+    assert "sponsored-program-status-active.html" not in aside
+
+
 def test_organization_page_lists_members(site):
     html = read(site, "organizations/office-of-research.html")
     assert 'href="../organizations/cto.html">Clinical Trials Office</a>' in html

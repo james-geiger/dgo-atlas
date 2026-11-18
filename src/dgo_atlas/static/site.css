@@ -793,6 +793,12 @@ h2.subhead--term { font-size: 20px; letter-spacing: .03em; }
   grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 210px) 18px;
 }
 .term-row__roles { display: flex; gap: 6px; flex-wrap: wrap; }
+/* A term's values: name, state and caret, with the value's definition on its
+   own line beneath (.row-detail). */
+.term-row--value {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 110px) 18px;
+  row-gap: 4px;
+}
 
 /* A data table (council members). Tables may scroll sideways on a narrow
    screen rather than reflow (WCAG 1.4.10 exempts them). */

@@ -152,6 +152,8 @@ term:
   narrower: Narrower terms
   value_of: Value of
   values: Values
+  column_value: Value
+  column_state: State
   related: Related terms
   replaced_by: Replaced by
   identifier: Identifier

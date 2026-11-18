@@ -45,6 +45,9 @@ def test_states(variant):
         "ex:faculty-salary": "proposed",
         "ex:protocol-status": "approved",
         "ex:protocol-open-date": "approved",
+        "ex:sponsored-program-status": "proposed",
+        "ex:sponsored-program-status-active": "proposed",
+        "ex:sponsored-program-status-closed": "proposed",
     }
 
 
@@ -97,11 +100,12 @@ def test_council_seats(variant):
         "Data Governance at Northfield University",
     ]
     assert [t.label for t in council.governed_terms] == [
-        "clinical investigation", "Clinical Trial", "Direct Cost", "Faculty Salary", "Indirect Cost",
-        "Personnel Cost", "protocol open date", "protocol status", "Sponsored Project Cost"]
+        "Active", "clinical investigation", "Clinical Trial", "Closed", "Direct Cost", "Faculty Salary",
+        "Indirect Cost", "Personnel Cost", "protocol open date", "protocol status", "Sponsored Program Status",
+        "Sponsored Project Cost"]
     assert [(a.subject_area.label, a.term_count, [r.role_label for r in a.roles or []])
             for a in council.governed_areas] == [
-        ("Clinical Research", 4, ["steward"]), ("Sponsored Programs", 5, ["steward", "data trustee"])]
+        ("Clinical Research", 4, ["steward"]), ("Sponsored Programs", 8, ["steward", "data trustee"])]
     (member,) = [a for a in site.agents if a.label == "Morgan Ellis"]
     assert [s.council.label for s in member.memberships] == [council.label]
     assert member.job_title == "Director, Data Governance"

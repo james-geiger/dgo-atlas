@@ -34,7 +34,7 @@
         <li class="term-row term-row--element">
           <span class="term-row__name">{{ r.label }}</span>
           {#- The term is plain text here; the element page links to it. #}
-          <span class="term-row__sub">{{ cell_label("data_set.column_represents") }}{{ e.represents.label if e.represents else "—" }}</span>
+          <span class="term-row__sub">{{ cell_label("data_set.column_represents") }}{% if e.represents %}<a href="{{ rel }}{{ e.represents.url }}">{{ e.represents.label }}</a>{% else %}—{% endif %}</span>
           <span class="term-row__sub">{{ cell_label("data_set.column_sensitivity") }}{{ e.sensitivity.label if e.sensitivity else "—" }}</span>
           <a class="row-link" href="{{ rel }}{{ r.url }}" aria-label="{{ t("data_set.open_element", name=r.label) }}"><span aria-hidden="true">&rsaquo;</span></a>
           {%- if e.description %}

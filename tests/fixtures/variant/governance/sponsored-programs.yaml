@@ -3,6 +3,9 @@
 # "indirect cost" has only been drafted. Both are published as proposed;
 # their history shows how far each has got. `type` values here are DGO class
 # names; governance.yaml writes the class CURIEs. Both mean the same.
+#
+# "sponsored program status" is a code list: "active" and "closed" are its
+# values (`value_of`), and its page lists them with their definitions.
 
 organizations:
   - id: ex:spo
@@ -59,6 +62,36 @@ glossary_terms:
       - type: data trustee           # a local subclass of steward (local-classes.yaml)
         role_of: ex:research-committee
 
+  - id: ex:sponsored-program-status
+    label: sponsored program status
+    pref_label: Sponsored Program Status
+    definition: >-
+      Where a sponsored program stands in its life, from award to closeout.
+    part_of: ex:business-glossary
+    in_subject_area: ex:sponsored-programs
+    responsibilities:
+      - type: owner
+        role_of: ex:spo
+
+  - id: ex:sponsored-program-status-active
+    label: active
+    pref_label: Active
+    definition: >-
+      The award has been accepted and work on the program may be charged to it.
+    part_of: ex:business-glossary
+    in_subject_area: ex:sponsored-programs
+    value_of: ex:sponsored-program-status
+
+  - id: ex:sponsored-program-status-closed
+    label: closed
+    pref_label: Closed
+    definition: >-
+      The period of performance has ended and every financial and technical
+      report owed to the sponsor has been accepted.
+    part_of: ex:business-glossary
+    in_subject_area: ex:sponsored-programs
+    value_of: ex:sponsored-program-status
+
 term_creations:
   - id: ex:direct-cost-creation
     label: Creation of the term "direct cost"
@@ -67,6 +100,18 @@ term_creations:
   - id: ex:indirect-cost-creation
     label: Creation of the term "indirect cost"
     has_output: ex:indirect-cost
+    part_of: ex:research-dg
+  - id: ex:sponsored-program-status-creation
+    label: Creation of the term "sponsored program status"
+    has_output: ex:sponsored-program-status
+    part_of: ex:research-dg
+  - id: ex:sponsored-program-status-active-creation
+    label: Creation of the term "active"
+    has_output: ex:sponsored-program-status-active
+    part_of: ex:research-dg
+  - id: ex:sponsored-program-status-closed-creation
+    label: Creation of the term "closed"
+    has_output: ex:sponsored-program-status-closed
     part_of: ex:research-dg
 
 status_boundaries:
@@ -79,3 +124,12 @@ status_boundaries:
   - type: drafted           # "indirect cost" is only drafted
     part_of: ex:indirect-cost-creation
     occurred_on: "2026-09-20"
+  - type: drafted
+    part_of: ex:sponsored-program-status-creation
+    occurred_on: "2026-09-22"
+  - type: drafted
+    part_of: ex:sponsored-program-status-active-creation
+    occurred_on: "2026-09-22"
+  - type: drafted
+    part_of: ex:sponsored-program-status-closed-creation
+    occurred_on: "2026-09-22"

@@ -1,5 +1,5 @@
 {% extends "base.html.j2" %}
-{% from "_macros.html.j2" import state_badge, bearer, link_panel, broader_panel, certification_badge, iri_row %}
+{% from "_macros.html.j2" import state_badge, bearer, link_panel, broader_panel, certification_badge, iri_row, cell_label %}
 {#- One glossary term. Sections with no data are left out rather than shown
     empty: a blank panel reads as a site bug, its absence as "not recorded". -#}
 
@@ -56,6 +56,30 @@
     {%- if term.predecessors %}
     {%- set predecessors %}{% for p in term.predecessors %}<a href="{{ rel }}{{ p.url }}">{{ p.label }}</a>{% if not loop.last %}, {% endif %}{% endfor %}{% endset %}
     <p class="term-row__sub">{{ t("term.replaces", terms=predecessors) }}</p>
+    {%- endif %}
+
+    {#- The terms whose value_of is this one: the term's permitted values, so
+        they lead the body with their definitions, not a sidebar list. #}
+    {%- if term.values %}
+    <h2 class="subhead subhead--term" id="values">{{ t("term.values") }}</h2>
+    <div class="term-table">
+      <div class="term-row term-row--value term-row--head" aria-hidden="true">
+        <div>{{ t("term.column_value") }}</div><div>{{ t("term.column_state") }}</div><div></div>
+      </div>
+      <ul class="term-list">
+        {%- for v in term.values %}
+        {%- set vp = lookup.get(v.about) %}
+        <li><a class="term-row term-row--value" href="{{ rel }}{{ v.url }}">
+          <span class="term-row__name{% if (v.state | enum) == 'deprecated' %} term-row__name--deprecated{% endif %}">{{ v.label }}</span>
+          <span>{{ cell_label("term.column_state") }}{{ state_badge(v.state) }}</span>
+          <span class="term-row__chev" aria-hidden="true">&rsaquo;</span>
+          {%- if vp and vp.definition %}
+          <span class="row-detail">{{ vp.definition }}</span>
+          {%- endif %}
+        </a></li>
+        {%- endfor %}
+      </ul>
+    </div>
     {%- endif %}
 
     {#- Read backwards from each data element's `represents`; the term itself
@@ -139,7 +163,6 @@
     {{ broader_panel(term, rel) }}
     {{ link_panel(t("term.narrower"), term.narrower, rel) }}
     {{ link_panel(t("term.value_of"), [term.value_of] if term.value_of else [], rel) }}
-    {{ link_panel(t("term.values"), term.values, rel) }}
     {{ link_panel(t("term.related"), term.related, rel) }}
     {{ link_panel(t("term.replaced_by"), [term.successor] if term.successor else [], rel) }}
 
