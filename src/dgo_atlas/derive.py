@@ -125,6 +125,14 @@ class Deriver:
             else:
                 self.published.add(t.id)
         self.terms = [t for t in self.terms if t.id in self.published]
+        # The term each data element represents (DGO 0.2.0), published terms only.
+        self.element_terms: dict[str, str] = {}
+        for e in self.elements:
+            term = getattr(e, "represents", None)
+            if term and term in self.published:
+                self.element_terms[e.id] = term
+            elif term:
+                self.notes.append(f"{e.id}: represents {term}, which is not published, so the link is left off")
 
     def records(self, list_name: str) -> list:
         """A template list, or nothing on a release that lacks its class."""
@@ -396,7 +404,7 @@ class Deriver:
             related=self.refs(self.linked(term, "related", related(self.rec, term))),
             value_of=self.ref(value_of[0]) if value_of else None,
             values=self.refs(t.id for t in self.terms if t.value_of == tid),
-            informed_by=self.element_groups(getattr(term, "informed_by", None) or []),
+            represented_by=self.element_groups(e.id for e in self.elements if self.represents(e) == tid),
             source_file=self.sources.get(tid),
         )
 
@@ -410,10 +418,9 @@ class Deriver:
         out = [vm.ElementGroup(data_set=self.ref(s), data_elements=self.refs(es)) for s, es in groups.items()]
         return sorted(out, key=lambda g: g.data_set.label.casefold())
 
-    def informed_terms(self, element_ids) -> list[vm.Ref]:
-        """Published terms informed by any of the elements (informed_by, read backwards)."""
-        ids = set(element_ids)
-        return self.refs(t.id for t in self.terms if ids & set(getattr(t, "informed_by", None) or []))
+    def represents(self, element) -> str | None:
+        """The published term a data element represents, if any."""
+        return self.element_terms.get(element.id)
 
     def lineage(self, set_id: str) -> list[vm.HierarchyNode]:
         """The foundational sets a data set comes from, branching down through
@@ -423,22 +430,18 @@ class Deriver:
         return self.tree(set_id, lambda s: list(self.idx[s].derived_from or []))
 
     def classification(self, obj, fallback=None) -> dict:
-        """An object's sensitivity, security level and regulatory categories, as ClassificationRefs.
+        """An object's sensitivity, security level and regulatory categories.
 
-        A data element without its own reads its data set's (`fallback`), marked inherited.
+        A data element without its own, slot by slot, has its data set's (`fallback`).
         """
-        def one(level, inherited=False):
-            return vm.ClassificationRef(**self.ref(level).model_dump(), inherited=inherited or None) if level else None
-
         out = {}
         for slot in ("sensitivity", "security_level"):
-            own = getattr(obj, slot, None)
-            outer = getattr(fallback, slot, None) if fallback is not None else None
-            out[slot] = one(own) if own else one(outer, inherited=True)
-        own = list(obj.regulatory_categories or [])
-        outer = list(fallback.regulatory_categories or []) if fallback is not None and not own else []
-        out["regulatory_categories"] = [one(r) for r in sorted(own, key=self._label)] + \
-            [one(r, inherited=True) for r in sorted(outer, key=self._label)]
+            level = getattr(obj, slot, None) or (getattr(fallback, slot, None) if fallback is not None else None)
+            out[slot] = self.ref(level) if level else None
+        categories = list(obj.regulatory_categories or [])
+        if not categories and fallback is not None:
+            categories = list(fallback.regulatory_categories or [])
+        out["regulatory_categories"] = [self.ref(r) for r in sorted(categories, key=self._label)]
         return out
 
     def _label(self, oid: str) -> str:
@@ -467,7 +470,6 @@ class Deriver:
             foundational=foundational(s),
             lineage=self.lineage(s.id),
             derived_sets=self.refs(d.id for d in self.data_sets if s.id in (d.derived_from or [])),
-            informed_terms=self.informed_terms(elements),
             **self.classification(s),
             responsibilities=self.responsibilities(s),
             certification=state,
@@ -484,7 +486,7 @@ class Deriver:
             data_set=self.ref(e.part_of),
             sources=self.refs(e.derived_from or []),
             derived_elements=self.refs(d.id for d in self.elements if e.id in (d.derived_from or [])),
-            informed_terms=self.informed_terms([e.id]),
+            represents=self.ref(self.represents(e)) if self.represents(e) else None,
             **self.classification(e, self.idx[e.part_of]),
             responsibilities=self.responsibilities(e),
             source_file=self.sources.get(e.id),

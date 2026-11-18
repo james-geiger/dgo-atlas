@@ -5,8 +5,9 @@
 # A data store is the operational system, not its database design. A data
 # set's domain follows from its subject areas. A data set derived from no
 # other is foundational: raw data that others are built from, which is not
-# itself certified. Glossary terms point at the data that informs them with
-# `informed_by`; data never points at terms.
+# itself certified. A data element `represents` the glossary term whose
+# definition gives its values their meaning, one term per element; the term's
+# page then lists the elements that represent it.
 
 sensitivity_levels:              # your own scheme; higher severity = more harm on disclosure
   - id: org:internal
@@ -61,6 +62,7 @@ data_elements:                   # each is part of exactly one data set
   - id: org:protocol-status
     label: protocol status
     part_of: org:trial-protocols
+    # represents: org:protocol-status-term   # the glossary term that gives its values meaning
   - id: org:reporting-status
     label: protocol status
     part_of: org:trial-reporting

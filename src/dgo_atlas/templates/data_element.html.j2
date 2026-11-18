@@ -1,9 +1,10 @@
 {% extends "base.html.j2" %}
 {% from "_macros.html.j2" import certification_badge, classification_panel, responsibility_panel,
-   identifier_panel, link_panel, term_rows %}
-{#- One data element: the data set it is part of, where it was derived from
-    and into, and the terms it informs. Classification it doesn't carry
-    itself is read from its data set. -#}
+   identifier_panel, link_panel, state_badge %}
+{#- One data element: the term it represents, the data set it is part of, and
+    where it was derived from and into, with the term each of those represents
+    so a change of meaning along the lineage shows. Classification it doesn't
+    carry itself is read from its data set. -#}
 
 {% block content %}
 <div class="split">
@@ -19,9 +20,17 @@
     </div>
     {%- if element.description %}<p class="lede">{{ element.description }}</p>{% endif %}
 
-    {%- if element.informed_terms %}
-    <h2 class="subhead" id="terms">{{ t("data_element.terms") }}</h2>
-    {{ term_rows(element.informed_terms, rel, "") }}
+    {#- The term whose definition gives this element's values their meaning. #}
+    {%- if element.represents %}
+    {%- set term = lookup.get(element.represents.about) %}
+    <div class="definition-box">
+      <h2 class="definition-box__label">{{ t("data_element.represents") }}</h2>
+      <p class="represents__term"><a href="{{ rel }}{{ element.represents.url }}">{{ element.represents.label }}</a>
+        {{ state_badge(element.represents.state) }}</p>
+      {%- if term %}<p>{{ term.definition }}</p>{% endif %}
+    </div>
+    {%- else %}
+    <p class="term-row__sub">{{ t("data_element.represents_none") }}</p>
     {%- endif %}
   </article>
 
@@ -35,7 +44,10 @@
         {%- for r in refs %}
         <li><a class="panel-link" href="{{ rel }}{{ r.url }}">
           <div class="panel-link__name">{{ r.label }}</div>
-          {%- if r.data_set %}<div class="panel-link__rel">{{ r.data_set.label }}</div>{% endif %}
+          {%- set other = lookup.get(r.about) %}
+          <div class="panel-link__rel">
+            {%- if r.data_set %}{{ r.data_set.label }}{% endif %}
+            {%- if other and other.represents %} &middot; {{ t("data_element.represents_short", term=other.represents.label) }}{% endif %}</div>
         </a></li>
         {%- endfor %}
       </ul>

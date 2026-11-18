@@ -59,7 +59,7 @@ CERTIFICATION_STATES = ("certified", "in_progress", "not_certified", "foundation
 # Slots the release lacks (semantic_type before 0.1.1) are left out.
 TERM_FIELDS = ["pref_label", "label", "alt_labels", "definition", "definition_source", "semantic_type",
                "part_of", "in_subject_area", "responsibilities", "broader", "related", "value_of",
-               "replaced_by", "informed_by", "id"]
+               "replaced_by", "id"]
 
 DATA_PAGE = "data.html"
 

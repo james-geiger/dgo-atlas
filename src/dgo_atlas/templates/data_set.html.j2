@@ -2,7 +2,8 @@
 {% from "_macros.html.j2" import certification_badge, classification_panel,
    responsibility_panel, identifier_panel, link_panel, data_set_rows, cell_label, state_badge %}
 {#- One data set: certification, elements, lineage back to the sources of
-    truth, the terms its data informs, and its classification. Domains and
+    truth, and its classification. Each element row shows the term it
+    represents. Domains and
     whether it is foundational are derived, never written in the data. -#}
 
 {% block content %}
@@ -23,14 +24,16 @@
     <div class="term-table">
       {%- if data_set.data_elements %}
       <div class="term-row term-row--head" aria-hidden="true">
-        <div>{{ t("data_set.column_element") }}</div><div></div><div>{{ t("data_set.column_sensitivity") }}</div><div></div>
+        <div>{{ t("data_set.column_element") }}</div><div>{{ t("data_set.column_represents") }}</div><div>{{ t("data_set.column_sensitivity") }}</div><div></div>
       </div>
       <ul class="term-list">
         {%- for r in data_set.data_elements %}
         {%- set e = lookup.get(r.about) %}
         <li><a class="term-row" href="{{ rel }}{{ r.url }}">
           <span class="term-row__name">{{ r.label }}</span>
-          <span class="term-row__sub">{{ e.description or "" }}</span>
+          {#- The row links to the element, so the term is plain text here; the
+              element page links to it. #}
+          <span class="term-row__sub">{{ cell_label("data_set.column_represents") }}{{ e.represents.label if e.represents else "—" }}</span>
           <span class="term-row__sub">{{ cell_label("data_set.column_sensitivity") }}{{ e.sensitivity.label if e.sensitivity else "—" }}</span>
           <span class="term-row__chev" aria-hidden="true">&rsaquo;</span>
         </a></li>
@@ -74,31 +77,6 @@
     {%- if data_set.derived_sets %}
     <h2 class="subhead">{{ t("data_set.derived_sets") }}</h2>
     {{ data_set_rows(data_set.derived_sets, rel, lookup, "") }}
-    {%- endif %}
-
-    {%- if data_set.informed_terms %}
-    <h2 class="subhead" id="terms">{{ t("data_set.terms") }}</h2>
-    <p class="subhead-note">{{ t("data_set.terms_intro") }}</p>
-    {#- Each term with the elements of this set that inform it, read from the
-        term's own informed_by. #}
-    <div class="term-table">
-      <div class="term-row term-row--head" aria-hidden="true">
-        <div>{{ t("data_set.column_term") }}</div><div>{{ t("data_set.column_informed_by") }}</div><div>{{ t("data_set.column_state") }}</div><div></div>
-      </div>
-      <ul class="term-list">
-        {%- for r in data_set.informed_terms %}
-        {%- set term = lookup.get(r.about) %}
-        {%- set groups = (term.informed_by or []) | selectattr("data_set.about", "equalto", data_set.about) | list %}
-        <li><a class="term-row" href="{{ rel }}{{ r.url }}">
-          <span class="term-row__name{% if (r.state | enum) == 'deprecated' %} term-row__name--deprecated{% endif %}">{{ r.label }}</span>
-          <span class="term-row__sub">{{ cell_label("data_set.column_informed_by") }}
-            {%- for g in groups %}{{ (g.data_elements or []) | map(attribute="label") | join(", ") }}{% endfor %}</span>
-          <span>{{ cell_label("data_set.column_state") }}{{ state_badge(r.state) }}</span>
-          <span class="term-row__chev" aria-hidden="true">&rsaquo;</span>
-        </a></li>
-        {%- endfor %}
-      </ul>
-    </div>
     {%- endif %}
 
     {%- if c != "foundational" %}

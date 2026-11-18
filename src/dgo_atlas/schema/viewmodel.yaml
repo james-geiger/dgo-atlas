@@ -95,7 +95,7 @@ classes:
       - related
       - value_of
       - values
-      - informed_by
+      - represented_by
       - source_file
     slot_usage:
       glossary: { required: true }
@@ -178,16 +178,12 @@ classes:
       councils: { range: Ref, inlined: true, inlined_as_list: true }
 
   ElementGroup:
-    description: Data elements that inform a term, grouped by the data set they are part of.
+    description: Data elements that represent a term, grouped by the data set they are part of.
     slots: [data_set, data_elements]
     slot_usage:
       data_set: { required: true }
       data_elements: { range: Ref, inlined: true, inlined_as_list: true }
 
-  ClassificationRef:
-    is_a: Ref
-    description: A classification level held by a data set or data element.
-    slots: [inherited]
 
   DataStorePage:
     is_a: Page
@@ -208,7 +204,6 @@ classes:
       - foundational
       - lineage
       - derived_sets
-      - informed_terms
       - sensitivity
       - security_level
       - regulatory_categories
@@ -233,7 +228,7 @@ classes:
       - data_set
       - sources
       - derived_elements
-      - informed_terms
+      - represents
       - sensitivity
       - security_level
       - regulatory_categories
@@ -471,22 +466,22 @@ slots:
     range: Ref
     multivalued: true
     inlined_as_list: true
-  informed_terms:
-    description: Published glossary terms informed by this data (glossary terms' informed_by, read backwards).
+  represents:
+    description: >-
+      The published glossary term whose definition gives a data element's
+      values their meaning (DGO's represents).
     range: Ref
-    multivalued: true
-    inlined_as_list: true
-  informed_by:
-    description: The data elements the term is informed by, grouped by data set.
+    inlined: true
+  represented_by:
+    description: >-
+      Data elements that represent the term, grouped by data set. Derived from
+      the elements' represents; the term itself records nothing.
     range: ElementGroup
     multivalued: true
     inlined_as_list: true
-  sensitivity: { range: ClassificationRef, inlined: true }
-  security_level: { range: ClassificationRef, inlined: true }
-  regulatory_categories: { range: ClassificationRef, multivalued: true, inlined_as_list: true }
-  inherited:
-    description: Not set on the data element itself, so read from its data set.
-    range: boolean
+  sensitivity: { range: Ref, inlined: true }
+  security_level: { range: Ref, inlined: true }
+  regulatory_categories: { range: Ref, multivalued: true, inlined_as_list: true }
   axis: { range: ClassificationAxis, required: true }
   severity: { range: integer }
   children: { range: Ref, multivalued: true, inlined_as_list: true }

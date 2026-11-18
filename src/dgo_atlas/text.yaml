@@ -157,8 +157,10 @@ term:
   identifier: Identifier
   source: Source
   term_id: Term ID
-  informed_by: Informed by data
-  informed_by_intro: The data elements whose values determine this term.
+  represented_by: Represented by
+  represented_by_intro: >-
+    Data elements whose values this term gives meaning to, grouped by data set.
+    Worked out from each element; nothing is recorded on the term.
   iri: IRI
   copy_iri: Copy IRI
   class: Class
@@ -268,16 +270,12 @@ data_set:
   elements: Data elements
   elements_empty: No data elements are recorded for this data set.
   column_element: Element
+  column_represents: Represents
   column_sensitivity: Sensitivity
   lineage: Lineage
   lineage_intro: Where this data comes from, starting at the foundational data.
   lineage_current: This data set
   derived_sets: Derived data sets
-  terms: Terms this data informs
-  terms_intro: Glossary terms informed by this data set's elements. Terms point at the data, not the other way round.
-  column_term: Term
-  column_informed_by: Informed by
-  column_state: State
   history: Certification history
   history_empty: No certification is recorded for this data set.
   stored_in: Stored in
@@ -295,7 +293,9 @@ data_element:
   part_of: Part of {data_set}
   derived_from: Derived from
   derived_elements: Derived into
-  terms: Terms this element informs
+  represents: Represents
+  represents_short: represents {term}
+  represents_none: No glossary term is recorded for what this element's values mean.
   responsibility: Responsibility
   responsibility_empty: No responsibilities are recorded for this data element.
 
@@ -308,7 +308,6 @@ classification:
   security_level: Security
   regulatory_categories: Regulatory
   severity: Severity {n}
-  inherited: from its data set
   axis:
     sensitivity_level: Sensitivity levels
     security_level: Security levels
@@ -356,8 +355,9 @@ how_to_read:
     certified once one reaches an approved step, on that step's date.
   data: Data
   data_intro: >-
-    Data stores hold data sets, which are made of data elements. Terms are
-    informed by data elements, and data sets are derived from one another.
+    Data stores hold data sets, which are made of data elements. Each data
+    element represents a glossary term, and data sets are derived from one
+    another.
   classification: Classification
   fields: Every field on a term
   required: required
@@ -371,7 +371,6 @@ field:
   definition: Definition
   definition_source: Definition source
   semantic_type: Denotes
-  informed_by: Informed by data
   part_of: Glossary
   in_subject_area: Subject area
   responsibilities: Responsibility

@@ -166,11 +166,9 @@
 </div>
 {%- endmacro %}
 
-{#- A classification level, linked to its entry on the classification page;
-    marked when a data element reads it from its data set. -#}
+{#- A classification level, linked to its entry on the classification page. -#}
 {% macro classification_link(ref, rel) -%}
 <a href="{{ rel }}{{ ref.url }}">{{ ref.label }}</a>
-{%- if ref.inherited %} <span class="term-row__sub">({{ t("classification.inherited") }})</span>{% endif %}
 {%- endmacro %}
 
 {#- Sensitivity, security and regulatory categories of a data set or element,

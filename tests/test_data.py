@@ -10,7 +10,7 @@ from rdflib import RDF, URIRef
 from dgo_atlas import config, dgo
 from dgo_atlas.build import build
 
-from .conftest import DGO_VERSION, FIXTURES
+from .conftest import DGO_VERSION, EX, FIXTURES
 from .test_cli import dgo_atlas
 
 DATA = "https://w3id.org/dgo/data/"
@@ -52,16 +52,28 @@ def test_domains_are_inferred_from_subject_areas(variant):
     assert {r.about for r in research.data_sets} == {"ex:ctms-protocols", "ex:warehouse-studies", "ex:study-dashboard"}
 
 
-def test_terms_flow_up_from_the_data(variant):
-    _, site = variant
-    assert [t.label for t in page(site.data_sets, "ex:warehouse-studies").informed_terms] == ["open study"]
-    assert not page(site.data_sets, "ex:study-dashboard").informed_terms
-    assert [t.label for t in page(site.data_elements, "ex:ctms-open-date").informed_terms] == ["open study"]
-    (term,) = [t for t in site.terms if t.about == "ex:open-study"]
-    assert [(g.data_set.label, [e.about for e in g.data_elements]) for g in term.informed_by] == [
-        ("Research studies", ["ex:warehouse-open-date", "ex:warehouse-protocol-status"]),
-        ("Trial management protocols", ["ex:ctms-open-date", "ex:ctms-protocol-status"]),
+def test_elements_represent_terms(variant):
+    deriver, site = variant
+    element = page(site.data_elements, "ex:ctms-open-date")
+    assert element.represents.label == "protocol open date"
+    assert page(site.data_elements, "ex:dashboard-status").represents is None
+    # The term page reads represents backwards, grouped by data set.
+    (term,) = [t for t in site.terms if t.about == "ex:protocol-status"]
+    assert [(g.data_set.label, [e.about for e in g.data_elements]) for g in term.represented_by] == [
+        ("Research studies", ["ex:warehouse-protocol-status"]),
+        ("Trial management protocols", ["ex:ctms-protocol-status"]),
     ]
+
+
+def test_represents_an_unpublished_term_is_left_off(broken):
+    from dgo_atlas.derive import Deriver
+    extra = ("data_elements:\n  - id: ex:orphan\n    label: orphan\n    part_of: ex:study-dashboard\n"
+             "    represents: ex:clinical-study\n")
+    report = broken(extra={"orphan.yaml": extra})
+    assert report.ok, report.errors
+    deriver = Deriver(report.record, EX)
+    assert page(deriver.site().data_elements, "ex:orphan").represents is None
+    assert "ex:orphan: represents ex:clinical-study, which is not published, so the link is left off" in deriver.notes
 
 
 def test_certification(variant):
@@ -85,9 +97,10 @@ def test_certification(variant):
 def test_classification(variant):
     _, site = variant
     element = page(site.data_elements, "ex:ctms-open-date")
-    assert (element.sensitivity.label, element.sensitivity.inherited) == ("Internal", None)
-    assert (element.security_level.label, element.security_level.inherited) == ("Role-based", True)
-    assert [(r.label, r.inherited) for r in element.regulatory_categories] == [("PHI (HIPAA)", True)]
+    # Its own sensitivity; the security level and regulatory category it lacks are its data set's.
+    assert element.sensitivity.label == "Internal"
+    assert element.security_level.label == "Role-based"
+    assert [r.label for r in element.regulatory_categories] == ["PHI (HIPAA)"]
     levels = [(lv.axis, lv.label, lv.severity) for lv in site.classification_levels]
     assert levels[:3] == [("sensitivity_level", "Public", 1), ("sensitivity_level", "Internal", 2),
                           ("sensitivity_level", "Confidential", 3)]
@@ -190,9 +203,9 @@ def test_export_runs_the_dgo_lineage_query(tmp_path):
     assert [(r["certified"], r["certifiedOn"], r["setLabel"], r["sourceOfTruth"], r["stores"], r["domains"],
              r["terms"], r["sensitivity"], r["security"], r["regulatory"]) for r in rows] == [
         (DATA + "warehouse-studies", "2026-10-20", "Research studies", "false", "Research Data Warehouse",
-         "Research", "open study", "Confidential", "Role-based", "PHI (HIPAA)"),
+         "Research", "protocol open date, protocol status", "Confidential", "Role-based", "PHI (HIPAA)"),
         (DATA + "warehouse-studies", "2026-10-20", "Trial management protocols", "true",
-         "Clinical Trial Management System", "Research", "open study", "Confidential", "Role-based", "PHI (HIPAA)"),
+         "Clinical Trial Management System", "Research", "protocol open date, protocol status", "Confidential", "Role-based", "PHI (HIPAA)"),
     ]
 
 

@@ -4,7 +4,8 @@
 # protocol status and open date. The research warehouse's study set is
 # derived from them, field by field, and certified by the research committee;
 # a dashboard set derived from the warehouse is still being certified. The
-# term "open study" is informed by the status and open date fields.
+# status and open date columns represent the terms "protocol status" and
+# "protocol open date" in both sets, so the lineage carries their meaning.
 
 organizations:
   - id: ex:research-computing
@@ -109,13 +110,16 @@ data_elements:                   # each element is part of exactly one data set
   - id: ex:ctms-protocol-status
     label: protocol status
     part_of: ex:ctms-protocols
+    represents: ex:protocol-status   # one term per column: what its values mean
   - id: ex:ctms-open-date
     label: open date
     part_of: ex:ctms-protocols
+    represents: ex:protocol-open-date
     sensitivity: ex:internal     # an element may carry its own, lower, level
   - id: ex:warehouse-protocol-status
     label: protocol status
     part_of: ex:warehouse-studies
+    represents: ex:protocol-status   # same meaning downstream
     derived_from:
       - ex:ctms-protocol-status
     responsibilities:
@@ -124,9 +128,10 @@ data_elements:                   # each element is part of exactly one data set
   - id: ex:warehouse-open-date
     label: open date
     part_of: ex:warehouse-studies
+    represents: ex:protocol-open-date
     derived_from:
       - ex:ctms-open-date
-  - id: ex:dashboard-status
+  - id: ex:dashboard-status     # no term recorded for what its values mean
     label: study status
     part_of: ex:study-dashboard
     derived_from:
@@ -144,32 +149,42 @@ data_set_certifications:
     has_output: ex:study-dashboard
     part_of: ex:research-dg
 
-# --- a term the data informs -----------------------------------------------------
+# --- the terms the data represents ----------------------------------------------
 
 glossary_terms:
-  - id: ex:open-study
-    label: open study
-    definition: a study that is open to accrual and has passed its open date
+  - id: ex:protocol-status
+    label: protocol status
+    definition: where a study protocol stands in its life, from development through closure
     part_of: ex:business-glossary
     in_subject_area: ex:clinical-research
-    informed_by:                 # the data whose values determine the term, in both sets
-      - ex:ctms-protocol-status
-      - ex:ctms-open-date
-      - ex:warehouse-protocol-status
-      - ex:warehouse-open-date
+  - id: ex:protocol-open-date
+    label: protocol open date
+    definition: the date a study protocol opened to accrual
+    part_of: ex:business-glossary
+    in_subject_area: ex:clinical-research
 
 term_creations:
-  - id: ex:open-study-creation
-    label: Creation of the term "open study"
-    has_output: ex:open-study
+  - id: ex:protocol-status-creation
+    label: Creation of the term "protocol status"
+    has_output: ex:protocol-status
+    part_of: ex:research-dg
+  - id: ex:protocol-open-date-creation
+    label: Creation of the term "protocol open date"
+    has_output: ex:protocol-open-date
     part_of: ex:research-dg
 
 status_boundaries:
   - type: drafted
-    part_of: ex:open-study-creation
+    part_of: ex:protocol-status-creation
     occurred_on: "2026-10-01"
   - type: approved
-    part_of: ex:open-study-creation
+    part_of: ex:protocol-status-creation
+    occurred_on: "2026-10-08"
+  - type: drafted
+    part_of: ex:protocol-open-date-creation
+    occurred_on: "2026-10-01"
+  - type: approved
+    part_of: ex:protocol-open-date-creation
     occurred_on: "2026-10-08"
 
   - type: drafted

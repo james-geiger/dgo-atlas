@@ -1257,5 +1257,6 @@ a.tag-type:hover { text-decoration: none; border-color: var(--accent-line); }
 .lineage { max-width: 460px; }
 .element-group { margin: 14px 0 0; }
 .element-group__set { font-size: 13px; color: var(--ink-3); margin: 0 0 4px; }
+.represents__term { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; font-family: var(--font-display); font-size: 18px; letter-spacing: .02em; }
 .class-row { display: flex; flex-wrap: wrap; gap: 6px; }
 .term-row__badges { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }

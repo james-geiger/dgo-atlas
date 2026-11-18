@@ -58,12 +58,12 @@
     <p class="term-row__sub">{{ t("term.replaces", terms=predecessors) }}</p>
     {%- endif %}
 
-    {#- Terminology flows up from the data: the term names the elements that
-        determine it, grouped by the data set each is part of. #}
-    {%- if term.informed_by %}
-    <h2 class="subhead subhead--term" id="informed-by">{{ t("term.informed_by") }}</h2>
-    <p class="subhead-note">{{ t("term.informed_by_intro") }}</p>
-    {%- for g in term.informed_by %}
+    {#- Read backwards from each data element's `represents`; the term itself
+        records nothing, so the note says the list is derived. #}
+    {%- if term.represented_by %}
+    <h2 class="subhead subhead--term" id="represented-by">{{ t("term.represented_by") }}</h2>
+    <p class="subhead-note">{{ t("term.represented_by_intro") }}</p>
+    {%- for g in term.represented_by %}
     <div class="element-group">
       <p class="element-group__set"><a href="{{ rel }}{{ g.data_set.url }}">{{ g.data_set.label }}</a> {{ certification_badge(g.data_set) }}</p>
       <ul class="panel-list">

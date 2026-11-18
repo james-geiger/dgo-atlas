@@ -56,9 +56,9 @@ time.
 - **Older releases.** The template is fitted to the release (`dgo._fit_to_release`):
   a list whose class the release lacks, such as `data_sets` before 0.2.0, is
   left out, so a 0.1.x project builds as before.
-- **Version.** The version shown on the site is `dgo_version`. DGO Atlas never
-  reads it from the release, whose own `version` (and `owl:versionInfo`) still
-  says 0.1.0 at the 0.2.0 tag.
+- **Version.** The version shown on the site is `dgo_version`, the release
+  the project imports. DGO Atlas doesn't read a version from the release
+  itself.
 
 ## Data management (DGO 0.2.0)
 
@@ -71,9 +71,15 @@ fixture's `governance/data.yaml` uses each. The site reads them like this:
   logical database, and has no domain. A data set's domains are inferred from
   its subject areas. Each data element is part of one data set; the same
   attribute in another set is another element, linked by `derived_from`.
-- **Terms flow up from the data.** A glossary term lists the elements that
-  determine it in `informed_by`. Data set and element pages read that
-  backwards; elements never name terms.
+- **Elements represent terms.** A data element `represents` at most one
+  glossary term: the term whose definition gives the element's values their
+  meaning (a `tot_dir_cost` column represents "direct cost"). The element page
+  shows the term and its definition, and the term each element it was derived
+  from or into represents, so a change of meaning along a lineage shows. A
+  data set page's element table has a Represents column. A term page lists the
+  elements that represent it, worked out from the elements; nothing is
+  recorded on the term. A link to an unpublished term is left off, with a
+  build note.
 - **Foundational** data sets have no `derived_from` (`derive.foundational`):
   raw data others are built from, such as a table in an operational system.
   There is no field for it. They are not expected to be certified, so an
@@ -88,7 +94,7 @@ fixture's `governance/data.yaml` uses each. The site reads them like this:
   `?filter=certified` preselects it). The home page links to the data index.
 - **Classification** levels are the organization's own instances, shown on
   `classification.html`, ordered by `severity`. A data element without its own
-  level shows its data set's, marked as inherited. Validation warns when an
+  level shows its data set's. Validation warns when an
   element is more severe than its set.
 - **Responsibilities** on stores, sets and elements appear on the bearer's
   page alongside their terms.
@@ -243,8 +249,10 @@ prefix.
    turned into a view-model `Site`: state, domain, governing councils,
    history, pending changes, narrower terms, both-way `related`, council
    seats, organization members (and, read back, what each agent is a member
-   of). With data: inferred domains, foundational sets, lineage, the terms each
-   data set informs, and certification status. Each semantic type is shown by what its class calls itself: its
+   of). With data: inferred domains, foundational sets, lineage, the elements
+   that represent each term (read back from `represents`), and certification
+   status. Each semantic type is
+   shown by what its class calls itself: its
    label and ontology are read from the EBI Ontology Lookup Service or,
    failing that, from the IRI dereferenced as RDF
    (`semantic.py`). A class neither describes is shown by its IRI, with a

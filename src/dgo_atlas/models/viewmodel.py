@@ -330,7 +330,7 @@ class TermPage(Page):
     related: Optional[list[Ref]] = Field(default=None, description="""Related terms, read in both directions.""", json_schema_extra = { "linkml_meta": {'domain_of': ['TermPage']} })
     value_of: Optional[Ref] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['TermPage']} })
     values: Optional[list[Ref]] = Field(default=None, description="""Terms whose value_of is this term.""", json_schema_extra = { "linkml_meta": {'domain_of': ['TermPage']} })
-    informed_by: Optional[list[ElementGroup]] = Field(default=None, description="""The data elements the term is informed by, grouped by data set.""", json_schema_extra = { "linkml_meta": {'domain_of': ['TermPage']} })
+    represented_by: Optional[list[ElementGroup]] = Field(default=None, description="""Data elements that represent the term, grouped by data set. Derived from the elements' represents; the term itself records nothing.""", json_schema_extra = { "linkml_meta": {'domain_of': ['TermPage']} })
     source_file: Optional[str] = Field(default=None, description="""The governance file the object is defined in, relative to the repository.""", json_schema_extra = { "linkml_meta": {'domain_of': ['TermPage', 'DataSetPage', 'DataElementPage']} })
     about: str = Field(default=..., description="""The CURIE of the governed object this page or link is about.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref', 'SemanticType', 'Change']} })
     iri: str = Field(default=..., description="""The expanded IRI of the governed object (or the source).""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'SourceRef', 'SemanticType']} })
@@ -526,7 +526,7 @@ class ProcessPage(Page):
 
 class ElementGroup(ConfiguredBaseModel):
     """
-    Data elements that inform a term, grouped by the data set they are part of.
+    Data elements that represent a term, grouped by the data set they are part of.
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://w3id.org/dgo-atlas/viewmodel',
          'slot_usage': {'data_elements': {'inlined': True,
@@ -537,23 +537,6 @@ class ElementGroup(ConfiguredBaseModel):
 
     data_set: Ref = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Ref', 'ElementGroup', 'DataElementPage']} })
     data_elements: Optional[list[Ref]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Site', 'ElementGroup', 'DataSetPage']} })
-
-
-class ClassificationRef(Ref):
-    """
-    A classification level held by a data set or data element.
-    """
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://w3id.org/dgo-atlas/viewmodel'})
-
-    inherited: Optional[bool] = Field(default=None, description="""Not set on the data element itself, so read from its data set.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ClassificationRef']} })
-    about: str = Field(default=..., description="""The CURIE of the governed object this page or link is about.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref', 'SemanticType', 'Change']} })
-    url: Optional[str] = Field(default=None, description="""Site-relative path of the page, e.g. terms/clinical-trial.html.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref']} })
-    label: str = Field(default=..., description="""The display label.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref', 'SourceRef', 'SemanticType', 'Change']} })
-    state: Optional[TermState] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Ref', 'TermPage']} })
-    kind: Optional[AgentKind] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Ref', 'AgentPage']} })
-    certification: Optional[CertificationState] = Field(default=None, description="""A data set's certification status (see derive.certification_state).""", json_schema_extra = { "linkml_meta": {'domain_of': ['Ref', 'DataSetPage']} })
-    certified_on: Optional[date] = Field(default=None, description="""The date of the approved boundary of the data set's certification.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Ref', 'DataSetPage']} })
-    data_set: Optional[Ref] = Field(default=None, description="""For a data element, the data set it is part of, to tell same-named elements apart.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Ref', 'ElementGroup', 'DataElementPage']} })
 
 
 class DataStorePage(Page):
@@ -611,10 +594,9 @@ class DataSetPage(Page):
     foundational: Optional[bool] = Field(default=None, description="""Derived from no other data set: the raw data others are built from (there is no field for it in DGO).""", json_schema_extra = { "linkml_meta": {'domain_of': ['DataSetPage']} })
     lineage: Optional[list[HierarchyNode]] = Field(default=None, description="""The foundational data sets this one comes from, topmost first, branching down through each derived set to this one.""", json_schema_extra = { "linkml_meta": {'domain_of': ['DataSetPage']} })
     derived_sets: Optional[list[Ref]] = Field(default=None, description="""Data sets derived from this one.""", json_schema_extra = { "linkml_meta": {'domain_of': ['DataSetPage']} })
-    informed_terms: Optional[list[Ref]] = Field(default=None, description="""Published glossary terms informed by this data (glossary terms' informed_by, read backwards).""", json_schema_extra = { "linkml_meta": {'domain_of': ['DataSetPage', 'DataElementPage']} })
-    sensitivity: Optional[ClassificationRef] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['DataSetPage', 'DataElementPage']} })
-    security_level: Optional[ClassificationRef] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['DataSetPage', 'DataElementPage']} })
-    regulatory_categories: Optional[list[ClassificationRef]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['DataSetPage', 'DataElementPage']} })
+    sensitivity: Optional[Ref] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['DataSetPage', 'DataElementPage']} })
+    security_level: Optional[Ref] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['DataSetPage', 'DataElementPage']} })
+    regulatory_categories: Optional[list[Ref]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['DataSetPage', 'DataElementPage']} })
     responsibilities: Optional[list[Responsibility]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['TermPage',
                        'CouncilPage',
                        'AgentPage',
@@ -643,10 +625,10 @@ class DataElementPage(Page):
     data_set: Ref = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Ref', 'ElementGroup', 'DataElementPage']} })
     sources: Optional[list[Ref]] = Field(default=None, description="""The data elements this one was derived from.""", json_schema_extra = { "linkml_meta": {'domain_of': ['DataElementPage']} })
     derived_elements: Optional[list[Ref]] = Field(default=None, description="""Data elements derived from this one.""", json_schema_extra = { "linkml_meta": {'domain_of': ['DataElementPage']} })
-    informed_terms: Optional[list[Ref]] = Field(default=None, description="""Published glossary terms informed by this data (glossary terms' informed_by, read backwards).""", json_schema_extra = { "linkml_meta": {'domain_of': ['DataSetPage', 'DataElementPage']} })
-    sensitivity: Optional[ClassificationRef] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['DataSetPage', 'DataElementPage']} })
-    security_level: Optional[ClassificationRef] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['DataSetPage', 'DataElementPage']} })
-    regulatory_categories: Optional[list[ClassificationRef]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['DataSetPage', 'DataElementPage']} })
+    represents: Optional[Ref] = Field(default=None, description="""The published glossary term whose definition gives a data element's values their meaning (DGO's represents).""", json_schema_extra = { "linkml_meta": {'domain_of': ['DataElementPage']} })
+    sensitivity: Optional[Ref] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['DataSetPage', 'DataElementPage']} })
+    security_level: Optional[Ref] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['DataSetPage', 'DataElementPage']} })
+    regulatory_categories: Optional[list[Ref]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['DataSetPage', 'DataElementPage']} })
     responsibilities: Optional[list[Responsibility]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['TermPage',
                        'CouncilPage',
                        'AgentPage',
@@ -699,7 +681,6 @@ CouncilRoleHeld.model_rebuild()
 AgentPage.model_rebuild()
 ProcessPage.model_rebuild()
 ElementGroup.model_rebuild()
-ClassificationRef.model_rebuild()
 DataStorePage.model_rebuild()
 DataSetPage.model_rebuild()
 DataElementPage.model_rebuild()
