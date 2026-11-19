@@ -281,7 +281,6 @@ data_set:
   classification: Classification
   responsibility: Responsibility
   responsibility_empty: No responsibilities are recorded for this data set.
-  certified_by: Certification falls to
   repeated: shown above
 
 data_element:

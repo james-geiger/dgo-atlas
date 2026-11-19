@@ -102,8 +102,6 @@
 
   <aside class="split__aside">
     {{ responsibility_panel(data_set, rel, lookup, t("data_set.responsibility_empty")) }}
-    {{ link_panel(t("data_set.certified_by"), data_set.certifying_councils, rel, show_state=False) }}
-    {{ link_panel(t("data_set.stored_in"), data_set.data_stores, rel, show_state=False) }}
     {%- if data_set.subject_areas %}
     <div class="panel">
       <h2 class="panel__label">{{ t("data_set.filed_under") }}</h2>
@@ -115,6 +113,7 @@
       </dl>
     </div>
     {%- endif %}
+    {{ link_panel(t("data_set.stored_in"), data_set.data_stores, rel, show_state=False) }}
     {{ identifier_panel(data_set, set_kind, show_identifiers, repo_blob_url) }}
   </aside>
 </div>

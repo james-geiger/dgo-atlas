@@ -339,7 +339,6 @@
 #   data_set.classification: Classification
 #   data_set.responsibility: Responsibility
 #   data_set.responsibility_empty: No responsibilities are recorded for this data set.
-#   data_set.certified_by: Certification falls to
 #   data_set.repeated: shown above
 #
 #   data_element.part_of: Part of {data_set}
