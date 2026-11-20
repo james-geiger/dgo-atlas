@@ -8,7 +8,7 @@ page's facts, derived and denormalised, ready to render. Governance data never
 stores these facts; the view model always does.
 
 Only published terms reach the site (see `unpublished_reason`): a term exists
-once a term creation is recorded for it, unless that creation was rejected.
+once a creation of it is recorded, unless that creation was rejected.
 Links from a published term to an unpublished one are left off, and each
 omission is recorded in `Deriver.notes` for the build to report.
 
@@ -40,7 +40,7 @@ m = _ActiveModel()
 
 # Same-day tie-break for status boundaries: drafted < submitted < approved/rejected.
 BOUNDARY_ORDER = {"Drafted": 0, "SubmittedForReview": 1, "Approved": 2, "Rejected": 2}
-PROCESS_ORDER = {"TermCreation": 0, "TermModification": 1, "TermDeprecation": 2, "DataSetCertification": 3}
+PROCESS_ORDER = {"Creation": 0, "Modification": 1, "Deprecation": 2}
 
 # Where each kind of page lives.
 DIRS = {
@@ -95,20 +95,19 @@ class Deriver:
         self.describe = describe or (lambda iri: ClassInfo(iri=iri))
         self.idx = index(rec)
         self.urls: dict[str, str] = {}
-        # Data management (DGO 0.2.0); empty on earlier releases.
+        # Data management.
         self.stores = self.records("data_stores")
         self.data_sets = self.records("data_sets")
         self.elements = self.records("data_elements")
         self._assign_urls()
 
         self.terms = list(rec.glossary_terms or [])
-        self.certifications_by_set: dict[str, list] = defaultdict(list)
-        for cert in self.records("data_set_certifications"):
-            self.certifications_by_set[cert.has_output].append(cert)
-        self.processes_by_term: dict[str, list[m.TermLifecycleProcess]] = defaultdict(list)
-        for obj in self.idx.values():
-            if isinstance(obj, m.TermLifecycleProcess):
-                self.processes_by_term[obj.has_output].append(obj)
+        # Lifecycle processes by what they output: a glossary term or a data
+        # set. DGO's kinds are generic, so the output, not the class, says
+        # whose process it is; a data set's creations are its certifications.
+        self.processes_by_output: dict[str, list[m.LifecycleProcess]] = defaultdict(list)
+        for proc in self.records("lifecycle_processes"):
+            self.processes_by_output[proc.has_output].append(proc)
         self.boundaries_by_process: dict[str, list[m.StatusBoundary]] = defaultdict(list)
         for b in rec.status_boundaries or []:
             self.boundaries_by_process[b.part_of].append(b)
@@ -234,10 +233,10 @@ class Deriver:
 
     def pending(self, term_id: str) -> list[vm.Change]:
         return [self.change(p) for p in self._processes(term_id)
-                if isinstance(p, (m.TermModification, m.TermDeprecation)) and self.outcome(p) == "open"]
+                if isinstance(p, (m.Modification, m.Deprecation)) and self.outcome(p) == "open"]
 
     def _processes(self, term_id: str):
-        return sorted(self.processes_by_term.get(term_id, []),
+        return sorted(self.processes_by_output.get(term_id, []),
                       key=lambda p: (PROCESS_ORDER[dgo.dgo_kind(p).model_class], p.id))
 
     def history(self, term_id: str, processes=None) -> list[vm.HistoryEntry]:
@@ -265,7 +264,7 @@ class Deriver:
 
     def governing_councils(self, term_id: str) -> list[str]:
         out = set()
-        for proc in self.processes_by_term.get(term_id, []):
+        for proc in self.processes_by_output.get(term_id, []):
             chain = self.process_chain(proc.part_of)
             out |= {c.id for c in self.rec.councils or [] if c.participates_in in chain}
         return sorted(out)
@@ -454,7 +453,7 @@ class Deriver:
 
     def certifying_councils(self, set_id: str) -> list[str]:
         out = set()
-        for cert in self.certifications_by_set.get(set_id, []):
+        for cert in certifications(self, set_id):
             chain = self.process_chain(cert.part_of)
             out |= {c.id for c in self.rec.councils or [] if c.participates_in in chain}
         return sorted(out)
@@ -465,7 +464,7 @@ class Deriver:
         members = [e for e in self.elements if e.part_of == s.id]
         elements = [e.id for e in members]
         state, certified_on = self.certifications[s.id]
-        certs = sorted(self.certifications_by_set.get(s.id, []), key=lambda c: c.id)
+        certs = sorted(certifications(self, s.id), key=lambda c: c.id)
         return vm.DataSetPage(
             **self.page(s),
             description=getattr(s, "description", None),
@@ -656,22 +655,22 @@ def related(rec: m.GovernanceRecord, term) -> list[str]:
 def unpublished_reason(d: Deriver, term_id: str) -> str | None:
     """Why a term is left out of the site, or None if it is published.
 
-    A term exists once a term creation is recorded for it, whatever boundaries
-    that creation has reached, unless the creation was rejected.
+    A term exists once a creation of it is recorded, whatever boundaries that
+    creation has reached, unless the creation was rejected.
     """
-    created = [p for p in d.processes_by_term.get(term_id, []) if isinstance(p, m.TermCreation)]
+    created = [p for p in d.processes_by_output.get(term_id, []) if isinstance(p, m.Creation)]
     if not created:
-        return "no term creation is recorded for it"
+        return "no creation of it is recorded"
     if d.outcome(created[0]) == "rejected":
-        return "its term creation was rejected"
+        return "its creation was rejected"
     return None
 
 
 def term_state(d: Deriver, term_id: str) -> str:
     """A term's state (handoff §5.2; provisional until DGO confirms it).
 
-    1. deprecated: a term deprecation of the term has an approved boundary.
-    2. otherwise, from the term creation's latest boundary: approved, rejected,
+    1. deprecated: a deprecation of the term has an approved boundary.
+    2. otherwise, from the creation's latest boundary: approved, rejected,
        or proposed while the creation is open.
     3. unrecorded: no creation in the data.
 
@@ -682,10 +681,10 @@ def term_state(d: Deriver, term_id: str) -> str:
     Only approved, proposed and deprecated terms are published; rejected and
     unrecorded ones never reach the view model (see unpublished_reason).
     """
-    procs = d.processes_by_term.get(term_id, [])
-    if any(isinstance(p, m.TermDeprecation) and d.outcome(p) == "approved" for p in procs):
+    procs = d.processes_by_output.get(term_id, [])
+    if any(isinstance(p, m.Deprecation) and d.outcome(p) == "approved" for p in procs):
         return "deprecated"
-    created = [p for p in procs if isinstance(p, m.TermCreation)]
+    created = [p for p in procs if isinstance(p, m.Creation)]
     if not created:
         return "unrecorded"
     return {"approved": "approved", "rejected": "rejected"}.get(d.outcome(created[0]), "proposed")
@@ -695,6 +694,12 @@ def foundational(data_set) -> bool:
     """A data set derived from no other is foundational: the raw data others are
     built from, such as a table in an operational system. DGO has no field for it."""
     return not data_set.derived_from
+
+
+def certifications(d: Deriver, set_id: str) -> list:
+    """A data set's certifications: the creations whose output it is (DGO: a
+    data set is certified when such a creation reaches an approved boundary)."""
+    return [p for p in d.processes_by_output.get(set_id, []) if isinstance(p, m.Creation)]
 
 
 def certification_state(d: Deriver, set_id: str) -> tuple[str, object]:
@@ -711,7 +716,8 @@ def certification_state(d: Deriver, set_id: str) -> tuple[str, object]:
     Certification is a process, not a flag, so nothing is read from the set itself.
     """
     approved, open_ = [], False
-    for cert in d.certifications_by_set.get(set_id, []):
+    certs = certifications(d, set_id)
+    for cert in certs:
         outcome = d.outcome(cert)
         if outcome == "approved":
             approved.append(d.boundaries_by_process[cert.id][-1].occurred_on)
@@ -720,7 +726,6 @@ def certification_state(d: Deriver, set_id: str) -> tuple[str, object]:
         return "certified", max(approved, key=str)
     if open_:
         return "in_progress", None
-    certs = d.certifications_by_set.get(set_id)
     return ("foundational" if not certs and foundational(d.idx[set_id]) else "not_certified"), None
 
 

@@ -42,7 +42,7 @@ RELEASE_URL = "https://raw.githubusercontent.com/james-geiger/dgo/refs/tags/{ver
 
 # Releases this version of DGO Atlas has been tested against. Others are used
 # if they have the classes below, with a warning.
-TESTED_VERSIONS = ("0.1.0", "0.1.1", "0.2.0")
+TESTED_VERSIONS = ("0.3.0",)
 
 # The placeholder in schema/template.yaml that the import location replaces.
 IMPORT_PLACEHOLDER = "DGO_IMPORT"
@@ -52,9 +52,10 @@ IMPORT_PLACEHOLDER = "DGO_IMPORT"
 REQUIRED_CLASSES = (
     "data governance", "data governance council", "person", "organization",
     "council role", "governance role", "business glossary", "domain", "subject area",
-    "glossary term", "definition source", "term lifecycle process", "term creation",
-    "term modification", "term deprecation", "status boundary", "drafted",
-    "submitted for review", "approved", "rejected",
+    "glossary term", "definition source", "lifecycle process", "creation",
+    "modification", "deprecation", "status boundary", "drafted",
+    "submitted for review", "approved", "rejected", "data store", "data set",
+    "data element",
 )
 
 
@@ -322,8 +323,8 @@ def kind_of(obj) -> Kind:
 @cache
 def typed_bases() -> tuple[str, ...]:
     """The DGO classes whose subclasses `type` picks between: those that declare
-    DGO's type-designator slot. Objects in their lists have no id; their kind
-    comes from `type` alone.
+    DGO's type-designator slot. An object in their lists takes its kind from
+    `type`.
     """
     sv = _release(active().location)
     designators = {s for s in sv.all_slots() if sv.get_slot(s).designates_type}

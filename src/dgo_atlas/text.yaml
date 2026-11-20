@@ -194,7 +194,7 @@ council:
   areas_intro: >-
     The subject areas holding the terms this council governs, with the roles
     it holds on them. Open an area to see its terms.
-  areas_empty: No term lifecycle process falls under this council yet.
+  areas_empty: No lifecycle process of a term falls under this council yet.
   general_roles: "Also holds, for no particular term:"
   data: Data
   data_intro: Data sets whose certification falls to this council, and the data it holds roles on.
@@ -343,9 +343,10 @@ how_to_read:
   council_roles: Council seats
   certification: Data set certification
   certification_intro: >-
-    Certification is a process, not a flag. A data set certification moves
-    through the same dated steps as a term's lifecycle, and the data set is
-    certified once one reaches an approved step, on that step's date.
+    Certification is a process, not a flag. A data set is certified by a
+    creation of it, which moves through the same dated steps as a term's
+    lifecycle. The data set is certified once one reaches an approved step,
+    on that step's date.
   data: Data
   data_intro: >-
     Data stores hold data sets, which are made of data elements. Each data

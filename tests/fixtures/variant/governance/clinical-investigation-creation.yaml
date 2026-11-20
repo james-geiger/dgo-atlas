@@ -3,8 +3,9 @@
 # without this the fixture's one example of deprecation would not appear on
 # the site. With it, "clinical investigation" is published as deprecated.
 
-term_creations:
+lifecycle_processes:
   - id: ex:clinical-investigation-creation
+    type: creation
     label: initial creation of the term
     has_output: ex:clinical-investigation
     part_of: ex:research-dg

@@ -10,12 +10,27 @@ position it came from so problems can be reported where they were written.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-
-# Former list names, still read: merged into the current list.
-RENAMED = {"term_status_boundaries": "status_boundaries"}
 from pathlib import Path
 
 import yaml
+
+from . import dgo
+
+# Former list names, still read: merged into the current list.
+RENAMED = {
+    "term_status_boundaries": "status_boundaries",
+    "term_creations": "lifecycle_processes",
+    "term_modifications": "lifecycle_processes",
+    "term_deprecations": "lifecycle_processes",
+    "data_set_certifications": "lifecycle_processes",
+}
+# The DGO kind each former process list held, given to its objects as `type`.
+RENAMED_TYPES = {
+    "term_creations": "creation",
+    "term_modifications": "modification",
+    "term_deprecations": "deprecation",
+    "data_set_certifications": "creation",
+}
 
 
 @dataclass
@@ -84,11 +99,15 @@ def merge(dataset: Dataset) -> Dataset:
         for list_name, items in (source.data or {}).items():
             if not isinstance(items, list):
                 continue
+            kind = RENAMED_TYPES.get(list_name)
             if list_name in RENAMED:
-                dataset.deprecations.append((source.rel, f"{list_name} is now called {RENAMED[list_name]}; "
-                                                         "rename it (the old name still works)"))
+                now = (f"is now {RENAMED[list_name]} with `type: {kind}` on each" if kind
+                       else f"is now called {RENAMED[list_name]}")
+                dataset.deprecations.append((source.rel, f"{list_name} {now}; rename it (the old name still works)"))
             bucket = merged.setdefault(RENAMED.get(list_name, list_name), [])
             for index, item in enumerate(items):
+                if kind and isinstance(item, dict) and not item.get("type"):
+                    item["type"] = dgo.kind(kind).curie
                 bucket.append(item)
                 dataset.origins[id(item)] = Origin(source.rel, list_name, index)
     dataset.merged = merged

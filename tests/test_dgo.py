@@ -14,9 +14,10 @@ from .conftest import DGO_VERSION, FIXTURES
 
 
 def test_release_url():
-    source = dgo.source_for("0.1.0")
-    assert source.location == "https://raw.githubusercontent.com/james-geiger/dgo/refs/tags/0.1.0/dist/dgo"
+    source = dgo.source_for(DGO_VERSION)
+    assert source.location == f"https://raw.githubusercontent.com/james-geiger/dgo/refs/tags/{DGO_VERSION}/dist/dgo"
     assert source.tested
+    assert not dgo.source_for("0.2.0").tested
 
 
 def test_template_imports_the_release():
@@ -27,7 +28,7 @@ def test_template_imports_the_release():
 
 def test_model_generated_at_runtime():
     m = dgo.model()
-    assert {"GovernanceRecord", "GlossaryTerm", "Drafted", "Owner", "TermDeprecation"} <= set(dir(m))
+    assert {"GovernanceRecord", "GlossaryTerm", "Drafted", "Owner", "Deprecation"} <= set(dir(m))
 
 
 def test_json_schema_for_editors():

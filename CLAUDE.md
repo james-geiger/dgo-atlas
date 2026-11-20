@@ -87,8 +87,8 @@ defaults. DGO Atlas's defaults use a neutral palette.
 
 Rules to keep:
 
-- **Publishing.** A term enters the site only once a term creation is
-  recorded for it and that creation hasn't been rejected
+- **Publishing.** A term enters the site only once a creation of it is
+  recorded and that creation hasn't been rejected
   (`derive.unpublished_reason`). A term may go straight to approved. There are
   no "unrecorded" or "rejected" pages; unpublished terms and links to them
   are dropped, and the build prints a note.

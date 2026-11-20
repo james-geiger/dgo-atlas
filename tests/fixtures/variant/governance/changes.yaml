@@ -2,12 +2,14 @@
 # file to exercise the merge. One is still open; one was drafted and rejected
 # on the same day.
 
-term_modifications:
+lifecycle_processes:
   - id: ex:clinical-trial-modification-2
+    type: modification
     label: Rewording of the definition of "clinical trial"
     has_output: ex:clinical-trial
     part_of: ex:research-dg
   - id: ex:clinical-trial-modification-3
+    type: modification
     label: Narrowing of "clinical trial" to drug studies
     has_output: ex:clinical-trial
     part_of: ex:research-dg

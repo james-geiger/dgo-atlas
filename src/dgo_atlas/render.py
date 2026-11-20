@@ -436,16 +436,13 @@ class Renderer:
                   for name in TERM_FIELDS if name in term_slots]
         states = [{"name": s, "label": self.text(f"state.{s}.label"),
                    "description": self.text(f"state.{s}.description")} for s in STATES]
-        # From DGO 0.2.0, term processes and data set certifications share one
-        # abstract parent, and the data-management kinds exist.
         data = dgo.has_class("data set")
-        lifecycle = "lifecycle process" if dgo.has_class("lifecycle process") else "term lifecycle process"
         self.write(
             url, "how_to_read.html.j2", head=head,
             fields=fields, states=states,
             roles=dgo.subkinds("governance role")[1:],
             council_roles=dgo.subkinds("council role")[1:],
-            processes=[k for k in dgo.subkinds(lifecycle)[1:] if k.name != "term lifecycle process"],
+            processes=dgo.subkinds("lifecycle process")[1:],
             boundaries=dgo.subkinds("status boundary")[1:],
             certification_states=[{"name": c, "label": self.text(f"certification.{c}.label"),
                                    "description": self.text(f"certification.{c}.description")}

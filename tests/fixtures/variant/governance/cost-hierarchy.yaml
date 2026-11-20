@@ -36,17 +36,20 @@ glossary_terms:
     broader:
       - ex:personnel-cost
 
-term_creations:
+lifecycle_processes:
   - id: ex:project-cost-creation
+    type: creation
     label: Creation of the term "sponsored project cost"
     has_output: ex:project-cost
     part_of: ex:research-dg
   - id: ex:personnel-cost-creation
+    type: creation
     label: Creation of the term "personnel cost"
     has_output: ex:personnel-cost
     part_of: ex:research-dg
 
   - id: ex:faculty-salary-creation
+    type: creation
     label: Creation of the term "faculty salary"
     has_output: ex:faculty-salary
     part_of: ex:research-dg

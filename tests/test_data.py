@@ -4,6 +4,7 @@ certification and lineage, from validation through to the export."""
 import shutil
 import urllib.request
 
+import pytest
 import rdflib
 from rdflib import RDF, URIRef
 
@@ -177,22 +178,15 @@ def test_former_list_name_still_reads(broken):
 # ---------------------------------------------------------------- earlier releases
 
 
-def test_older_release_still_builds(tmp_path):
-    """A 0.1.1 project, with the former list name and no data, builds unchanged."""
+def test_older_release_is_refused(tmp_path):
+    """DGO 0.2.0 and earlier name term processes separately; this version needs DGO's generic ones."""
     project_dir = tmp_path / "project"
     shutil.copytree(FIXTURES / "variant", project_dir, ignore=shutil.ignore_patterns(".dgo-atlas", "site"))
-    (project_dir / "governance" / "data.yaml").unlink()
     cfg = project_dir / config.CONFIG_NAME
-    cfg.write_text(cfg.read_text().replace('dgo_version: "0.2.0"', 'dgo_version: "0.1.1"'))
-    for path in (project_dir / "governance").glob("*.yaml"):
-        path.write_text(path.read_text().replace("\nstatus_boundaries:", "\nterm_status_boundaries:"))
+    cfg.write_text(cfg.read_text().replace(f'dgo_version: "{DGO_VERSION}"', 'dgo_version: "0.2.0"'))
     try:
-        project = config.load(cfg)
-        assert "data_sets" not in dgo.list_ranges() and not dgo.has_class("data set")
-        result = build(project, out=tmp_path / "site")
-        assert result == 0
-        assert not (tmp_path / "site" / "data.html").exists()
-        assert "Data sets" not in (tmp_path / "site" / "index.html").read_text()
+        with pytest.raises(config.ConfigError, match="missing classes DGO Atlas depends on: creation, modification"):
+            config.load(cfg)
     finally:
         dgo.use(dgo.source_for(DGO_VERSION))
 

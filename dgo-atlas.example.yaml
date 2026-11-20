@@ -13,7 +13,7 @@
 # # schema is imported from the DGO repository's dist/dgo.yaml at that tag.
 # # Quote it, or YAML may read it as a number. (required; shown is the newest
 # # release this version of DGO Atlas is tested with)
-# dgo_version: "0.2.0"
+# dgo_version: "0.3.0"
 
 # # Import DGO from here instead of the release URL: a URL, or a path relative
 # # to dgo-atlas.yaml, to a single-file DGO schema (for a mirror, a fork, or
@@ -263,7 +263,7 @@
 #   council.member: Member
 #   council.areas: Subject areas
 #   council.areas_intro: The subject areas holding the terms this council governs, with the roles it holds on them. Open an area to see its terms.
-#   council.areas_empty: No term lifecycle process falls under this council yet.
+#   council.areas_empty: No lifecycle process of a term falls under this council yet.
 #   council.general_roles: "Also holds, for no particular term:"
 #   council.data: Data
 #   council.data_intro: Data sets whose certification falls to this council, and the data it holds roles on.
@@ -385,7 +385,7 @@
 #   how_to_read.roles_intro: A role is borne by a person, an organization or a council. The role isn't the person, and a term's page lists who currently holds each role.
 #   how_to_read.council_roles: Council seats
 #   how_to_read.certification: Data set certification
-#   how_to_read.certification_intro: Certification is a process, not a flag. A data set certification moves through the same dated steps as a term's lifecycle, and the data set is certified once one reaches an approved step, on that step's date.
+#   how_to_read.certification_intro: Certification is a process, not a flag. A data set is certified by a creation of it, which moves through the same dated steps as a term's lifecycle. The data set is certified once one reaches an approved step, on that step's date.
 #   how_to_read.data: Data
 #   how_to_read.data_intro: Data stores hold data sets, which are made of data elements. Each data element represents a glossary term, and data sets are derived from one another.
 #   how_to_read.classification: Classification

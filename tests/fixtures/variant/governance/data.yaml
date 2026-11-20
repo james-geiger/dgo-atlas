@@ -142,18 +142,6 @@ data_elements:                   # each element is part of exactly one data set
     derived_from:
       - ex:warehouse-protocol-status
 
-# --- certification -------------------------------------------------------------
-
-data_set_certifications:
-  - id: ex:warehouse-studies-certification
-    label: Certification of "Research studies"
-    has_output: ex:warehouse-studies
-    part_of: ex:research-dg      # certified within research data governance, so by its committee
-  - id: ex:study-dashboard-certification
-    label: Certification of "Study dashboard extract"
-    has_output: ex:study-dashboard
-    part_of: ex:research-dg
-
 # --- the terms the data represents ----------------------------------------------
 
 glossary_terms:
@@ -168,12 +156,28 @@ glossary_terms:
     part_of: ex:business-glossary
     in_subject_area: ex:clinical-research
 
-term_creations:
+# --- certification and creation -------------------------------------------------
+# A data set is certified by a creation of it, as a term is created: DGO's
+# lifecycle processes are the same for both, and has_output says which.
+
+lifecycle_processes:
+  - id: ex:warehouse-studies-certification
+    type: creation
+    label: Certification of "Research studies"
+    has_output: ex:warehouse-studies
+    part_of: ex:research-dg      # certified within research data governance, so by its committee
+  - id: ex:study-dashboard-certification
+    type: creation
+    label: Certification of "Study dashboard extract"
+    has_output: ex:study-dashboard
+    part_of: ex:research-dg
   - id: ex:protocol-status-creation
+    type: creation
     label: Creation of the term "protocol status"
     has_output: ex:protocol-status
     part_of: ex:research-dg
   - id: ex:protocol-open-date-creation
+    type: creation
     label: Creation of the term "protocol open date"
     has_output: ex:protocol-open-date
     part_of: ex:research-dg

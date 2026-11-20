@@ -92,24 +92,29 @@ glossary_terms:
     in_subject_area: ex:sponsored-programs
     value_of: ex:sponsored-program-status
 
-term_creations:
+lifecycle_processes:
   - id: ex:direct-cost-creation
+    type: creation
     label: Creation of the term "direct cost"
     has_output: ex:direct-cost
     part_of: ex:research-dg
   - id: ex:indirect-cost-creation
+    type: creation
     label: Creation of the term "indirect cost"
     has_output: ex:indirect-cost
     part_of: ex:research-dg
   - id: ex:sponsored-program-status-creation
+    type: creation
     label: Creation of the term "sponsored program status"
     has_output: ex:sponsored-program-status
     part_of: ex:research-dg
   - id: ex:sponsored-program-status-active-creation
+    type: creation
     label: Creation of the term "active"
     has_output: ex:sponsored-program-status-active
     part_of: ex:research-dg
   - id: ex:sponsored-program-status-closed-creation
+    type: creation
     label: Creation of the term "closed"
     has_output: ex:sponsored-program-status-closed
     part_of: ex:research-dg

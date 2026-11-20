@@ -115,20 +115,19 @@ definition_sources:              # id is the source's IRI; label describes it
 
 # --- how the terms came to be -------------------------------------------------
 
-term_creations:
+lifecycle_processes:
   - id: ex:clinical-trial-creation
+    type: creation
     label: Creation of the term "clinical trial"
     has_output: ex:clinical-trial
     part_of: ex:research-dg                # created within research data governance, so governed by its committee
-
-term_modifications:
   - id: ex:clinical-trial-modification
+    type: modification
     label: Addition of a definition source to "clinical trial"
     has_output: ex:clinical-trial    # same term, same id: a modification changes it, not replaces it
     part_of: ex:research-dg
-
-term_deprecations:
   - id: ex:clinical-investigation-deprecation
+    type: deprecation
     label: Deprecation of the term "clinical investigation"
     has_output: ex:clinical-investigation
     part_of: ex:research-dg                # deprecated once this process reaches its approved boundary

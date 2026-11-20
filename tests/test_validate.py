@@ -2,6 +2,8 @@
 
 import pytest
 
+from .conftest import FIXTURES
+
 
 def messages(report):
     return [str(e) for e in report.errors]
@@ -143,10 +145,10 @@ def test_broader_cycle(broken):
 
 
 def test_two_creations_of_one_term(broken):
-    extra = ("term_creations:\n  - id: ex:second-creation\n    label: Again\n"
+    extra = ("lifecycle_processes:\n  - id: ex:second-creation\n    type: creation\n    label: Again\n"
              "    has_output: ex:clinical-trial\n    part_of: ex:research-dg\n")
     report = broken(extra={"more.yaml": extra})
-    one(report, "more than one term creation")
+    one(report, "more than one creation")
 
 
 def test_boundary_after_close(broken):
@@ -162,7 +164,7 @@ def test_replaced_by_without_deprecation_warns(broken):
                     (('  - type: dgo:DGO_00000026           # deprecation approved: the term is now deprecated\n'
                       '    part_of: ex:clinical-investigation-deprecation\n    occurred_on: "2026-10-12"\n'), ""))
     assert report.ok, messages(report)
-    assert any("no approved term deprecation" in str(w) for w in report.warnings)
+    assert any("no approved deprecation" in str(w) for w in report.warnings)
 
 
 @pytest.mark.parametrize("text", ["- just\n- a list\n", "glossary_terms: [unclosed\n"])
@@ -170,3 +172,22 @@ def test_unreadable_file(broken, text):
     report = broken(extra={"bad.yaml": text})
     assert report.stage == "read"
     assert "bad.yaml" in messages(report)[0]
+
+
+def test_former_process_lists_are_still_read(broken):
+    """term_creations and the other former lists merge into lifecycle_processes, typed by the list."""
+    text = (FIXTURES / "variant" / "governance" / "clinical-investigation-creation.yaml").read_text()
+    old = text.replace("lifecycle_processes:", "term_creations:").replace("    type: creation\n", "")
+    report = broken(extra={"clinical-investigation-creation.yaml": old})
+    assert report.ok, messages(report)
+    assert any("term_creations is now lifecycle_processes with `type: creation`" in str(w) for w in report.warnings)
+    creation = next(p for p in report.record.lifecycle_processes if p.id == "ex:clinical-investigation-creation")
+    assert type(creation).__name__ == "Creation"
+
+
+def test_process_of_something_the_site_does_not_show_warns(broken):
+    extra = ("lifecycle_processes:\n  - id: ex:area-creation\n    type: creation\n    label: Area\n"
+             "    has_output: ex:clinical-research\n    part_of: ex:research-dg\n")
+    report = broken(extra={"more.yaml": extra})
+    assert report.ok, messages(report)
+    assert any("the site shows only processes of glossary terms and data sets" in str(w) for w in report.warnings)

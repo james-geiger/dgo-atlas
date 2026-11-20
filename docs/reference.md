@@ -37,7 +37,7 @@ test fails if it drifts.
 DGO is not bundled. Each project names a DGO release in `dgo-atlas.yaml`:
 
 ```yaml
-dgo_version: "0.2.0"
+dgo_version: "0.3.0"
 ```
 
 The authoring template imports that release's single-file schema straight
@@ -53,17 +53,20 @@ time.
   derivation depends on (`dgo.REQUIRED_CLASSES`), and fails clearly if not.
   It warns about releases this version of DGO Atlas hasn't been tested with
   (`dgo.TESTED_VERSIONS`, which `dgo-atlas --version` lists).
-- **Older releases.** The template is fitted to the release (`dgo._fit_to_release`):
-  a list whose class the release lacks, such as `data_sets` before 0.2.0, is
-  left out, so a 0.1.x project builds as before.
+- **Older releases.** This version needs DGO 0.3.0 or later, whose lifecycle
+  processes are generic (creation, modification, deprecation). A project on
+  0.2.0 or earlier stays on an earlier DGO Atlas release until it moves (see
+  "Moving a project to DGO 0.3.0"). The template is still fitted to the
+  release (`dgo._fit_to_release`): a list whose class the release lacks is
+  left out.
 - **Version.** The version shown on the site is `dgo_version`, the release
   the project imports. DGO Atlas doesn't read a version from the release
   itself.
 
-## Data management (DGO 0.2.0)
+## Data management
 
-From DGO 0.2.0 a project can also govern its data. The lists are
-`data_stores`, `data_sets`, `data_elements`, `data_set_certifications`,
+A project can also govern its data. The lists are
+`data_stores`, `data_sets`, `data_elements`,
 `sensitivity_levels`, `security_levels` and `regulations`; the variant
 fixture's `governance/data.yaml` uses each. The site reads them like this:
 
@@ -83,8 +86,9 @@ fixture's `governance/data.yaml` uses each. The site reads them like this:
   There is no field for it. They are not expected to be certified, so an
   uncertified foundational set shows "Foundational" where others show their
   certification. A data set page shows its lineage back to foundational data.
-- **Certification** is a process, not a flag. A data set certification has
-  the set as `has_output`, is `part_of` a governance process (which decides the
+- **Certification** is a process, not a flag. A data set is certified by a
+  `creation` in `lifecycle_processes` with the set as `has_output`; DGO has
+  no separate certification class (`derive.certifications`). It is `part_of` a governance process (which decides the
   council), and moves through the same status boundaries as a term. The set is
   certified once one reaches an approved boundary, on that date
   (`derive.certification_state`). Certified sets carry a badge in every
@@ -100,6 +104,24 @@ fixture's `governance/data.yaml` uses each. The site reads them like this:
   severe than its set, since the set's own level is then likely out of date.
 - **Responsibilities** on stores, sets and elements appear on the bearer's
   page alongside their terms.
+
+### Moving a project to DGO 0.3.0
+
+DGO 0.3.0 merges the term processes and data set certification into three
+generic lifecycle processes: `creation` (`DGO_00000021`), `modification`
+(`DGO_00000022`) and `deprecation` (`DGO_00000031`). `term lifecycle process`
+(`DGO_00000020`) and `data set certification` (`DGO_00000039`) are gone. What
+a process governs is its `has_output`, a glossary term or a data set.
+
+- **One list.** `term_creations`, `term_modifications`, `term_deprecations`
+  and `data_set_certifications` become `lifecycle_processes`, with `type`
+  naming the kind on each entry (`type: creation`). A data set certification
+  is a `creation` of the data set. The old names still read, with a warning,
+  and give their entries the matching `type`.
+- **The view model.** `process_kind` values are now `creation`,
+  `modification` and `deprecation`.
+- **Exports change classes.** Certifications export as `DGO_00000021`, not
+  `DGO_00000039`.
 
 ### Moving a project to DGO 0.2.0
 
@@ -270,8 +292,8 @@ prefix.
 The term-state rule (handoff §5.2) is provisional and lives in one function,
 `derive.term_state`.
 
-Only published terms are built. A term is published once a term creation is
-recorded for it, whatever steps that creation has reached, unless the creation
+Only published terms are built. A term is published once a creation of it is
+recorded, whatever steps that creation has reached, unless the creation
 was rejected (`derive.unpublished_reason`). Other terms, and links to them,
 are left out of every page, and the build prints a note for each.
 
@@ -306,13 +328,13 @@ uv sync
 uv run pytest
 ```
 
-The tests need network access: they import DGO 0.2.0 from its release URL. They cover:
+The tests need network access: they import DGO 0.3.0 from its release URL. They cover:
 - the expected page facts on the variant fixture (`tests/fixtures/variant`: the
   handoff's example with its §5.3 variant, a deprecated term, and terms in
   review and drafted);
 - which terms are published;
 - data management (`tests/test_data.py`): lineage, certification, inferred
-  domains, a 0.1.1 build of the fixture, and DGO's lineage query over the
+  domains, refusing a 0.2.0 release, and DGO's lineage query over the
   RDF export;
 - each validator rule;
 - loading DGO: the release URL, a local `dgo_source`, an unknown release, and

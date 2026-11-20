@@ -32,8 +32,9 @@ def test_init_then_build(tmp_path):
         "    part_of: org:glossary\n"
         "    in_subject_area: org:clinical-research\n"
         "    related: [org:clinical-trial]\n"
-        "term_creations:\n"
+        "lifecycle_processes:\n"
         "  - id: org:trial-phase-creation\n"
+        "    type: creation\n"
         "    label: Creation of \"trial phase\"\n"
         "    has_output: org:trial-phase\n"
         "    part_of: org:research-data-governance\n"
@@ -71,7 +72,7 @@ def test_readme_type_table_matches_dgo():
 def test_version_names_the_tested_dgo_releases():
     result = dgo_atlas("--version")
     assert result.exit_code == 0
-    assert "Tested with Data Governance Ontology 0.1.0, 0.1.1, 0.2.0" in result.stdout
+    assert "Tested with Data Governance Ontology 0.3.0" in result.stdout
 
 
 def test_scaffold_names_a_tested_dgo_release(tmp_path):

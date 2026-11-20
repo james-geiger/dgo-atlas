@@ -333,40 +333,49 @@ def _graph_problems(dataset: Dataset, prefixes: dict[str, str]) -> tuple[list[Pr
                 seen.add(t)
                 todo += broader.get(t, [])
 
-    # Lifecycle processes and their boundaries.
+    # Lifecycle processes and their boundaries. Each counts as its DGO kind
+    # (creation, modification, deprecation), so a local subclass does too;
+    # what it governs is its has_output.
     boundaries: dict[str, list[dict]] = defaultdict(list)
     for b in merged.get("status_boundaries") or []:
         boundaries[b["part_of"]].append(b)
+    processes = [(proc, dgo.kind(_declared_class("lifecycle_processes", proc)).dgo_ancestor)
+                 for proc in merged.get("lifecycle_processes") or []]
+    shown = ("glossary term", "data set")
     creations: dict[str, list[dict]] = defaultdict(list)
-    for proc in merged.get("term_creations") or []:
-        creations[proc["has_output"]].append(proc)
+    for proc, kind in processes:
+        output = index[proc["has_output"]][0]
+        if not any(_is_a(output, c) for c in shown):
+            warnings.append(Problem(where(proc), f"has_output: {proc['has_output']} is a {output}; "
+                                                 "the site shows only processes of glossary terms and data sets"))
+        elif kind == "creation" and _is_a(output, "glossary term"):
+            creations[proc["has_output"]].append(proc)
     for term_id, procs in creations.items():
         if len(procs) > 1:
             ids = ", ".join(p["id"] for p in procs)
-            errors.append(Problem(where(index[term_id][1]), f"has more than one term creation ({ids})"))
+            errors.append(Problem(where(index[term_id][1]), f"has more than one creation ({ids})"))
 
     # By DGO kind, so a local subclass of approved closes a process too.
     closing = {"approved", "rejected"}
     approved_deprecations = set()
-    for list_name in ("term_creations", "term_modifications", "term_deprecations", "data_set_certifications"):
-        for proc in merged.get(list_name) or []:
-            bs = boundaries.get(proc["id"], [])
-            if not bs:
-                warnings.append(Problem(where(proc), "has no status boundaries, so it counts as open"))
-                continue
-            kinds = [(str(b["occurred_on"]), dgo.kind(_resolve_type("status boundary", b)).dgo_ancestor)
-                     for b in bs]
-            closed = sorted(d for d, k in kinds if k in closing)
-            if len({k for _, k in kinds if k in closing}) > 1:
-                errors.append(Problem(where(proc), "has both an approved and a rejected boundary"))
-            elif closed and any(d > closed[0] for d, _ in kinds):
-                errors.append(Problem(where(proc), f"has a status boundary after it closed on {closed[0]}"))
-            if list_name == "term_deprecations" and any(k == "approved" for _, k in kinds):
-                approved_deprecations.add(proc["has_output"])
+    for proc, proc_kind in processes:
+        bs = boundaries.get(proc["id"], [])
+        if not bs:
+            warnings.append(Problem(where(proc), "has no status boundaries, so it counts as open"))
+            continue
+        kinds = [(str(b["occurred_on"]), dgo.kind(_resolve_type("status boundary", b)).dgo_ancestor)
+                 for b in bs]
+        closed = sorted(d for d, k in kinds if k in closing)
+        if len({k for _, k in kinds if k in closing}) > 1:
+            errors.append(Problem(where(proc), "has both an approved and a rejected boundary"))
+        elif closed and any(d > closed[0] for d, _ in kinds):
+            errors.append(Problem(where(proc), f"has a status boundary after it closed on {closed[0]}"))
+        if proc_kind == "deprecation" and any(k == "approved" for _, k in kinds):
+            approved_deprecations.add(proc["has_output"])
 
     for term in terms:
         if term.get("replaced_by") and term["id"] not in approved_deprecations:
-            warnings.append(Problem(where(term), "has replaced_by but no approved term deprecation, "
+            warnings.append(Problem(where(term), "has replaced_by but no approved deprecation, "
                                                  "so it is not shown as deprecated"))
 
     _data_problems(merged, index, where, errors, warnings)

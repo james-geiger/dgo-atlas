@@ -68,10 +68,12 @@ data_elements:                   # each is part of exactly one data set
     derived_from:
       - org:protocol-status
 
-# A certification is a process, like a term's creation: the data set is
-# certified once it reaches an approved status boundary, on that date.
-data_set_certifications:
+# A data set is certified by a creation of it, just as a term is created: the
+# data set is certified once the creation reaches an approved status boundary,
+# on that date.
+lifecycle_processes:
   - id: org:trial-reporting-certification
+    type: creation
     label: Certification of "Trial reporting"
     has_output: org:trial-reporting
     part_of: org:research-data-governance   # so certified by that process's council

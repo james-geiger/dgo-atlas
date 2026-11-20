@@ -8,8 +8,9 @@ glossary_terms:
       - type: subject matter expert
         role_of: org:sam-chen
 
-term_creations:
+lifecycle_processes:
   - id: org:clinical-study-creation
+    type: creation
     label: Creation of "clinical study"
     has_output: org:clinical-study
     part_of: org:research-data-governance

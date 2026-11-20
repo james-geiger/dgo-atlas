@@ -122,8 +122,8 @@ classes:
 
   Change:
     description: >-
-      A lifecycle process: a term creation, modification or deprecation, or a
-      data set certification.
+      A lifecycle process: a creation, modification or deprecation of a term,
+      or a creation (certification) of a data set.
     slots: [about, label, process_kind, process_label, outcome]
 
   HistoryEntry:
@@ -171,7 +171,7 @@ classes:
 
   ProcessPage:
     is_a: Page
-    description: A data governance process (not a term lifecycle process).
+    description: A data governance process (not a lifecycle process).
     slots: [parent, children, councils]
     slot_usage:
       councils: { range: Ref, inlined: true, inlined_as_list: true }
@@ -359,7 +359,7 @@ slots:
   process_kind: { range: ProcessKind, required: true }
   process_label:
     description: >-
-      The process kind's name, e.g. term modification: DGO's, or a local
+      The process kind's name, e.g. modification: DGO's, or a local
       class's own.
     required: true
   outcome: { range: Outcome, required: true }
@@ -491,10 +491,9 @@ enums:
       rejected: {}
   ProcessKind:
     permissible_values:
-      term_creation: { meaning: dgo:DGO_00000021 }
-      term_modification: { meaning: dgo:DGO_00000022 }
-      term_deprecation: { meaning: dgo:DGO_00000031 }
-      data_set_certification: { meaning: dgo:DGO_00000039 }
+      creation: { meaning: dgo:DGO_00000021 }
+      modification: { meaning: dgo:DGO_00000022 }
+      deprecation: { meaning: dgo:DGO_00000031 }
   BoundaryKind:
     permissible_values:
       drafted: { meaning: dgo:DGO_00000024 }

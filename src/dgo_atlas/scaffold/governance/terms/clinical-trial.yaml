@@ -23,8 +23,9 @@ glossary_terms:
       - type: steward
         role_of: org:research-council
 
-term_creations:
+lifecycle_processes:
   - id: org:clinical-trial-creation
+    type: creation
     label: Creation of "clinical trial"
     has_output: org:clinical-trial
     part_of: org:research-data-governance

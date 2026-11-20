@@ -27,10 +27,8 @@ checks the data without building. CI does both on every pull request.
 Each governance file is a mapping of lists: `processes`, `councils`,
 `people`, `organizations`, `council_roles`, `governance_roles`,
 `business_glossaries`, `domains`, `subject_areas`, `glossary_terms`,
-`definition_sources`, `term_creations`, `term_modifications`,
-`term_deprecations` and `status_boundaries`, and, with DGO 0.2.0 or later,
-`data_stores`, `data_sets`, `data_elements`, `data_set_certifications`,
-`sensitivity_levels`, `security_levels` and `regulations`. The site's
+`definition_sources`, `lifecycle_processes` and `status_boundaries`, and
+`data_stores`, `data_sets`, `data_elements`, `sensitivity_levels`, `security_levels` and `regulations`. The site's
 "How to read a term" page describes every field of a term.
 
 ## Changing the site's wording
@@ -74,11 +72,12 @@ The build enforces all of these.
 - **One definition per term.** A term is `part_of` one glossary and
   `in_subject_area` one subject area; its domain follows from the subject area.
 - **There is no status field.** A term's state comes from its lifecycle:
-  a term creation (and later term modifications or a term deprecation) with
-  the term as `has_output`, each with dated status boundaries.
-- **Changing a term keeps its id.** Edit it in place and record a term
+  a `creation` (and later `modification`s or a `deprecation`) in
+  `lifecycle_processes` with the term as `has_output`, each with dated status
+  boundaries. A data set is certified by a `creation` of it.
+- **Changing a term keeps its id.** Edit it in place and record a
   modification.
-- **Never delete a term.** Record a term deprecation, and set `replaced_by`
+- **Never delete a term.** Record a deprecation, and set `replaced_by`
   if there is a successor.
 - **`pref_label`** is only needed when the display form differs from `label`,
   and must differ from every alt label.
@@ -121,10 +120,10 @@ rejected, with the name to use.
 
 ## How a term's state is worked out
 
-A term appears on the site once a term creation is recorded for it, unless
+A term appears on the site once a creation of it is recorded, unless
 that creation was rejected. Its state is then:
 
-1. **Deprecated** if a term deprecation of it has an approved boundary.
+1. **Deprecated** if a deprecation of it has an approved boundary.
 2. Otherwise **approved** if its creation has an approved boundary, or
    **proposed** while the creation is still open.
 

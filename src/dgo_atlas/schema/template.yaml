@@ -44,15 +44,16 @@ classes:
       - subject_areas
       - glossary_terms
       - definition_sources
-      - term_creations
-      - term_modifications
-      - term_deprecations
+      - lifecycle_processes
       - status_boundaries
-      - term_status_boundaries
       - data_stores
       - data_sets
       - data_elements
+      - term_creations
+      - term_modifications
+      - term_deprecations
       - data_set_certifications
+      - term_status_boundaries
       - sensitivity_levels
       - security_levels
       - regulations
@@ -134,25 +135,20 @@ slots:
     range: definition source
     multivalued: true
     inlined_as_list: true
-  term_creations:
-    slot_uri: dgoatlas:term_creations
-    range: term creation
-    multivalued: true
-    inlined_as_list: true
-  term_modifications:
-    slot_uri: dgoatlas:term_modifications
-    range: term modification
-    multivalued: true
-    inlined_as_list: true
-  term_deprecations:
-    slot_uri: dgoatlas:term_deprecations
-    range: term deprecation
+  lifecycle_processes:
+    description: >-
+      Creations, modifications and deprecations of glossary terms and data
+      sets; `type` picks the kind and `has_output` names what it governs. A
+      data set is certified by a creation of it. Their status boundaries go in
+      status_boundaries.
+    slot_uri: dgoatlas:lifecycle_processes
+    range: lifecycle process
     multivalued: true
     inlined_as_list: true
   status_boundaries:
     description: >-
-      Dated status boundaries of term lifecycle processes and data set
-      certifications; `type` picks the kind. Quote the dates.
+      Dated status boundaries of lifecycle processes; `type` picks the kind.
+      Quote the dates.
     slot_uri: dgoatlas:status_boundaries
     range: status boundary
     multivalued: true
@@ -164,8 +160,36 @@ slots:
     range: status boundary
     multivalued: true
     inlined_as_list: true
+  term_creations:
+    description: The former list of term creations; still read into lifecycle_processes.
+    deprecated: "Use lifecycle_processes with `type: creation`."
+    slot_uri: dgoatlas:term_creations
+    range: creation
+    multivalued: true
+    inlined_as_list: true
+  term_modifications:
+    description: The former list of term modifications; still read into lifecycle_processes.
+    deprecated: "Use lifecycle_processes with `type: modification`."
+    slot_uri: dgoatlas:term_modifications
+    range: modification
+    multivalued: true
+    inlined_as_list: true
+  term_deprecations:
+    description: The former list of term deprecations; still read into lifecycle_processes.
+    deprecated: "Use lifecycle_processes with `type: deprecation`."
+    slot_uri: dgoatlas:term_deprecations
+    range: deprecation
+    multivalued: true
+    inlined_as_list: true
+  data_set_certifications:
+    description: The former list of data set certifications; still read into lifecycle_processes.
+    deprecated: "Use lifecycle_processes with `type: creation`."
+    slot_uri: dgoatlas:data_set_certifications
+    range: creation
+    multivalued: true
+    inlined_as_list: true
   data_stores:
-    description: Systems that carry data sets. Lists of this kind need DGO 0.2.0 or later.
+    description: Systems that carry data sets.
     slot_uri: dgoatlas:data_stores
     range: data store
     multivalued: true
@@ -179,12 +203,6 @@ slots:
     description: Fields or columns; each is part_of exactly one data set.
     slot_uri: dgoatlas:data_elements
     range: data element
-    multivalued: true
-    inlined_as_list: true
-  data_set_certifications:
-    description: Certifications of data sets; their status boundaries go in status_boundaries.
-    slot_uri: dgoatlas:data_set_certifications
-    range: data set certification
     multivalued: true
     inlined_as_list: true
   sensitivity_levels:

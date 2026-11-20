@@ -62,15 +62,15 @@ def test_clinical_trial(variant):
     ]
     assert [c.label for c in t.governing_councils] == ["Research Data Governance Committee"]
     assert history(t) == [
-        ("2026-09-25", "term_creation", "drafted"),
-        ("2026-09-27", "term_creation", "submitted_for_review"),
-        ("2026-09-28", "term_creation", "approved"),
-        ("2026-10-05", "term_modification", "drafted"),
-        ("2026-10-12", "term_modification", "approved"),
-        ("2026-11-01", "term_modification", "drafted"),
-        ("2026-11-02", "term_modification", "submitted_for_review"),
-        ("2026-11-03", "term_modification", "drafted"),
-        ("2026-11-03", "term_modification", "rejected"),
+        ("2026-09-25", "creation", "drafted"),
+        ("2026-09-27", "creation", "submitted_for_review"),
+        ("2026-09-28", "creation", "approved"),
+        ("2026-10-05", "modification", "drafted"),
+        ("2026-10-12", "modification", "approved"),
+        ("2026-11-01", "modification", "drafted"),
+        ("2026-11-02", "modification", "submitted_for_review"),
+        ("2026-11-03", "modification", "drafted"),
+        ("2026-11-03", "modification", "rejected"),
     ]
     assert t.glossary.label == "Business Glossary"
     assert t.subject_area.label == "Clinical Research"
@@ -85,7 +85,7 @@ def test_clinical_investigation(variant):
     assert enum(t.state) == "deprecated"
     assert not t.pending_changes
     assert t.successor.label == "Clinical Trial"
-    assert history(t)[0] == ("2024-03-04", "term_creation", "drafted")
+    assert history(t)[0] == ("2024-03-04", "creation", "drafted")
 
 
 def test_council_seats(variant):
@@ -155,7 +155,7 @@ def test_variant_stays_approved_with_one_pending_change(variant):
     _, site = variant
     t = term(site, "clinical trial")
     assert enum(t.state) == "approved"
-    assert [enum(c.process_kind) for c in t.pending_changes] == ["term_modification"]
+    assert [enum(c.process_kind) for c in t.pending_changes] == ["modification"]
     assert t.pending_changes[0].about == "ex:clinical-trial-modification-2"
 
 
@@ -163,8 +163,8 @@ def test_variant_rejected_change_only_in_history(variant):
     _, site = variant
     t = term(site, "clinical trial")
     assert history(t)[-2:] == [
-        ("2026-11-03", "term_modification", "drafted"),
-        ("2026-11-03", "term_modification", "rejected"),
+        ("2026-11-03", "modification", "drafted"),
+        ("2026-11-03", "modification", "rejected"),
     ]
     assert "ex:clinical-trial-modification-3" not in [c.about for c in t.pending_changes]
 
@@ -174,8 +174,8 @@ def test_variant_terms_in_review_and_drafted(variant):
     _, site = variant
     direct, indirect = term(site, "direct cost"), term(site, "indirect cost")
     assert enum(direct.state) == enum(indirect.state) == "proposed"
-    assert history(direct)[-1] == ("2026-09-17", "term_creation", "submitted_for_review")
-    assert history(indirect) == [("2026-09-20", "term_creation", "drafted")]
+    assert history(direct)[-1] == ("2026-09-17", "creation", "submitted_for_review")
+    assert history(indirect) == [("2026-09-20", "creation", "drafted")]
     assert direct.subject_area.label == "Sponsored Programs" and direct.domain.label == "Research"
     assert [r.label for r in direct.related] == ["Indirect Cost"]  # written once, on indirect cost
 
@@ -223,7 +223,7 @@ def test_broader_terms_and_hierarchy(variant):
 def test_unrecorded_term_is_not_published(variant):
     deriver, site = variant
     assert "clinical study" not in [t.label for t in site.terms]
-    assert "ex:clinical-study is not published: no term creation is recorded for it" in deriver.notes
+    assert "ex:clinical-study is not published: no creation of it is recorded" in deriver.notes
 
 
 def test_links_to_unpublished_terms_are_left_off(variant):
@@ -235,7 +235,7 @@ def test_links_to_unpublished_terms_are_left_off(variant):
 
 
 def _creation(term_id, *boundaries):
-    lines = ["term_creations:", f"  - id: {term_id}-creation", "    label: Creation",
+    lines = ["lifecycle_processes:", f"  - id: {term_id}-creation", "    type: creation", "    label: Creation",
              f"    has_output: {term_id}", "    part_of: ex:research-dg"]
     if boundaries:
         lines.append("status_boundaries:")
@@ -265,7 +265,7 @@ def test_rejected_creation_is_not_published(broken):
     deriver, states = _derive(broken, _creation("ex:clinical-study", ("dgo:DGO_00000024", "2026-01-01"),
                                                 ("dgo:DGO_00000027", "2026-01-02")))
     assert "ex:clinical-study" not in states
-    assert "ex:clinical-study is not published: its term creation was rejected" in deriver.notes
+    assert "ex:clinical-study is not published: its creation was rejected" in deriver.notes
 
 
 def test_deprecated_without_creation_is_not_published(broken):

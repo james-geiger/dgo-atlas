@@ -113,10 +113,9 @@ class Outcome(str, Enum):
 
 
 class ProcessKind(str, Enum):
-    term_creation = "term_creation"
-    term_modification = "term_modification"
-    term_deprecation = "term_deprecation"
-    data_set_certification = "data_set_certification"
+    creation = "creation"
+    modification = "modification"
+    deprecation = "deprecation"
 
 
 class BoundaryKind(str, Enum):
@@ -375,14 +374,14 @@ class Responsibility(ConfiguredBaseModel):
 
 class Change(ConfiguredBaseModel):
     """
-    A lifecycle process: a term creation, modification or deprecation, or a data set certification.
+    A lifecycle process: a creation, modification or deprecation of a term, or a creation (certification) of a data set.
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://w3id.org/dgo-atlas/viewmodel'})
 
     about: str = Field(default=..., description="""The CURIE of the governed object this page or link is about.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref', 'SemanticType', 'Change']} })
     label: str = Field(default=..., description="""The display label.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref', 'SourceRef', 'SemanticType', 'Change']} })
     process_kind: ProcessKind = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Change', 'HistoryEntry']} })
-    process_label: str = Field(default=..., description="""The process kind's name, e.g. term modification: DGO's, or a local class's own.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Change', 'HistoryEntry']} })
+    process_label: str = Field(default=..., description="""The process kind's name, e.g. modification: DGO's, or a local class's own.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Change', 'HistoryEntry']} })
     outcome: Outcome = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Change']} })
 
 
@@ -398,7 +397,7 @@ class HistoryEntry(ConfiguredBaseModel):
     occurred_on: date = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['HistoryEntry']} })
     process: Change = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['HistoryEntry']} })
     process_kind: ProcessKind = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Change', 'HistoryEntry']} })
-    process_label: str = Field(default=..., description="""The process kind's name, e.g. term modification: DGO's, or a local class's own.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Change', 'HistoryEntry']} })
+    process_label: str = Field(default=..., description="""The process kind's name, e.g. modification: DGO's, or a local class's own.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Change', 'HistoryEntry']} })
     boundary_kind: BoundaryKind = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['HistoryEntry']} })
     boundary_label: str = Field(default=..., description="""The boundary kind's name, e.g. submitted for review: DGO's, or a local class's own.""", json_schema_extra = { "linkml_meta": {'domain_of': ['HistoryEntry']} })
 
@@ -506,7 +505,7 @@ class AgentPage(Page):
 
 class ProcessPage(Page):
     """
-    A data governance process (not a term lifecycle process).
+    A data governance process (not a lifecycle process).
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://w3id.org/dgo-atlas/viewmodel',
          'slot_usage': {'councils': {'inlined': True,

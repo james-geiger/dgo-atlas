@@ -73,7 +73,7 @@ def test_editor_schema_lists_the_local_kind(variant_active):
 
 
 def test_typed_bases_come_from_the_release():
-    assert set(dgo.typed_bases()) == {"governance role", "council role", "status boundary"}
+    assert set(dgo.typed_bases()) == {"governance role", "council role", "lifecycle process", "status boundary"}
 
 
 def test_local_class_of_a_local_class(broken):
