@@ -187,7 +187,8 @@ instances of local classes, which sit in their DGO parent's list.
 | council | councils | councils | council |
 | person | people | people | person |
 | organization | organizations | organizations | organization |
-| process | processes, lifecycle_processes | processes | process |
+| process | processes | processes | process |
+| lifecycle | lifecycle_processes | processes | process |
 | data | data_stores, data_sets, data_elements | data | data |
 | classification | sensitivity_levels, security_levels, regulations | classifications | classification |
 | local_class | local_classes | classes | class |
@@ -226,6 +227,7 @@ namespaces:
   council:      {iri_segment: offices, authoring_prefix: office}
   organization: {iri_segment: offices, authoring_prefix: office}
   classification: {iri_segment: data, authoring_prefix: data}
+  lifecycle:    {iri_segment: terms, authoring_prefix: term}   # term:clinical-trial-creation
 ```
 
 Two objects in a shared namespace still can't have the same local name; the

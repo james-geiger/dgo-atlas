@@ -157,7 +157,7 @@ slots:
     range: lifecycle process
     multivalued: true
     inlined_as_list: true
-    annotations: {kind: process, iri_segment: processes, authoring_prefix: process}
+    annotations: {kind: lifecycle, iri_segment: processes, authoring_prefix: process}
   status_boundaries:
     description: >-
       Dated status boundaries of lifecycle processes; `type` picks the kind.

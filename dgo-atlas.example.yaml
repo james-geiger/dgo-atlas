@@ -60,7 +60,7 @@
 # # once IRIs are published; authoring_prefix is only how ids are written and
 # # may change at any time.
 # namespaces:
-#   # Objects in processes, lifecycle_processes.
+#   # Objects in processes.
 #   process:
 #     iri_segment: processes
 #     authoring_prefix: process
@@ -92,6 +92,10 @@
 #   term:
 #     iri_segment: terms
 #     authoring_prefix: term
+#   # Objects in lifecycle_processes.
+#   lifecycle:
+#     iri_segment: processes
+#     authoring_prefix: process
 #   # Objects in data_stores, data_sets, data_elements.
 #   data:
 #     iri_segment: data

@@ -296,7 +296,7 @@ def _graph_problems(dataset: Dataset, ns: Namespaces) -> tuple[list[Problem], li
                 errors.append(Problem(where(obj), f"id {oid} is already defined at {first}"))
                 continue
             index[oid] = (cls, obj)
-            problem = ns.problem(list_name, oid)
+            problem = ns.problem(list_name, oid, obj.get("has_output"))
             if problem is None and ns.expand(oid) is None:
                 problem = f"id {oid} does not use a declared prefix; add it under `prefixes:` in dgo-atlas.yaml"
             if problem:

@@ -151,7 +151,9 @@ class Deriver:
         by_page: dict[str, list[tuple[object, str, str]]] = defaultdict(list)
         for obj, target in shown:
             iri = self.ns.expand(obj.id)
-            by_page[self.ns.page_path(iri)].append((obj, iri, target))
+            url = self.ns.page_path(iri)
+            if url != target.partition("#")[0]:  # minted as a fragment of the page that shows it already
+                by_page[url].append((obj, iri, target))
         pages = []
         for url, entries in by_page.items():
             whole = [(obj, target) for obj, iri, target in entries if "#" not in iri]

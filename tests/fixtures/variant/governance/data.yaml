@@ -166,7 +166,7 @@ lifecycle_processes:
     label: Certification of "Research studies"
     has_output: data:warehouse-studies
     part_of: process:research-dg      # certified within research data governance, so by its committee
-  - id: process:study-dashboard-certification
+  - id: data:study-dashboard#certification
     type: creation
     label: Certification of "Study dashboard extract"
     has_output: data:study-dashboard
@@ -207,5 +207,5 @@ status_boundaries:
     occurred_on: "2026-10-20"
 
   - type: drafted                # still open: the dashboard is not certified yet
-    part_of: process:study-dashboard-certification
+    part_of: data:study-dashboard#certification
     occurred_on: "2026-10-22"

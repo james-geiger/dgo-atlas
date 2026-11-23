@@ -29,7 +29,8 @@ def pages_at_iris(site):
 def test_defaults_come_from_the_template():
     kinds = {k.kind: k for k in defaults()}
     assert (kinds["organization"].iri_segment, kinds["organization"].authoring_prefix) == ("organizations", "organization")
-    assert kinds["process"].lists == ("processes", "lifecycle_processes")
+    assert kinds["process"].lists == ("processes",)
+    assert (kinds["lifecycle"].lists, kinds["lifecycle"].iri_segment) == (("lifecycle_processes",), "processes")
     assert kinds["data"].lists == ("data_stores", "data_sets", "data_elements")
     assert kinds["classification"].lists == ("sensitivity_levels", "security_levels", "regulations")
     assert kinds["local_class"].authoring_prefix == "class"
@@ -72,6 +73,19 @@ def test_kinds_may_share_a_namespace_and_its_prefix():
     assert ns.canonical(BASE + "offices/board") == "office:board"
     assert ns.problem("councils", "office:board") is None
     assert ns.problem("organizations", "office:spo") is None
+
+
+def test_lifecycle_processes_may_live_with_their_terms():
+    ns = Namespaces.build(BASE, {"lifecycle": {"iri_segment": "terms", "authoring_prefix": "term"}})
+    assert ns.problem("lifecycle_processes", "term:trial-creation") is None
+    assert ns.problem("processes", "process:research-dg") is None
+
+
+def test_lifecycle_process_may_be_a_fragment_of_its_output():
+    ns = Namespaces.build(BASE)
+    assert ns.problem("lifecycle_processes", "data:awards#certification", "data:awards") is None
+    assert ns.problem("lifecycle_processes", "data:awards#certification", "data:other") is not None
+    assert ns.problem("lifecycle_processes", "data:awards#certification") is not None
 
 
 def test_fragment_ids():
@@ -195,6 +209,13 @@ def test_certifications_redirect_to_their_data_set(variant):
     _, site = variant
     redirects = {r.about: r for r in site.redirects}
     assert redirects["process:warehouse-studies-certification"].target == "data/warehouse-studies.html#history"
+
+
+def test_process_minted_on_its_outputs_page_needs_no_redirect(variant):
+    """data:study-dashboard#certification is already the data set's page, with a fragment."""
+    _, site = variant
+    assert not any(r.about == "data:study-dashboard#certification" or r.url == "data/study-dashboard.html"
+                   for r in site.redirects)
 
 
 def test_fragment_iris_share_a_redirect(variant):

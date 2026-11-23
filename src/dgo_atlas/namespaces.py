@@ -175,12 +175,20 @@ class Namespaces:
         fragment, plus .html."""
         return iri.partition("#")[0][len(self.iri_base):] + ".html"
 
-    def problem(self, list_name: str, value: str) -> str | None:
-        """Why `value` can't be the id of an object in `list_name`, or None if it can."""
+    def problem(self, list_name: str, value: str, output: str | None = None) -> str | None:
+        """Why `value` can't be the id of an object in `list_name`, or None if it can.
+
+        An object with an `output` (a lifecycle process) may instead be minted as a
+        fragment of its output's IRI, `term:x#creation`: its IRI is then the output's page.
+        """
         kind = self.for_list(list_name)
         if kind is None:
             return None
         iri = self.expand(value)
+        output_iri = self.expand(output) if isinstance(output, str) else None
+        if iri and output_iri and "#" not in output_iri and iri.startswith(output_iri + "#") \
+                and LOCAL.match("x" + iri[len(output_iri):]):
+            return None
         example = f"{kind.authoring_prefix}:{_example(value)}"
         if iri is None:
             return (f"id {value} does not use a declared prefix; write it as {example}, "
