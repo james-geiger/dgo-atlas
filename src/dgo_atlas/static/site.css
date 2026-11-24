@@ -107,7 +107,16 @@
 
 * { box-sizing: border-box; }
 
-html { scroll-behavior: smooth; }
+/* Anchor jumps stop below the sticky header. site.js keeps --header-height
+   at its measured height, which grows when it wraps on narrow screens;
+   without JavaScript the fallbacks below cover the usual sizes. */
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: calc(var(--header-height, 68px) + 24px);
+}
+@media (max-width: 720px) {
+  html { scroll-padding-top: calc(var(--header-height, 184px) + 16px); }
+}
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
@@ -1034,7 +1043,7 @@ code.term-code {
 .list-box__owner { font-size: 12.5px; color: var(--ink-3); }
 
 .history { list-style: none; margin: 0; border-left: 2px solid var(--line); padding-left: 22px; display: flex; flex-direction: column; gap: 22px; }
-.history__entry { position: relative; scroll-margin-top: 96px; } /* clear the sticky header */
+.history__entry { position: relative; }
 /* The entry a process IRI (term:x#creation) lands on. */
 .history__entry:target { background: var(--accent-soft); outline: 6px solid var(--accent-soft); }
 .history__entry:target .history__what { color: var(--ink); }
