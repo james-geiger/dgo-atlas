@@ -14,12 +14,24 @@ organization: Example Organization
 description: The shared, authoritative definitions of the data we report on.
 contact_email: data-governance@example.org
 
-# The namespace for your identifiers. Every id in governance/ is a CURIE
-# using a prefix declared here (e.g. `org:clinical-trial`). Choose an IRI
-# base you control and will keep stable, such as a w3id.org redirect.
+# The namespace every id is minted in. Choose a base you control and will
+# keep stable, such as a w3id.org redirect; never change it once published.
+# Each kind of object has its own namespace under it and its own prefix:
+# `term:clinical-trial` is <iri_base>terms/clinical-trial, and its page is
+# published at terms/clinical-trial.html, so one redirect from the base to
+# the site resolves every IRI.
+iri_base: https://data.example.org/governance/
+
+# Uncomment to change a kind's namespace or prefix. iri_segment is part of
+# every IRI: set it before you publish and never change it afterwards.
+# authoring_prefix is only how ids are written and can change at any time.
+# namespaces:
+#   organization:
+#     iri_segment: offices        # <iri_base>offices/<name>
+#     authoring_prefix: office    # written office:<name>
+
+# Prefixes for the external ontologies your semantic types come from.
 prefixes:
-  org: https://data.example.org/governance/
-  # Prefixes for the external ontologies your semantic types come from.
   bfo: http://purl.obolibrary.org/obo/BFO_
 
 paths:
@@ -48,7 +60,7 @@ brand:
 
 # Per-page settings, keyed by the id of what the page is about.
 pages:
-  org:research:
+  domain:research:
     accent: "#2E7D6B"
 
 # Change any wording on the site by its key. `dgo-atlas text` lists every key

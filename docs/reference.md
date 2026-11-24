@@ -138,6 +138,179 @@ YAML is unchanged apart from one list name, so existing data validates:
 - **Lineage query.** DGO's `docs/lineage.rq` runs over `dgo-atlas convert -t ttl`
   output as is; a test checks that its rows agree with the site.
 
+## IRIs and pages
+
+Every identified object is minted in the implementer's namespace, and every
+page is published at its object's IRI. A project names one root, `iri_base`,
+and each kind of object has its own namespace under it:
+
+```yaml
+iri_base: https://w3id.org/acme/
+```
+
+```yaml
+organizations:
+  - id: organization:sponsored-programs   # https://w3id.org/acme/organizations/sponsored-programs
+```
+
+The page for that organization is `organizations/sponsored-programs.html`:
+**the page path is the IRI less `iri_base`, plus `.html`**, always. One
+resolver rule then serves every IRI. For w3id.org, the `.htaccess` in the
+project's directory is:
+
+```apache
+RewriteEngine on
+RewriteRule ^(.+)$ https://example.github.io/data-governance/$1.html [R=302,L]
+```
+
+### Vocabulary
+
+- **Kind namespace:** `<iri_base><iri_segment>/`. Every object of one kind is
+  minted there.
+- **`iri_segment`:** the part after `iri_base`. It is part of every IRI, so it
+  is **permanent once published**.
+- **`authoring_prefix`:** the CURIE prefix ids are written with. It is only an
+  abbreviation, so it **can change at any time**.
+
+### Defaults
+
+The defaults are annotations on the template's lists (`schema/template.yaml`),
+so the list an object is written in decides its namespace. That includes
+instances of local classes, which sit in their DGO parent's list.
+
+| kind | lists | `iri_segment` | `authoring_prefix` |
+| --- | --- | --- | --- |
+| glossary | business_glossaries | glossaries | glossary |
+| domain | domains | domains | domain |
+| subject_area | subject_areas | areas | area |
+| term | glossary_terms | terms | term |
+| council | councils | councils | council |
+| person | people | people | person |
+| organization | organizations | organizations | organization |
+| process | processes | processes | process |
+| lifecycle | lifecycle_processes | processes | process |
+| data | data_stores, data_sets, data_elements | data | data |
+| classification | sensitivity_levels, security_levels, regulations | classifications | classification |
+| local_class | local_classes | classes | class |
+
+Lists read under a former name (`term_creations`, `data_set_certifications`
+and the like) are renamed before ids are checked, so they share the new
+list's namespace. Data stores, sets and elements are one kind, so they share
+`data/`; an element's local name may nest under its set's
+(`data:awards/record_id` is `data/awards/record_id.html`). Roles and status
+boundaries have no id. Definition sources are identified by
+the source's own IRI and have no page.
+
+### Overriding a kind's namespace
+
+`namespaces:` is keyed by kind and can set either field, or both:
+
+```yaml
+namespaces:
+  organization:
+    iri_segment: offices        # IRI:   https://w3id.org/acme/offices/<name>   (permanent once published)
+    authoring_prefix: office    # CURIE: office:<name>                          (change freely)
+  process:
+    iri_segment: governance     # authoring_prefix stays process:
+```
+
+With that, `office:sponsored-programs` is
+`https://w3id.org/acme/offices/sponsored-programs` and its page is
+`offices/sponsored-programs.html`. `organization:` is then undefined, unless
+it is declared under `prefixes:` as an alias.
+
+Kinds may share a namespace if they share its prefix too, for a project
+whose IRIs were minted that way before it adopted DGO Atlas:
+
+```yaml
+namespaces:
+  council:      {iri_segment: offices, authoring_prefix: office}
+  organization: {iri_segment: offices, authoring_prefix: office}
+  classification: {iri_segment: data, authoring_prefix: data}
+  lifecycle:    {iri_segment: terms, authoring_prefix: term}   # term:clinical-trial-creation
+```
+
+Two objects in a shared namespace still can't have the same local name; the
+page-clash check below catches it.
+
+These are checked when the config loads:
+- Segments must be one path segment, never `assets`, and used by one kind
+  unless the kinds sharing it also share its prefix.
+- Authoring prefixes must be names, used by one kind unless the kinds sharing
+  it also share its segment, and not `dgo`,
+  `dgoatlas` or `linkml`. They also can't redefine a prefix declared under
+  `prefixes:` or one DGO's release declares (DGO declares `org`, for example).
+
+### What can change after publishing
+
+- **`iri_base` and every effective `iri_segment` never change.** That
+  includes a default: adding `organization: {iri_segment: offices}` after
+  organizations were published under `organizations/` breaks every one of
+  those IRIs. DGO Atlas keeps no history, so it can't catch this.
+- **Authoring prefixes can change any number of times.** IRIs, pages and RDF
+  stay the same. Ids written with the old prefix fail validation until they
+  are rewritten, or the old prefix is kept as an alias.
+- **An IRI is forever.** If an object turns out to be of another kind (an
+  "office" that is really a council), mint a new IRI of the right kind rather
+  than reusing the old one.
+
+### Aliases and canonical ids
+
+`prefixes:` holds the ontologies semantic types come from, and any alias for
+one of the project's own namespaces
+(`office: https://w3id.org/acme/organizations/`). An id or reference may be
+written with an alias, or as the full IRI. At the graph stage every one is
+rewritten to its canonical form, which is the kind's authoring prefix
+(`validate.canonical_ids`), so the site, `pages:` keys and exports all see
+one spelling.
+
+An id is an error if it isn't in its kind's namespace, isn't under
+`iri_base`, or uses an undeclared prefix. So is a local name that isn't made
+of letters, digits and `- . _ ~` (with `/` between parts), because the IRI
+path is also the file path. A local name may end in one fragment
+(`data:sensitivity#high`); the page is then the document's
+(`data/sensitivity.html`), and the browser keeps the fragment. The editor schema checks the same thing as you
+type: each id and each reference to one kind has a pattern, and typing an
+`id` offers the kind's prefix.
+
+### Pages that aren't the object's own
+
+- **Data governance processes** are shown on `governance.html`, each at an
+  anchor named for its local name. Their IRIs get a redirect page
+  (`processes/<name>.html` → `governance.html#<name>`).
+- **Lifecycle processes** redirect to the history of what they output
+  (`terms/<term>.html#history`, `data/<set>.html#history`) while it has a page.
+- **Classification levels** are shown on `classification.html`, each at an
+  anchor named for its local name (`data:sensitivity#high` →
+  `#sensitivity-high`). Their IRIs get redirect pages like processes. IRIs
+  that differ only in their fragment share one redirect page at the document's
+  path, which sends each fragment to its own anchor with a short script, and
+  falls back to `classification.html`.
+- **Local classes** get a small page at their class IRI (`classes/<Name>.html`)
+  with the class they refine and what in the data is declared one.
+
+### Moving a project to pages at IRIs (DGO Atlas 0.8.0)
+
+Before 0.8.0, `prefixes:` named every namespace and pages went to fixed
+directories (`datasets/`, `stores/`, `elements/`...) under a slug of the id,
+so many IRIs didn't resolve. To keep the IRIs already published:
+
+1. Set `iri_base` to the root they share (`https://w3id.org/acme/`).
+2. For each kind whose ids don't use its default namespace and prefix, add a
+   `namespaces:` entry matching what was published, sharing a namespace
+   between kinds where they were minted together.
+3. Remove the now-implicit authoring prefixes from `prefixes:` (keeping one is
+   allowed if it names the same namespace). Keep the ontology prefixes.
+
+Ids and IRIs stay the same; only page paths move, to where the resolver
+already sends them. Bookmarks to the old paths (`datasets/x.html`) break.
+
+Static hosting can't send HTTP redirects, so redirect pages use a meta
+refresh and `rel=canonical`. If a page would land on another page's path (a
+term with the id `term:index` would replace `terms/index.html`, or a content
+page could clash), the build fails and names the id. Nothing is renamed,
+because the page must stay at its IRI. Paths are compared ignoring case.
+
 ## What it ships
 
 | Part | Where |
@@ -155,6 +328,7 @@ YAML is unchanged apart from one list name, so existing data validates:
 | Implementer scaffold, and the code that copies it | `src/dgo_atlas/scaffold/`, `scaffold.py` |
 | Editor JSON Schemas written into a project | `src/dgo_atlas/editor.py` |
 | Local classes: an implementer's own subclasses of DGO classes | `src/dgo_atlas/local_classes.py` |
+| Namespaces: where each kind is minted, how its ids are written, and where its pages live | `src/dgo_atlas/namespaces.py` |
 
 ## Local classes
 
@@ -165,7 +339,7 @@ DGO classes, in any governance file:
 
 ```yaml
 local_classes:
-  - id: acme:DataTrustee         # in one of your prefixes; never dgo:
+  - id: class:DataTrustee        # in your local-class namespace: <iri_base>classes/DataTrustee
     name: data trustee           # the readable `type:` name
     is_a: steward                # a DGO class (name or CURIE), or another local class (name or id)
     description: A steward who also answers to external sponsors for how the data is shared.
@@ -173,7 +347,8 @@ local_classes:
 
 `dgo-atlas new local-class "data trustee" --is-a steward` writes one to
 `governance/local-classes/`. From then on `type: data trustee` works wherever
-`type: steward` does, and becomes `type: acme:DataTrustee`.
+`type: steward` does, and becomes `type: class:DataTrustee`. The class gets a
+page at its IRI (see "IRIs and pages").
 
 - **How it works.** Local classes are read before the rest of the data is
   validated. Each becomes a subclass of its parent in a small LinkML schema,
@@ -187,9 +362,9 @@ local_classes:
   exported, and it gets a warning saying so. Once DGO gives that class a
   `type`, the local class works with no change here.
 - **Rules.** The parent must exist and `is_a` must not loop. The name must not
-  clash with a DGO class or another local class. The id must use a declared
-  prefix, outside DGO's and DGO Atlas's namespaces. Problems are reported at
-  the read stage, with the file and entry.
+  clash with a DGO class or another local class. The id must be in the
+  project's local-class namespace, which is never inside DGO's or DGO Atlas's
+  namespaces. Problems are reported at the read stage, with the file and entry.
 - **Derivation.** A local class counts as its nearest DGO ancestor
   (`dgo.dgo_kind`). An "approved with conditions" boundary closes a process
   as approved does, and a data trustee is styled as a steward. The site shows
@@ -216,8 +391,8 @@ RDF at all, the template sets `default_range: string` and declares the DGO
 release's prefixes, because LinkML takes neither from an imported schema.
 
 With local classes, JSON and YAML carry the local CURIE in `type`
-(`"type": "acme:DataTrustee"`). The RDF types each object with the local class
-(`a acme:DataTrustee`). Each declaration is exported too, as a
+(`"type": "class:DataTrustee"`). The RDF types each object with the local class
+(`a class:DataTrustee`). Each declaration is exported too, as a
 `dgoatlas:LocalClass`. This data is valid against the project's schema, not
 against DGO alone.
 
@@ -230,11 +405,11 @@ against, for LinkML's own generators:
 dgo-atlas export-schema -o governance.linkml.yaml            # template + DGO + local classes, merged
 dgo-atlas export-schema --local-only -o local-classes.yaml   # just the local classes; imports DGO by URL
 gen-pydantic governance.linkml.yaml > governance_model.py
-gen-owl --no-use-native-uris local-classes.yaml > local-classes.ttl   # acme:DataTrustee rdfs:subClassOf dgo:…
+gen-owl --no-use-native-uris local-classes.yaml > local-classes.ttl   # class:DataTrustee rdfs:subClassOf dgo:…
 ```
 
 Pass `--no-use-native-uris` to gen-owl so that classes keep their own IRIs
-(`dgo:DGO_…`, `acme:…`) instead of being renamed into the schema's default
+(`dgo:DGO_…`, `class:…`) instead of being renamed into the schema's default
 prefix.
 
 ## How a build works
@@ -255,8 +430,9 @@ prefix.
    validated against the template with LinkML's validator, the same check as
    `linkml-validate -s template.yaml -C GovernanceRecord`. Bad `type` values
    get a suggestion (`dgo:Approved` → `approved`).
-4. **Graph.** Files are merged. Ids must be unique and use a declared
-   prefix. Every reference must resolve to an object of a kind the slot
+4. **Graph.** Files are merged, and every id and reference is rewritten to
+   its canonical CURIE (see "IRIs and pages"). Ids must be unique and minted
+   in their kind's namespace. Every reference must resolve to an object of a kind the slot
    allows, including references inside a term's `responsibilities`. The
    allowed kinds are read from DGO, not restated. Then the rules:
    - `pref_label` must differ from every alt label.
@@ -284,9 +460,12 @@ prefix.
 6. **Render.** Jinja templates render the site: terms, subject areas,
    domains, glossaries, councils, people and organizations, the governance
    process tree, data stores, sets and elements, the data index and the
-   classification scheme, a "How to read a term" page built from DGO's descriptions,
-   and authored Markdown. Kinds (glossary term, owner, approved…) link to
-   their DGO class IRIs; the site does not restate the ontology.
+   classification scheme, a "How to read a term" page built from DGO's
+   descriptions, local classes, and authored Markdown. Every page is at its
+   IRI's path, and things shown on another page (processes, classification
+   levels) get redirect pages at theirs; a clash stops the build. Kinds
+   (glossary term, owner, approved…) link to their DGO class IRIs; the site
+   does not restate the ontology.
 7. **Link check.** Every internal link must resolve.
 
 The term-state rule (handoff §5.2) is provisional and lives in one function,

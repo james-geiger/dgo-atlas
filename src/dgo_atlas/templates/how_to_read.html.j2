@@ -8,7 +8,7 @@
   <div class="fact-box__lead">
     <span class="badge badge--{{ k.slug }} badge--kind">{{ k.name }}</span>
     <p style="margin:8px 0 0;font-size:14.5px;color:var(--ink-2)">{{ k.description }}</p>
-    <p style="margin:4px 0 0"><code class="term-code">{{ k.curie }}</code></p>
+    <p style="margin:4px 0 0">{% if local_pages.get(k.iri) %}<a href="{{ rel }}{{ local_pages[k.iri] }}"><code class="term-code">{{ k.curie }}</code></a>{% else %}<code class="term-code">{{ k.curie }}</code>{% endif %}</p>
   </div>
   {%- endfor %}
 </div>

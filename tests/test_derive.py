@@ -14,7 +14,7 @@ from dgo_atlas.derive import Deriver, related
 from dgo_atlas.resources import VIEWMODEL
 from dgo_atlas.semantic import ClassInfo
 
-from .conftest import EX
+from .conftest import NS
 
 
 def term(site, label):
@@ -35,19 +35,19 @@ def history(t):
 def test_states(variant):
     deriver, _ = variant
     assert deriver.states == {
-        "ex:clinical-trial": "approved",
-        "ex:clinical-study": "unrecorded",
-        "ex:clinical-investigation": "deprecated",
-        "ex:direct-cost": "proposed",
-        "ex:indirect-cost": "proposed",
-        "ex:project-cost": "proposed",
-        "ex:personnel-cost": "proposed",
-        "ex:faculty-salary": "proposed",
-        "ex:protocol-status": "approved",
-        "ex:protocol-open-date": "approved",
-        "ex:sponsored-program-status": "proposed",
-        "ex:sponsored-program-status-active": "proposed",
-        "ex:sponsored-program-status-closed": "proposed",
+        "term:clinical-trial": "approved",
+        "term:clinical-study": "unrecorded",
+        "term:clinical-investigation": "deprecated",
+        "term:direct-cost": "proposed",
+        "term:indirect-cost": "proposed",
+        "term:project-cost": "proposed",
+        "term:personnel-cost": "proposed",
+        "term:faculty-salary": "proposed",
+        "term:protocol-status": "approved",
+        "term:protocol-open-date": "approved",
+        "term:sponsored-program-status": "proposed",
+        "term:sponsored-program-status-active": "proposed",
+        "term:sponsored-program-status-closed": "proposed",
     }
 
 
@@ -135,7 +135,7 @@ def test_semantic_type_described_by_its_class(variant):
         looked_up.append(iri)
         return ClassInfo(iri=iri, label="process", ontology="BFO")
 
-    d = Deriver(deriver.rec, EX, describe=describe)
+    d = Deriver(deriver.rec, NS, describe=describe)
     st = term(d.site(), "clinical trial").semantic_type
     assert looked_up == ["http://purl.obolibrary.org/obo/BFO_0000015"]
     assert (st.about, st.iri, st.label, st.ontology) == (
@@ -147,7 +147,7 @@ def test_semantic_type_that_cannot_be_looked_up_keeps_its_iri(variant):
     deriver, site = variant  # no describe: nothing is looked up
     st = term(site, "clinical trial").semantic_type
     assert (st.about, st.iri, st.label) == ("bfo:0000015", "http://purl.obolibrary.org/obo/BFO_0000015", None)
-    assert "ex:clinical-trial: semantic_type bfo:0000015 could not be looked up, so only its IRI is shown" \
+    assert "term:clinical-trial: semantic_type bfo:0000015 could not be looked up, so only its IRI is shown" \
         in deriver.notes
 
 
@@ -156,7 +156,7 @@ def test_variant_stays_approved_with_one_pending_change(variant):
     t = term(site, "clinical trial")
     assert enum(t.state) == "approved"
     assert [enum(c.process_kind) for c in t.pending_changes] == ["modification"]
-    assert t.pending_changes[0].about == "ex:clinical-trial-modification-2"
+    assert t.pending_changes[0].about == "process:clinical-trial-modification-2"
 
 
 def test_variant_rejected_change_only_in_history(variant):
@@ -166,7 +166,7 @@ def test_variant_rejected_change_only_in_history(variant):
         ("2026-11-03", "modification", "drafted"),
         ("2026-11-03", "modification", "rejected"),
     ]
-    assert "ex:clinical-trial-modification-3" not in [c.about for c in t.pending_changes]
+    assert "process:clinical-trial-modification-3" not in [c.about for c in t.pending_changes]
 
 
 def test_variant_terms_in_review_and_drafted(variant):
@@ -182,9 +182,9 @@ def test_variant_terms_in_review_and_drafted(variant):
 
 def test_variant_related_read_both_ways(variant):
     deriver, _ = variant
-    trial, study = (deriver.idx[i] for i in ("ex:clinical-trial", "ex:clinical-study"))
-    assert related(deriver.rec, trial) == ["ex:clinical-study"]
-    assert related(deriver.rec, study) == ["ex:clinical-trial"]
+    trial, study = (deriver.idx[i] for i in ("term:clinical-trial", "term:clinical-study"))
+    assert related(deriver.rec, trial) == ["term:clinical-study"]
+    assert related(deriver.rec, study) == ["term:clinical-trial"]
 
 
 def outline(nodes, depth=0):
@@ -223,56 +223,57 @@ def test_broader_terms_and_hierarchy(variant):
 def test_unrecorded_term_is_not_published(variant):
     deriver, site = variant
     assert "clinical study" not in [t.label for t in site.terms]
-    assert "ex:clinical-study is not published: no creation of it is recorded" in deriver.notes
+    assert "term:clinical-study is not published: no creation of it is recorded" in deriver.notes
 
 
 def test_links_to_unpublished_terms_are_left_off(variant):
     deriver, site = variant
     t = term(site, "clinical trial")
     assert not t.broader and not t.related
-    assert "ex:clinical-trial: broader ex:clinical-study is not published, so the link is left off" in deriver.notes
+    assert "term:clinical-trial: broader term:clinical-study is not published, so the link is left off" in deriver.notes
     assert [a.label for a in site.subject_areas[0].terms] == ["clinical investigation", "Clinical Trial", "protocol open date", "protocol status"]
 
 
 def _creation(term_id, *boundaries):
-    lines = ["lifecycle_processes:", f"  - id: {term_id}-creation", "    type: creation", "    label: Creation",
-             f"    has_output: {term_id}", "    part_of: ex:research-dg"]
+    creation = f"process:{term_id.partition(':')[2]}-creation"
+    lines = ["lifecycle_processes:", f"  - id: {creation}", "    type: creation", "    label: Creation",
+             f"    has_output: {term_id}", "    part_of: process:research-dg"]
     if boundaries:
         lines.append("status_boundaries:")
         for kind, date in boundaries:
-            lines += [f"  - type: {kind}", f"    part_of: {term_id}-creation", f'    occurred_on: "{date}"']
+            lines += [f"  - type: {kind}", f"    part_of: {creation}", f'    occurred_on: "{date}"']
     return "\n".join(lines) + "\n"
 
 
 def _derive(broken, extra, drop=()):
     report = broken(extra={"extra.yaml": extra}, drop=drop)
     assert report.ok, [str(e) for e in report.errors]
-    deriver = Deriver(report.record, EX)
+    deriver = Deriver(report.record, NS)
     return deriver, {t.about: enum(t.state) for t in deriver.site().terms}
 
 
 def test_creation_straight_to_approved_is_published(broken):
-    _, states = _derive(broken, _creation("ex:clinical-study", ("dgo:DGO_00000026", "2026-01-01")))
-    assert states["ex:clinical-study"] == "approved"
+    _, states = _derive(broken, _creation("term:clinical-study", ("dgo:DGO_00000026", "2026-01-01")))
+    assert states["term:clinical-study"] == "approved"
 
 
 def test_creation_without_boundaries_is_published_as_proposed(broken):
-    _, states = _derive(broken, _creation("ex:clinical-study"))
-    assert states["ex:clinical-study"] == "proposed"
+    _, states = _derive(broken, _creation("term:clinical-study"))
+    assert states["term:clinical-study"] == "proposed"
 
 
 def test_rejected_creation_is_not_published(broken):
-    deriver, states = _derive(broken, _creation("ex:clinical-study", ("dgo:DGO_00000024", "2026-01-01"),
+    deriver, states = _derive(broken, _creation("term:clinical-study", ("dgo:DGO_00000024", "2026-01-01"),
                                                 ("dgo:DGO_00000027", "2026-01-02")))
-    assert "ex:clinical-study" not in states
-    assert "ex:clinical-study is not published: its creation was rejected" in deriver.notes
+    assert "term:clinical-study" not in states
+    assert "term:clinical-study is not published: its creation was rejected" in deriver.notes
 
 
 def test_deprecated_without_creation_is_not_published(broken):
     """Without its recorded creation, clinical investigation has a deprecation but no creation."""
     deriver, states = _derive(broken, "", drop=["clinical-investigation-creation.yaml"])
-    assert deriver.states["ex:clinical-investigation"] == "deprecated"
-    assert "ex:clinical-investigation" not in states
+    assert deriver.states["term:clinical-investigation"] == "deprecated"
+    assert "term:clinical-investigation" not in states
 
 
 # ---------------------------------------------------------------- view model

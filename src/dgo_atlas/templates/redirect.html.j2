@@ -1,0 +1,29 @@
+{#- A page at the IRI of something shown on another page (a process on the
+    governance page, a lifecycle process in its term's or data set's history,
+    a classification level on the classification page), so the IRI resolves.
+    Static hosting can't send an HTTP redirect, so it refreshes. IRIs that
+    differ only in their fragment share this page; the script sends each
+    fragment to its own target before the refresh would. -#}
+<!DOCTYPE html>
+<html lang="{{ site.language or "en" }}">
+<head>
+<meta charset="utf-8">
+<title>{{ t("redirect.title", label=redirect.label) }} · {{ site.title }}</title>
+<link rel="canonical" href="{{ rel }}{{ redirect.target }}">
+{%- if redirect.fragments %}
+<script>
+(function () {
+  var fragments = {{ redirect.fragments | map(attribute="fragment") | list | tojson }};
+  var targets = {{ redirect.fragments | map(attribute="target") | list | tojson }};
+  var i = fragments.indexOf(decodeURIComponent(location.hash.slice(1)));
+  if (i >= 0) location.replace({{ rel | tojson }} + targets[i]);
+})();
+</script>
+{%- endif %}
+<meta http-equiv="refresh" content="0; url={{ rel }}{{ redirect.target }}">
+<meta name="robots" content="noindex">
+</head>
+<body>
+<p>{{ t("redirect.moved", label=redirect.label) }} <a href="{{ rel }}{{ redirect.target }}">{{ t("redirect.continue", label=redirect.label) }}</a></p>
+</body>
+</html>

@@ -69,6 +69,7 @@ def _applied_defaults() -> dict[str, tuple[object, str]]:
     return {
         "dgo_version": (dgo.TESTED_VERSIONS[-1], "required; shown is the newest release this version of DGO Atlas is tested with"),
         "title": (None, "required"),
+        "iri_base": ("https://data.example.org/governance/", "required; shown is an example, with no default"),
         "mark": (None, "unset by default: the initials of the title are used"),
         "accent": (var("accent"), "the default, from site.css"),
         "accent_dark": (None, "unset by default: the accent mixed half and half with white is used"),
@@ -122,7 +123,7 @@ def example_config() -> str:
         "# # `# ` are settings. To use a block (or the whole file), remove one `# ` from",
         "# # each of its lines (Cmd+/ or Ctrl+/ in most editors): the settings become",
         "# # YAML and the explanations stay comments. Only dgo_version, title and",
-        "# # prefixes are required; leave out anything else to keep its default.",
+        "# # iri_base are required; leave out anything else to keep its default.",
         "",
     ]
 
@@ -146,7 +147,7 @@ def example_config() -> str:
 
         range_ = spec.get("range")
         if range_ in classes and spec.get("multivalued"):
-            # A keyed map: prefixes, pages, text.
+            # A keyed map: namespaces, prefixes, pages, text.
             if name == "text":
                 lines.append(f"# {indent}{name}:")
                 section = None
@@ -157,15 +158,25 @@ def example_config() -> str:
                             lines.append("#")
                         section = top
                     lines.append(f"# {indent}  {key}: {_yaml_value(value)}")
+            elif name == "namespaces":
+                from .namespaces import defaults as namespace_defaults
+
+                lines.append(f"# {indent}{name}:")
+                for kind in namespace_defaults():
+                    lists = ", ".join(kind.lists)
+                    lines.extend(_wrap(f"Objects in {lists}.", indent + "  "))
+                    lines.append(f"# {indent}  {kind.kind}:")
+                    lines.append(f"# {indent}    iri_segment: {kind.iri_segment}")
+                    lines.append(f"# {indent}    authoring_prefix: {kind.authoring_prefix}")
             elif name == "prefixes":
                 lines.append(f"# {indent}{name}:")
-                lines.extend(_wrap("One entry per prefix your ids use; this one is an example, with no default.", indent + "  "))
-                lines.append(f"# {indent}  org: https://data.example.org/governance/")
+                lines.extend(_wrap("No extra prefixes by default; this one is an example.", indent + "  "))
+                lines.append(f"# {indent}  bfo: http://purl.obolibrary.org/obo/BFO_")
             elif name == "pages":
                 lines.append(f"# {indent}{name}: {{}}")
                 lines.extend(_wrap("No per-page settings by default. Each entry is keyed by an id, for example:", indent))
                 lines.append(f"# {indent}# pages:")
-                lines.append(f"# {indent}#   org:research:")
+                lines.append(f"# {indent}#   domain:research:")
                 for slot in classes[range_]["slots"]:
                     if slot != "about":
                         lines.append(f"# {indent}#     {slot}: \"#2E7D6B\"")

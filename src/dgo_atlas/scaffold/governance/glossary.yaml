@@ -2,18 +2,18 @@
 # the glossary and classified in one subject area; its domain follows from that.
 
 business_glossaries:
-  - id: org:glossary
+  - id: glossary:glossary
     label: Example Organization Business Glossary
 
 domains:
-  - id: org:research
+  - id: domain:research
     label: Research
-    part_of: org:glossary
+    part_of: glossary:glossary
 
 subject_areas:
-  - id: org:clinical-research
+  - id: area:clinical-research
     label: Clinical Research
-    part_of: org:research
+    part_of: domain:research
 
 # Sources definitions are drawn from. The id is the source's own IRI.
 definition_sources:

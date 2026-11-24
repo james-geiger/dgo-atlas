@@ -12,11 +12,11 @@ from typer.testing import CliRunner
 from dgo_atlas import config, dgo
 from dgo_atlas.cli import app
 
-from .conftest import EX, FIXTURES
+from .conftest import BASE, FIXTURES
 
 runner = CliRunner()
 VARIANT = FIXTURES / "variant"
-EXN = rdflib.Namespace(EX["ex"])
+EXN = rdflib.Namespace(BASE + "classes/")
 
 
 def dgo_atlas(*args):
@@ -45,7 +45,7 @@ def test_readable_name_resolves_to_the_local_curie(broken):
     report = broken()
     assert report.ok, messages(report)
     roles = [r["type"] for t in report.dataset.merged["glossary_terms"] for r in t.get("responsibilities") or []]
-    assert "ex:DataTrustee" in roles
+    assert "class:DataTrustee" in roles
 
 
 def test_local_class_is_a_subclass_in_the_model(variant_active):
@@ -53,23 +53,23 @@ def test_local_class_is_a_subclass_in_the_model(variant_active):
     assert issubclass(model.DataTrustee, model.Steward)
     assert issubclass(model.ApprovedWithConditions, model.Approved)
     trustee = dgo.kind("data trustee")
-    assert (trustee.local, trustee.dgo_ancestor, trustee.curie) == (True, "steward", "ex:DataTrustee")
+    assert (trustee.local, trustee.dgo_ancestor, trustee.curie) == (True, "steward", "class:DataTrustee")
     assert not dgo.kind("steward").local
 
 
 def test_local_class_counts_as_its_dgo_ancestor(variant):
     deriver, site = variant
     # Its creation closed with "approved with conditions": still deprecated, not open.
-    assert deriver.states["ex:clinical-investigation"] == "deprecated"
-    (term,) = [t for t in site.terms if t.about == "ex:indirect-cost"]
+    assert deriver.states["term:clinical-investigation"] == "deprecated"
+    (term,) = [t for t in site.terms if t.about == "term:indirect-cost"]
     (trustee,) = [r for r in term.responsibilities if r.role_label == "data trustee"]
     assert trustee.role == "steward"  # DGO's slug, for styling and rules
-    assert trustee.role_iri == EX["ex"] + "DataTrustee"
+    assert trustee.role_iri == BASE + "classes/DataTrustee"
 
 
 def test_editor_schema_lists_the_local_kind(variant_active):
     schema = dgo.json_schema()
-    assert "ex:DataTrustee" in schema and "data trustee" in schema
+    assert "class:DataTrustee" in schema and "data trustee" in schema
 
 
 def test_typed_bases_come_from_the_release():
@@ -77,13 +77,13 @@ def test_typed_bases_come_from_the_release():
 
 
 def test_local_class_of_a_local_class(broken):
-    report = broken(extra=local("  - {id: ex:LeadTrustee, name: lead trustee, is_a: data trustee}\n"))
+    report = broken(extra=local("  - {id: class:LeadTrustee, name: lead trustee, is_a: data trustee}\n"))
     assert report.ok, messages(report)
     assert dgo.kind("lead trustee").dgo_ancestor == "steward"
 
 
 def test_untyped_parent_warns(broken):
-    report = broken(extra=local("  - {id: ex:KeyTerm, name: key term, is_a: glossary term}\n"))
+    report = broken(extra=local("  - {id: class:KeyTerm, name: key term, is_a: glossary term}\n"))
     assert report.ok, messages(report)
     assert any("no `type` field" in str(w) for w in report.warnings)
 
@@ -92,14 +92,14 @@ def test_untyped_parent_warns(broken):
 
 
 def test_unknown_parent(broken):
-    report = broken(extra=local("  - {id: ex:X, name: x, is_a: nonsense}\n"))
+    report = broken(extra=local("  - {id: class:X, name: x, is_a: nonsense}\n"))
     assert report.stage == "read"
-    assert any("more-local-classes.yaml: local_classes[0] (ex:X): is_a: nonsense is not" in m
+    assert any("more-local-classes.yaml: local_classes[0] (class:X): is_a: nonsense is not" in m
                for m in messages(report))
 
 
 def test_name_clashes_with_dgo(broken):
-    report = broken(extra=local("  - {id: ex:Owner, name: owner, is_a: steward}\n"))
+    report = broken(extra=local("  - {id: class:Owner, name: owner, is_a: steward}\n"))
     assert any("name 'owner' is already a DGO class" in m for m in messages(report))
 
 
@@ -108,8 +108,15 @@ def test_id_in_dgo_namespace(broken):
     assert any("more-local-classes.yaml" in m and "DGO's or DGO Atlas's namespace" in m for m in messages(report))
 
 
+def test_id_outside_the_local_class_namespace(broken):
+    report = broken(extra=local("  - {id: term:Mine, name: mine, is_a: steward}\n"))
+    assert report.stage == "read"
+    assert any("is not in the namespace for local_class ids, https://w3id.org/northfield/classes/; "
+               "write it as class:Mine" in m for m in messages(report))
+
+
 def test_cycle(broken):
-    report = broken(extra=local("  - {id: ex:A, name: a, is_a: b}\n  - {id: ex:B, name: b, is_a: a}\n"))
+    report = broken(extra=local("  - {id: class:A, name: a, is_a: b}\n  - {id: class:B, name: b, is_a: a}\n"))
     assert any("is_a loops back to 'a'" in m for m in messages(report))
 
 
@@ -130,7 +137,7 @@ def test_no_local_classes_leaves_the_release_as_is(broken):
 def test_convert_keeps_local_types(tmp_path):
     out = tmp_path / "g.json"
     assert dgo_atlas("convert", "--project", VARIANT, "-t", "json", "-o", out).exit_code == 0
-    assert "ex:DataTrustee" in out.read_text()
+    assert "class:DataTrustee" in out.read_text()
     ttl = tmp_path / "g.ttl"
     assert dgo_atlas("convert", "--project", VARIANT, "-t", "ttl", "-o", ttl).exit_code == 0
     graph = rdflib.Graph().parse(ttl)
@@ -154,7 +161,7 @@ def test_export_schema(tmp_path):
 def test_export_schema_to_stdout():
     result = dgo_atlas("export-schema", "--project", VARIANT, "--local-only")
     assert result.exit_code == 0
-    assert "class_uri: ex:DataTrustee" in result.stdout
+    assert "class_uri: class:DataTrustee" in result.stdout
 
 
 def test_export_local_only_without_local_classes(tmp_path):
@@ -173,6 +180,7 @@ def test_new_local_class(tmp_path):
     assert result.exit_code == 0, result.output
     created = tmp_path / "governance" / "local-classes" / "high-risk.yaml"
     assert "is_a: steward" in created.read_text()
+    assert "id: class:HighRisk" in created.read_text()  # in the local-class namespace
     assert dgo_atlas("validate", "--project", tmp_path).exit_code == 0
     assert "high risk" in dgo.named_types("governance role")
     # Once it exists, it can be a parent, and the same name can't be added twice.

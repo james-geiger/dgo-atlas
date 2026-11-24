@@ -4,40 +4,40 @@
 # `type` values are DGO class names (owner, chair, approved...), as DGO spells them.
 
 processes:
-  - id: org:data-governance
+  - id: process:data-governance
     label: Data governance at Example Organization
-  - id: org:research-data-governance
+  - id: process:research-data-governance
     label: Research data governance
-    part_of: org:data-governance
+    part_of: process:data-governance
 
 councils:
-  - id: org:research-council
+  - id: council:research-council
     label: Research Data Governance Council
-    participates_in: org:research-data-governance   # governs terms created within this process
+    participates_in: process:research-data-governance   # governs terms created within this process
     has_member:
-      - org:alex-rivera
-      - org:sam-chen
+      - person:alex-rivera
+      - person:sam-chen
 
 people:
-  - id: org:alex-rivera
+  - id: person:alex-rivera
     label: Alex Rivera
     title: Director of Research Analytics
     email: alex.rivera@example.org
-  - id: org:sam-chen
+  - id: person:sam-chen
     label: Sam Chen
     title: Clinical Research Manager
 
 organizations:
-  - id: org:research-office
+  - id: organization:research-office
     label: Office of Research
     email: research@example.org
     has_member:                   # people or organizations; listed on its page
-      - org:sam-chen
+      - person:sam-chen
 
 council_roles:
   - type: chair
-    role_of: org:alex-rivera
-    realized_in: org:research-data-governance
+    role_of: person:alex-rivera
+    realized_in: process:research-data-governance
   - type: documentation steward
-    role_of: org:sam-chen
-    realized_in: org:research-data-governance
+    role_of: person:sam-chen
+    realized_in: process:research-data-governance

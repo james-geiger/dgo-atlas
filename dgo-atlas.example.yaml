@@ -7,7 +7,7 @@
 # # `# ` are settings. To use a block (or the whole file), remove one `# ` from
 # # each of its lines (Cmd+/ or Ctrl+/ in most editors): the settings become
 # # YAML and the explanations stay comments. Only dgo_version, title and
-# # prefixes are required; leave out anything else to keep its default.
+# # iri_base are required; leave out anything else to keep its default.
 
 # # The Data Governance Ontology release to use, as its tag (e.g. "0.1.0"). Its
 # # schema is imported from the DGO repository's dist/dgo.yaml at that tag.
@@ -46,12 +46,75 @@
 # # person and organization pages. Set false to hide it.
 # show_identifiers: true
 
-# # The instance namespaces used in governance data, as `prefix: namespace`.
-# # (required)
+# # The namespace every id is minted in: a base you control and will keep
+# # stable, such as a w3id.org redirect (e.g. https://w3id.org/acme/). Each kind
+# # of object gets its own namespace under it (see `namespaces`), and each page
+# # is published at its IRI's path under the site, so one redirect from this
+# # base to the site resolves every IRI. Never change it once IRIs are
+# # published. (required; shown is an example, with no default)
+# iri_base: https://data.example.org/governance/
+
+# # Each kind's namespace and authoring prefix: objects of a kind are minted at
+# # <iri_base><iri_segment>/<name> and written <authoring_prefix>:<name>.
+# # iri_segment is part of every IRI, so never change it (or override a default)
+# # once IRIs are published; authoring_prefix is only how ids are written and
+# # may change at any time.
+# namespaces:
+#   # Objects in processes.
+#   process:
+#     iri_segment: processes
+#     authoring_prefix: process
+#   # Objects in councils.
+#   council:
+#     iri_segment: councils
+#     authoring_prefix: council
+#   # Objects in people.
+#   person:
+#     iri_segment: people
+#     authoring_prefix: person
+#   # Objects in organizations.
+#   organization:
+#     iri_segment: organizations
+#     authoring_prefix: organization
+#   # Objects in business_glossaries.
+#   glossary:
+#     iri_segment: glossaries
+#     authoring_prefix: glossary
+#   # Objects in domains.
+#   domain:
+#     iri_segment: domains
+#     authoring_prefix: domain
+#   # Objects in subject_areas.
+#   subject_area:
+#     iri_segment: areas
+#     authoring_prefix: area
+#   # Objects in glossary_terms.
+#   term:
+#     iri_segment: terms
+#     authoring_prefix: term
+#   # Objects in lifecycle_processes.
+#   lifecycle:
+#     iri_segment: processes
+#     authoring_prefix: process
+#   # Objects in data_stores, data_sets, data_elements.
+#   data:
+#     iri_segment: data
+#     authoring_prefix: data
+#   # Objects in sensitivity_levels, security_levels, regulations.
+#   classification:
+#     iri_segment: classifications
+#     authoring_prefix: classification
+#   # Objects in local_classes.
+#   local_class:
+#     iri_segment: classes
+#     authoring_prefix: class
+
+# # Extra prefixes, as `prefix: namespace`: those of the ontologies your
+# # semantic types come from, and any alias for one of your own namespaces. Each
+# # kind's authoring prefix is declared for you.
 # prefixes:
-#   # One entry per prefix your ids use; this one is an example, with no
-#   # default.
-#   org: https://data.example.org/governance/
+#   # No extra prefixes by default; this one is an example.
+#   bfo: http://purl.obolibrary.org/obo/BFO_
 
 # paths:
 #   # Directory of governance YAML files (searched recursively).
@@ -94,7 +157,7 @@
 # pages: {}
 # # No per-page settings by default. Each entry is keyed by an id, for example:
 # # pages:
-# #   org:research:
+# #   domain:research:
 # #     accent: "#2E7D6B"
 
 # # Replacement wording for the site, keyed by text key (e.g. `term.history:
@@ -419,6 +482,16 @@
 #   search.guide: Guide
 #
 #   content.on_this_page: On this page
+#
+#   local_class.eyebrow: Local class
+#   local_class.subclass_of: A kind of {parent}
+#   local_class.used_by: Used by
+#   local_class.unused: Nothing in the governance data is declared one yet.
+#   local_class.iri: IRI
+#
+#   redirect.title: "{label}"
+#   redirect.moved: "{label} is shown on another page:"
+#   redirect.continue: Go to {label}
 #
 #   not_found.title: Page not found
 #   not_found.eyebrow: Not found

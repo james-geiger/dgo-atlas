@@ -77,7 +77,7 @@ defaults. DGO Atlas's defaults use a neutral palette.
 
 | Stage | Module |
 | --- | --- |
-| Load and validate `dgo-atlas.yaml`, then load and check the DGO release | `config.py`, `dgo.py` |
+| Load and validate `dgo-atlas.yaml` and its namespaces, then load and check the DGO release | `config.py`, `namespaces.py`, `dgo.py` |
 | Read and merge the data files, and turn readable `type` names into CURIEs | `loader.py`, `dgo.py` |
 | Shape (linkml-validate against the template), references and rules | `validate.py` |
 | Derive the view model (`schema/viewmodel.yaml`, `dgoatlas:`) | `derive.py`, `semantic.py` |
@@ -92,6 +92,14 @@ Rules to keep:
   (`derive.unpublished_reason`). A term may go straight to approved. There are
   no "unrecorded" or "rejected" pages; unpublished terms and links to them
   are dropped, and the build prints a note.
+- **Pages live at their IRIs.** Each kind of object is minted in its own
+  namespace, `<iri_base><iri_segment>/`, and its page path is always the IRI
+  less `iri_base`, plus `.html` (`namespaces.py`). The defaults are
+  annotations on the template's lists; `namespaces:` overrides them. Never
+  configure a page path, rename a page to avoid a clash, or key anything on
+  a prefix name: compare expanded IRIs, and use the canonical CURIE
+  (`Namespaces.canonical`). An object shown on another page gets a redirect
+  page at its IRI.
 - **State.** The term-state rule is provisional and lives only in
   `derive.term_state`. A term has no status field; its state comes from its
   lifecycle boundaries.

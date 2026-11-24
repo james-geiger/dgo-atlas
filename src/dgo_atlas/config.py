@@ -15,6 +15,7 @@ from pathlib import Path
 import yaml
 
 from . import dgo, local_classes
+from .namespaces import NamespaceError, Namespaces
 from .models.config import Brand, Paths, SiteConfig
 from .text import Text, TextError
 from .resources import CONFIG_SCHEMA
@@ -77,19 +78,27 @@ class Project:
         return self.config.brand or Brand()
 
     @property
+    def namespaces(self) -> Namespaces:
+        """Where each kind of object is minted, and every prefix ids may use (raises NamespaceError)."""
+        declared = {key: value if isinstance(value, str) else value.namespace
+                    for key, value in (self.config.prefixes or {}).items()}
+        overrides = {key: {"iri_segment": value.iri_segment, "authoring_prefix": value.authoring_prefix}
+                     for key, value in (self.config.namespaces or {}).items()}
+        return Namespaces.build(str(self.config.iri_base), overrides, declared)
+
+    @property
     def prefixes(self) -> dict[str, str]:
-        out = {}
-        for key, value in (self.config.prefixes or {}).items():
-            out[key] = value if isinstance(value, str) else value.namespace
-        return out
+        return self.namespaces.prefixes
 
     @property
     def accents(self) -> dict[str, str]:
+        """Accent colours by page, keyed by the canonical id of what the page is about."""
+        ns = self.namespaces
         out = {}
         for key, value in (self.config.pages or {}).items():
             accent = value if isinstance(value, str) else value.accent
             if accent:
-                out[key] = accent
+                out[ns.canonical(key)] = accent
         return out
 
     @property
@@ -125,7 +134,7 @@ def load(path: Path) -> Project:
         raise ConfigError(f"{path.name}:\n" + "\n".join(f"  - {p}" for p in problems))
     # LinkML lets a dict-inlined list leave out each value's key slot
     # (`pages: {org:x: {accent: ...}}`); the generated pydantic model wants it.
-    for slot, key in (("pages", "about"), ("prefixes", "prefix"), ("text", "key")):
+    for slot, key in (("pages", "about"), ("namespaces", "kind"), ("prefixes", "prefix"), ("text", "key")):
         for name, value in (raw.get(slot) or {}).items():
             if isinstance(value, dict):
                 value.setdefault(key, name)
@@ -135,9 +144,22 @@ def load(path: Path) -> Project:
     except TextError as exc:
         raise ConfigError(f"{path.name}:\n{exc}") from exc
     try:
+        namespaces = project.namespaces
+    except NamespaceError as exc:
+        raise ConfigError(f"{path.name}:\n" + "\n".join(f"  - {p}" for p in str(exc).splitlines())) from exc
+    try:
         dgo.use(project.dgo)
     except dgo.DgoError as exc:
         raise ConfigError(f"{path.name}: {exc}") from exc
+    # DGO's own prefixes are declared in the template too, so a project's can't redefine one.
+    release = dgo.release_prefixes(project.dgo.location)
+    declared = dict(namespaces.declared)
+    clashes = [f"{'prefixes' if name in declared else 'namespaces: authoring_prefix'} {name} is already "
+               f"DGO's prefix for {release[name]}; choose another name"
+               for name, uri in namespaces.prefixes.items() if name in release and release[name] != uri]
+    if clashes:
+        raise ConfigError(f"{path.name}:\n" + "\n".join(f"  - {p}" for p in clashes))
+    dgo.with_namespaces(namespaces)
     # So the editor schemas and exports know them; validation reports any problem.
-    local_classes.load(project.data_dir, project.root, project.prefixes)
+    local_classes.load(project.data_dir, project.root, namespaces)
     return project

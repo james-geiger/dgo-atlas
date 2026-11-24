@@ -19,95 +19,95 @@
 # --- governance ---------------------------------------------------------------
 
 processes:
-  - id: ex:northfield-dg
+  - id: process:northfield-dg
     label: Data Governance at Northfield University
-  - id: ex:research-dg
+  - id: process:research-dg
     label: Research Data Governance
-    part_of: ex:northfield-dg
+    part_of: process:northfield-dg
 
 councils:
-  - id: ex:research-committee
+  - id: council:research-committee
     label: Research Data Governance Committee
-    participates_in: ex:research-dg        # the committee governs what happens in research data governance
+    participates_in: process:research-dg        # the committee governs what happens in research data governance
     has_member:
-      - ex:morgan-ellis
+      - person:morgan-ellis
 
 people:
-  - id: ex:morgan-ellis
+  - id: person:morgan-ellis
     label: Morgan Ellis
     title: Director, Data Governance
     email: morgan.ellis@example.edu
-  - id: ex:jordan-price
+  - id: person:jordan-price
     label: Jordan Price
     title: Clinical Trials Manager
     email: jordan.price@example.edu
 
 organizations:
-  - id: ex:office-of-research
+  - id: organization:office-of-research
     label: Office of Research
     has_member:                          # organizations can be members too (DGO 0.1.1)
-      - ex:cto
-      - ex:spo
-  - id: ex:cto
+      - organization:cto
+      - organization:spo
+  - id: office:cto   # an alias; the site shows it as organization:cto
     label: Clinical Trials Office
     email: cto@example.org
     has_member:
-      - ex:jordan-price
+      - person:jordan-price
 
 council_roles:
   - type: dgo:DGO_00000006           # chair
-    role_of: ex:morgan-ellis
-    realized_in: ex:research-dg
+    role_of: person:morgan-ellis
+    realized_in: process:research-dg
 
 # --- glossary -----------------------------------------------------------------
 
 business_glossaries:
-  - id: ex:business-glossary
+  - id: glossary:business-glossary
     label: Business Glossary
 
 domains:
-  - id: ex:research
+  - id: domain:research
     label: Research
-    part_of: ex:business-glossary
+    part_of: glossary:business-glossary
 
 subject_areas:
-  - id: ex:clinical-research
+  - id: area:clinical-research
     label: Clinical Research
-    part_of: ex:research
+    part_of: domain:research
 
 glossary_terms:
-  - id: ex:clinical-trial
+  - id: term:clinical-trial
     label: clinical trial
     pref_label: Clinical Trial       # shown to readers when it differs from the label
     alt_labels:
       - interventional study
     definition: a study in which participants are prospectively assigned to a treatment
     definition_source: https://grants.nih.gov/policy/clinical-trials/definition.htm
-    part_of: ex:business-glossary        # containment: every term is part of exactly one glossary
-    in_subject_area: ex:clinical-research   # classification; its domain is one step further
+    part_of: glossary:business-glossary        # containment: every term is part of exactly one glossary
+    in_subject_area: area:clinical-research   # classification; its domain is one step further
     broader:
-      - ex:clinical-study
+      - term:clinical-study
     semantic_type: bfo:0000015       # what the term denotes (BFO "process"), not what the term is
     responsibilities:                # current assignments, held with respect to this term
       - type: dgo:DGO_00000012       # owner
-        role_of: ex:cto
+        role_of: organization:cto
       - type: dgo:DGO_00000013       # steward (a council can bear a governance role)
-        role_of: ex:research-committee
+        role_of: council:research-committee
 
-  - id: ex:clinical-study
+  - id: term:clinical-study
     label: clinical study
     definition: a research study involving human participants
     related:
-      - ex:clinical-trial            # written once; read from both terms
-    part_of: ex:business-glossary
-    in_subject_area: ex:clinical-research
+      - term:clinical-trial            # written once; read from both terms
+    part_of: glossary:business-glossary
+    in_subject_area: area:clinical-research
 
-  - id: ex:clinical-investigation
+  - id: term:clinical-investigation
     label: clinical investigation
     definition: a study of a treatment in human participants
-    part_of: ex:business-glossary
-    in_subject_area: ex:clinical-research
-    replaced_by: ex:clinical-trial   # its successor; deprecated by ex:clinical-investigation-deprecation
+    part_of: glossary:business-glossary
+    in_subject_area: area:clinical-research
+    replaced_by: term:clinical-trial   # its successor; deprecated by process:clinical-investigation-deprecation
 
 definition_sources:              # id is the source's IRI; label describes it
   - id: https://grants.nih.gov/policy/clinical-trials/definition.htm
@@ -116,43 +116,43 @@ definition_sources:              # id is the source's IRI; label describes it
 # --- how the terms came to be -------------------------------------------------
 
 lifecycle_processes:
-  - id: ex:clinical-trial-creation
+  - id: process:clinical-trial-creation
     type: creation
     label: Creation of the term "clinical trial"
-    has_output: ex:clinical-trial
-    part_of: ex:research-dg                # created within research data governance, so governed by its committee
-  - id: ex:clinical-trial-modification
+    has_output: term:clinical-trial
+    part_of: process:research-dg                # created within research data governance, so governed by its committee
+  - id: process:clinical-trial-modification
     type: modification
     label: Addition of a definition source to "clinical trial"
-    has_output: ex:clinical-trial    # same term, same id: a modification changes it, not replaces it
-    part_of: ex:research-dg
-  - id: ex:clinical-investigation-deprecation
+    has_output: term:clinical-trial    # same term, same id: a modification changes it, not replaces it
+    part_of: process:research-dg
+  - id: process:clinical-investigation-deprecation
     type: deprecation
     label: Deprecation of the term "clinical investigation"
-    has_output: ex:clinical-investigation
-    part_of: ex:research-dg                # deprecated once this process reaches its approved boundary
+    has_output: term:clinical-investigation
+    part_of: process:research-dg                # deprecated once this process reaches its approved boundary
 
 status_boundaries:        # quote dates: LinkML validation rejects unquoted YAML dates
   - type: dgo:DGO_00000024           # drafted (proposed)
-    part_of: ex:clinical-trial-creation
+    part_of: process:clinical-trial-creation
     occurred_on: "2026-09-25"
   - type: dgo:DGO_00000025           # submitted for review
-    part_of: ex:clinical-trial-creation
+    part_of: process:clinical-trial-creation
     occurred_on: "2026-09-27"
   - type: dgo:DGO_00000026           # approved
-    part_of: ex:clinical-trial-creation
+    part_of: process:clinical-trial-creation
     occurred_on: "2026-09-28"
 
   - type: dgo:DGO_00000024           # modification drafted
-    part_of: ex:clinical-trial-modification
+    part_of: process:clinical-trial-modification
     occurred_on: "2026-10-05"
   - type: dgo:DGO_00000026           # modification approved
-    part_of: ex:clinical-trial-modification
+    part_of: process:clinical-trial-modification
     occurred_on: "2026-10-12"
 
   - type: dgo:DGO_00000024           # deprecation drafted
-    part_of: ex:clinical-investigation-deprecation
+    part_of: process:clinical-investigation-deprecation
     occurred_on: "2026-10-05"
   - type: dgo:DGO_00000026           # deprecation approved: the term is now deprecated
-    part_of: ex:clinical-investigation-deprecation
+    part_of: process:clinical-investigation-deprecation
     occurred_on: "2026-10-12"

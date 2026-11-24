@@ -1,21 +1,21 @@
 glossary_terms:
-  - id: org:clinical-study
+  - id: term:clinical-study
     label: clinical study
     definition: A research study involving human participants.
-    part_of: org:glossary
-    in_subject_area: org:clinical-research
+    part_of: glossary:glossary
+    in_subject_area: area:clinical-research
     responsibilities:
       - type: subject matter expert
-        role_of: org:sam-chen
+        role_of: person:sam-chen
 
 lifecycle_processes:
-  - id: org:clinical-study-creation
+  - id: process:clinical-study-creation
     type: creation
     label: Creation of "clinical study"
-    has_output: org:clinical-study
-    part_of: org:research-data-governance
+    has_output: term:clinical-study
+    part_of: process:research-data-governance
 
 status_boundaries:
   - type: drafted              # the term shows as proposed until it is approved
-    part_of: org:clinical-study-creation
+    part_of: process:clinical-study-creation
     occurred_on: "2026-09-20"

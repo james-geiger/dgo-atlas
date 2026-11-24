@@ -50,15 +50,15 @@ def project(
 def local_class(
     name: Annotated[str, typer.Argument(help="The class's name, used as a `type` value, e.g. \"data trustee\".")],
     is_a: Annotated[str, typer.Option("--is-a", help="Its parent: a DGO class (name or CURIE) or a local class.")],
-    id: Annotated[str | None, typer.Option(help="Its id. Default: the first prefix in dgo-atlas.yaml and the "
-                                                "name in CamelCase.")] = None,
+    id: Annotated[str | None, typer.Option(help="Its id. Default: the local-class authoring prefix and "
+                                                "the name in CamelCase.")] = None,
     description: Annotated[str | None, typer.Option(help="What makes something one.")] = None,
     project: ProjectOption = Path("."),
 ) -> None:
     """Add a local class: your own subclass of a DGO class, in its own governance file."""
     loaded = open_project(project)
     try:
-        path = local_classes.scaffold(loaded.data_dir, name, is_a, loaded.prefixes, id=id, description=description)
+        path = local_classes.scaffold(loaded.data_dir, name, is_a, loaded.namespaces, id=id, description=description)
     except ValueError as exc:
         error(str(exc))
         raise typer.Exit(1) from None

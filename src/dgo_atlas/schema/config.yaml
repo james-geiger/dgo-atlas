@@ -29,6 +29,8 @@ classes:
       - contact_email
       - base_path
       - show_identifiers
+      - iri_base
+      - namespaces
       - prefixes
       - paths
       - repository
@@ -37,10 +39,17 @@ classes:
       - pages
       - text
 
+  KindNamespace:
+    description: >-
+      Where one kind of object is minted and how its ids are written, keyed
+      by kind (e.g. `organization: {iri_segment: offices, authoring_prefix:
+      office}`). Either field may be left out to keep its default.
+    slots: [kind, iri_segment, authoring_prefix]
+
   Prefix:
     description: >-
-      An instance namespace used in governance data, written as
-      `prefix: namespace` (e.g. `acme: https://data.acme.example/`).
+      A prefix ids or semantic types may use, written as `prefix: namespace`
+      (e.g. `bfo: http://purl.obolibrary.org/obo/BFO_`).
     slots: [prefix, namespace]
 
   Paths:
@@ -107,12 +116,42 @@ slots:
       Where the site is served from: "/" for a custom domain, "/<repo>/" for
       a GitHub Pages project site. Only the 404 page uses it.
     ifabsent: string(/)
+  iri_base:
+    description: >-
+      The namespace every id is minted in: a base you control and will keep
+      stable, such as a w3id.org redirect (e.g. https://w3id.org/acme/). Each
+      kind of object gets its own namespace under it (see `namespaces`), and
+      each page is published at its IRI's path under the site, so one
+      redirect from this base to the site resolves every IRI. Never change it
+      once IRIs are published.
+    range: uri
+    required: true
+    pattern: "^https?://"
+  namespaces:
+    description: >-
+      Each kind's namespace and authoring prefix: objects of a kind are minted
+      at <iri_base><iri_segment>/<name> and written <authoring_prefix>:<name>.
+      iri_segment is part of every IRI, so never change it (or override a
+      default) once IRIs are published; authoring_prefix is only how ids are
+      written and may change at any time.
+    range: KindNamespace
+    multivalued: true
+    inlined: true
+  kind:
+    identifier: true
+  iri_segment:
+    description: The path segment after iri_base for this kind's IRIs (permanent once published).
+  authoring_prefix:
+    description: The prefix this kind's ids are written with (may change at any time).
+    range: ncname
   prefixes:
-    description: "The instance namespaces used in governance data, as `prefix: namespace`."
+    description: >-
+      Extra prefixes, as `prefix: namespace`: those of the ontologies your
+      semantic types come from, and any alias for one of your own namespaces.
+      Each kind's authoring prefix is declared for you.
     range: Prefix
     multivalued: true
     inlined: true
-    required: true
   prefix:
     identifier: true
     range: ncname

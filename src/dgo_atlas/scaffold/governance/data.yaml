@@ -9,17 +9,17 @@
 # definition gives its values their meaning, one term per element.
 
 sensitivity_levels:              # your own scheme; higher severity = more harm on disclosure
-  - id: org:internal
+  - id: classification:internal
     label: Internal
     definition: data whose disclosure outside the organization would cause limited harm
     severity: 1
-  - id: org:confidential
+  - id: classification:confidential
     label: Confidential
     definition: data whose disclosure would cause serious harm
     severity: 2
 
 security_levels:                 # higher severity = stricter controls
-  - id: org:role-based
+  - id: classification:role-based
     label: Role-based
     definition: access is granted to roles approved by the data owner
     severity: 1
@@ -27,61 +27,61 @@ security_levels:                 # higher severity = stricter controls
 regulations: []                  # regulatory categories, e.g. PHI (HIPAA); unordered
 
 data_stores:
-  - id: org:trial-system
+  - id: data:trial-system
     label: Clinical trial management system
     responsibilities:
       - type: custodian
-        role_of: org:research-office
+        role_of: organization:research-office
 
 data_sets:
-  - id: org:trial-protocols      # no derived_from: foundational
+  - id: data:trial-protocols      # no derived_from: foundational
     label: Trial protocols
     stored_in:
-      - org:trial-system
+      - data:trial-system
     in_subject_area:
-      - org:clinical-research
-    sensitivity: org:confidential
-    security_level: org:role-based
+      - area:clinical-research
+    sensitivity: classification:confidential
+    security_level: classification:role-based
     responsibilities:
       - type: owner
-        role_of: org:research-office
+        role_of: organization:research-office
 
-  - id: org:trial-reporting      # built from the protocols, and certified below
+  - id: data:trial-reporting      # built from the protocols, and certified below
     label: Trial reporting
     stored_in:
-      - org:trial-system
+      - data:trial-system
     in_subject_area:
-      - org:clinical-research
+      - area:clinical-research
     derived_from:
-      - org:trial-protocols
-    sensitivity: org:confidential
-    security_level: org:role-based
+      - data:trial-protocols
+    sensitivity: classification:confidential
+    security_level: classification:role-based
 
 data_elements:                   # each is part of exactly one data set
-  - id: org:protocol-status
+  - id: data:protocol-status
     label: protocol status
-    part_of: org:trial-protocols
-    # represents: org:protocol-status-term   # the glossary term that gives its values meaning
-  - id: org:reporting-status
+    part_of: data:trial-protocols
+    # represents: term:protocol-status   # the glossary term that gives its values meaning
+  - id: data:reporting-status
     label: protocol status
-    part_of: org:trial-reporting
+    part_of: data:trial-reporting
     derived_from:
-      - org:protocol-status
+      - data:protocol-status
 
 # A data set is certified by a creation of it, just as a term is created: the
 # data set is certified once the creation reaches an approved status boundary,
 # on that date.
 lifecycle_processes:
-  - id: org:trial-reporting-certification
+  - id: process:trial-reporting-certification
     type: creation
     label: Certification of "Trial reporting"
-    has_output: org:trial-reporting
-    part_of: org:research-data-governance   # so certified by that process's council
+    has_output: data:trial-reporting
+    part_of: process:research-data-governance   # so certified by that process's council
 
 status_boundaries:
   - type: drafted
-    part_of: org:trial-reporting-certification
+    part_of: process:trial-reporting-certification
     occurred_on: "2026-01-12"
   - type: approved
-    part_of: org:trial-reporting-certification
+    part_of: process:trial-reporting-certification
     occurred_on: "2026-01-20"

@@ -24,6 +24,26 @@
   }
   var THEME_KEY = "dgo-atlas-theme";
 
+  /* ---------- Sticky header height ---------- */
+
+  /* Anchor jumps stop below the sticky header (scroll-padding-top in
+     site.css). Its height changes as it wraps, so it is measured and kept
+     current; a page opened at a fragment is re-scrolled once it is known. */
+  (function () {
+    var header = document.querySelector(".header");
+    if (!header) return;
+    var root = document.documentElement;
+    function measure() {
+      root.style.setProperty("--header-height", Math.ceil(header.getBoundingClientRect().height) + "px");
+    }
+    measure();
+    if (window.ResizeObserver) new ResizeObserver(measure).observe(header);
+    else window.addEventListener("resize", measure);
+    var id = decodeURIComponent(location.hash.slice(1));
+    var target = id && document.getElementById(id);
+    if (target) target.scrollIntoView({ block: "start", behavior: "instant" });
+  })();
+
   /* ---------- Announcements ---------- */
 
   /* The page's one polite live region (base.html.j2). Emptied first so the

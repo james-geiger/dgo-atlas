@@ -8,204 +8,204 @@
 # "protocol open date" in both sets, so the lineage carries their meaning.
 
 organizations:
-  - id: ex:research-computing
+  - id: organization:research-computing
     label: Research Computing
 
 # --- classification: the organization's own scheme ---------------------------
 
 sensitivity_levels:              # higher severity = more harm on disclosure
-  - id: ex:public
+  - id: data:sensitivity#public
     label: Public
     definition: data that may be shared with anyone
     severity: 1
-  - id: ex:internal
+  - id: data:sensitivity#internal
     label: Internal
     definition: data whose disclosure outside the university would cause limited harm
     severity: 2
-  - id: ex:confidential
+  - id: data:sensitivity#confidential
     label: Confidential
     definition: data whose disclosure would cause serious harm to people or the university
     severity: 3
 
 security_levels:                 # higher severity = stricter controls
-  - id: ex:open-access
+  - id: data:security#open-access
     label: Open
     definition: no access control beyond the university network
     severity: 1
-  - id: ex:role-based
+  - id: data:security#role-based
     label: Role-based
     definition: access is granted to roles approved by the data owner
     severity: 2
 
 regulations:                     # unordered: data may fall under several
-  - id: ex:phi
+  - id: data:regulations#phi
     label: PHI (HIPAA)
     definition: protected health information under the HIPAA Privacy Rule
-  - id: ex:ferpa
+  - id: data:regulations#ferpa
     label: FERPA
     definition: education records under the Family Educational Rights and Privacy Act
 
 # --- stores, sets and elements -----------------------------------------------
 
 data_stores:                     # the operational systems, not their schemas
-  - id: ex:ctms
+  - id: data:ctms
     label: Clinical Trial Management System
     description: The system of record for protocols and enrollment.
     responsibilities:
       - type: custodian
-        role_of: ex:research-computing
-  - id: ex:warehouse
+        role_of: organization:research-computing
+  - id: data:warehouse
     label: Research Data Warehouse
     responsibilities:
       - type: custodian
-        role_of: ex:research-computing
+        role_of: organization:research-computing
 
 data_sets:
-  - id: ex:ctms-protocols        # derived from nothing: foundational, so not certified
+  - id: data:ctms-protocols        # derived from nothing: foundational, so not certified
     label: Trial management protocols
     stored_in:
-      - ex:ctms
+      - data:ctms
     in_subject_area:             # its domain (Research) follows from the subject area
-      - ex:clinical-research
-    sensitivity: ex:confidential
-    security_level: ex:role-based
+      - area:clinical-research
+    sensitivity: data:sensitivity#confidential
+    security_level: data:security#role-based
     regulatory_categories:
-      - ex:phi
+      - data:regulations#phi
     responsibilities:
       - type: owner
-        role_of: ex:cto
+        role_of: organization:cto
 
-  - id: ex:warehouse-studies
+  - id: data:warehouse-studies
     label: Research studies
     description: Certified, consumer-facing protocol data.
     stored_in:
-      - ex:warehouse
+      - data:warehouse
     in_subject_area:
-      - ex:clinical-research
-      - ex:sponsored-programs
+      - area:clinical-research
+      - area:sponsored-programs
     derived_from:
-      - ex:ctms-protocols
-    sensitivity: ex:confidential
-    security_level: ex:role-based
+      - data:ctms-protocols
+    sensitivity: data:sensitivity#confidential
+    security_level: data:security#role-based
     regulatory_categories:
-      - ex:phi
+      - data:regulations#phi
     responsibilities:
       - type: owner
-        role_of: ex:cto
+        role_of: organization:cto
       - type: steward
-        role_of: ex:research-committee
+        role_of: council:research-committee
 
-  - id: ex:study-dashboard
+  - id: data:study-dashboard
     label: Study dashboard extract
     stored_in:
-      - ex:warehouse
+      - data:warehouse
     in_subject_area:
-      - ex:clinical-research
+      - area:clinical-research
     derived_from:
-      - ex:warehouse-studies
-    sensitivity: ex:internal
-    security_level: ex:role-based
+      - data:warehouse-studies
+    sensitivity: data:sensitivity#internal
+    security_level: data:security#role-based
 
 data_elements:                   # each element is part of exactly one data set
-  - id: ex:ctms-protocol-status
+  - id: data:ctms-protocol-status
     label: protocol status
     description: The protocol's current status code as entered by the study coordinator.
-    part_of: ex:ctms-protocols
-    represents: ex:protocol-status   # one term per column: what its values mean
-  - id: ex:ctms-open-date
+    part_of: data:ctms-protocols
+    represents: term:protocol-status   # one term per column: what its values mean
+  - id: data:ctms-open-date
     label: open date
-    part_of: ex:ctms-protocols
-    represents: ex:protocol-open-date
-    sensitivity: ex:internal     # an element may carry its own, lower, level
-  - id: ex:warehouse-protocol-status
+    part_of: data:ctms-protocols
+    represents: term:protocol-open-date
+    sensitivity: data:sensitivity#internal     # an element may carry its own, lower, level
+  - id: data:warehouse-protocol-status
     label: protocol status
     description: >-
       The protocol's status, mapped from the trial management system's codes to
       the glossary's status values and refreshed nightly.
-    part_of: ex:warehouse-studies
-    represents: ex:protocol-status   # same meaning downstream
+    part_of: data:warehouse-studies
+    represents: term:protocol-status   # same meaning downstream
     derived_from:
-      - ex:ctms-protocol-status
+      - data:ctms-protocol-status
     responsibilities:
       - type: subject matter expert
-        role_of: ex:jordan-price
-  - id: ex:warehouse-open-date
+        role_of: person:jordan-price
+  - id: data:warehouse-studies/open-date
     label: open date
     description: The date the protocol opened to accrual; empty until it opens.
-    part_of: ex:warehouse-studies
-    represents: ex:protocol-open-date
+    part_of: data:warehouse-studies
+    represents: term:protocol-open-date
     derived_from:
-      - ex:ctms-open-date
-  - id: ex:dashboard-status     # no term recorded for what its values mean
+      - data:ctms-open-date
+  - id: data:dashboard-status     # no term recorded for what its values mean
     label: study status
-    part_of: ex:study-dashboard
+    part_of: data:study-dashboard
     derived_from:
-      - ex:warehouse-protocol-status
+      - data:warehouse-protocol-status
 
 # --- the terms the data represents ----------------------------------------------
 
 glossary_terms:
-  - id: ex:protocol-status
+  - id: term:protocol-status
     label: protocol status
     definition: where a study protocol stands in its life, from development through closure
-    part_of: ex:business-glossary
-    in_subject_area: ex:clinical-research
-  - id: ex:protocol-open-date
+    part_of: glossary:business-glossary
+    in_subject_area: area:clinical-research
+  - id: term:protocol-open-date
     label: protocol open date
     definition: the date a study protocol opened to accrual
-    part_of: ex:business-glossary
-    in_subject_area: ex:clinical-research
+    part_of: glossary:business-glossary
+    in_subject_area: area:clinical-research
 
 # --- certification and creation -------------------------------------------------
 # A data set is certified by a creation of it, as a term is created: DGO's
 # lifecycle processes are the same for both, and has_output says which.
 
 lifecycle_processes:
-  - id: ex:warehouse-studies-certification
+  - id: process:warehouse-studies-certification
     type: creation
     label: Certification of "Research studies"
-    has_output: ex:warehouse-studies
-    part_of: ex:research-dg      # certified within research data governance, so by its committee
-  - id: ex:study-dashboard-certification
+    has_output: data:warehouse-studies
+    part_of: process:research-dg      # certified within research data governance, so by its committee
+  - id: data:study-dashboard#certification
     type: creation
     label: Certification of "Study dashboard extract"
-    has_output: ex:study-dashboard
-    part_of: ex:research-dg
-  - id: ex:protocol-status-creation
+    has_output: data:study-dashboard
+    part_of: process:research-dg
+  - id: process:protocol-status-creation
     type: creation
     label: Creation of the term "protocol status"
-    has_output: ex:protocol-status
-    part_of: ex:research-dg
-  - id: ex:protocol-open-date-creation
+    has_output: term:protocol-status
+    part_of: process:research-dg
+  - id: process:protocol-open-date-creation
     type: creation
     label: Creation of the term "protocol open date"
-    has_output: ex:protocol-open-date
-    part_of: ex:research-dg
+    has_output: term:protocol-open-date
+    part_of: process:research-dg
 
 status_boundaries:
   - type: drafted
-    part_of: ex:protocol-status-creation
+    part_of: process:protocol-status-creation
     occurred_on: "2026-10-01"
   - type: approved
-    part_of: ex:protocol-status-creation
+    part_of: process:protocol-status-creation
     occurred_on: "2026-10-08"
   - type: drafted
-    part_of: ex:protocol-open-date-creation
+    part_of: process:protocol-open-date-creation
     occurred_on: "2026-10-01"
   - type: approved
-    part_of: ex:protocol-open-date-creation
+    part_of: process:protocol-open-date-creation
     occurred_on: "2026-10-08"
 
   - type: drafted
-    part_of: ex:warehouse-studies-certification
+    part_of: process:warehouse-studies-certification
     occurred_on: "2026-10-14"
   - type: submitted for review
-    part_of: ex:warehouse-studies-certification
+    part_of: process:warehouse-studies-certification
     occurred_on: "2026-10-16"
   - type: approved               # the set is certified on this date
-    part_of: ex:warehouse-studies-certification
+    part_of: process:warehouse-studies-certification
     occurred_on: "2026-10-20"
 
   - type: drafted                # still open: the dashboard is not certified yet
-    part_of: ex:study-dashboard-certification
+    part_of: data:study-dashboard#certification
     occurred_on: "2026-10-22"

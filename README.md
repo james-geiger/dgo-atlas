@@ -29,7 +29,8 @@ terms, owners, stewards, councils and approval steps, and how they relate to
 each other. You write in everyday words like `owner` or `approved`, and
 Atlas translates them into DGO's standard definitions. That means other
 tools can read and reuse your glossary without guessing what your fields
-mean.
+mean. Each term also gets a permanent web address, and its page is published
+at that address.
 
 ## Get started
 
@@ -49,12 +50,12 @@ Here is a small part of an example term:
 
 ```yaml
 glossary_terms:
-  - id: org:clinical-trial
+  - id: term:clinical-trial
     label: clinical trial
     definition: A research study in which participants are assigned to interventions...
     responsibilities:
       - type: owner
-        role_of: org:research-office
+        role_of: organization:research-office
 ```
 
 ## Everyday commands

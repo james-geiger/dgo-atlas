@@ -24,7 +24,7 @@ classes:
     tree_root: true
     description: Every page of one site.
     slots: [glossaries, domains, subject_areas, terms, councils, agents, processes,
-            data_stores, data_sets, data_elements, classification_levels]
+            data_stores, data_sets, data_elements, classification_levels, local_classes, redirects]
 
   Page:
     abstract: true
@@ -87,6 +87,7 @@ classes:
       - governing_councils
       - pending_changes
       - history
+      - history_anchors
       - successor
       - predecessors
       - broader
@@ -128,7 +129,7 @@ classes:
 
   HistoryEntry:
     description: One status boundary of one of a term's or data set's lifecycle processes.
-    slots: [occurred_on, process, process_kind, process_label, boundary_kind, boundary_label]
+    slots: [occurred_on, process, process_kind, process_label, boundary_kind, boundary_label, anchor]
     slot_usage:
       process: { range: Change, inlined: true }
 
@@ -204,6 +205,7 @@ classes:
       - certified_on
       - certifying_councils
       - history
+      - history_anchors
       - source_file
     slot_usage:
       data_stores: { range: Ref, inlined: true, inlined_as_list: true }
@@ -238,6 +240,27 @@ classes:
     slot_usage:
       definition: { required: false }
 
+  LocalClassPage:
+    is_a: Page
+    description: One of the implementer's local classes, at its class IRI.
+    slots: [class_description, parent_label, parent_iri, parent_url, used_by]
+
+  Redirect:
+    description: >-
+      A page at the IRI of something shown on another page (a data
+      governance process on the governance page, a lifecycle process in its
+      term's or data set's history, a classification level on the
+      classification page), so every IRI in the project's namespace
+      resolves. IRIs that differ only in their fragment share one page, which
+      sends each fragment on with `fragments`.
+    slots: [about, iri, url, label, target, fragments]
+    slot_usage:
+      iri: { description: "The IRI the page is at (without any fragment)." }
+
+  RedirectFragment:
+    description: Where a redirect page sends one fragment of its IRI.
+    slots: [fragment, target]
+
 slots:
   about:
     description: The CURIE of the governed object this page or link is about.
@@ -248,7 +271,9 @@ slots:
     range: uri
     required: true
   url:
-    description: Site-relative path of the page, e.g. terms/clinical-trial.html.
+    description: >-
+      Site-relative path of the page, e.g. terms/clinical-trial.html: its
+      IRI less iri_base, plus .html (see namespaces.py).
   label:
     description: The display label.
     required: true
@@ -290,6 +315,14 @@ slots:
   governing_councils: { range: Ref, multivalued: true, inlined_as_list: true }
   pending_changes: { range: Change, multivalued: true, inlined_as_list: true }
   history: { range: HistoryEntry, multivalued: true, inlined_as_list: true }
+  anchor:
+    description: >-
+      The id of this entry on the page, from its process's IRI: the fragment of
+      a process minted on its output (term:x#creation), else its local name.
+      Only the newest entry of each process has one.
+  history_anchors:
+    description: Anchors of lifecycle processes with no history entry yet, placed on the history heading.
+    multivalued: true
   successor: { range: Ref, inlined: true }
   predecessors:
     description: Terms whose replaced_by is this term.
@@ -470,6 +503,32 @@ slots:
   axis: { range: ClassificationAxis, required: true }
   severity: { range: integer }
   children: { range: Ref, multivalued: true, inlined_as_list: true }
+
+  local_classes: { range: LocalClassPage, multivalued: true, inlined_as_list: true }
+  redirects: { range: Redirect, multivalued: true, inlined_as_list: true }
+  fragments: { range: RedirectFragment, multivalued: true, inlined_as_list: true }
+  fragment:
+    description: An IRI fragment, without the '#'.
+    required: true
+  class_description:
+    description: What makes something a member of the local class.
+  parent_label:
+    description: The name of the class it is a subclass of (DGO's, or another local class's).
+    required: true
+  parent_iri:
+    description: The IRI of the class it is a subclass of.
+    range: uri
+    required: true
+  parent_url:
+    description: The parent's page, when the parent is another local class.
+  used_by:
+    description: The terms, councils and agents whose data uses the local class as a `type`.
+    range: Ref
+    multivalued: true
+    inlined_as_list: true
+  target:
+    description: The site-relative page (and anchor) a redirect leads to.
+    required: true
 
 enums:
   TermState:

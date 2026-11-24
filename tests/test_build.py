@@ -52,7 +52,7 @@ def test_term_page(site):
     assert "Clinical Trial" in html
     assert "Approved definition" in html
     assert "Change under review" in html  # the open modification
-    assert "https://w3id.org/dgo/data/clinical-trial" in html  # expanded IRI
+    assert "https://w3id.org/northfield/terms/clinical-trial" in html  # expanded IRI
     assert 'href="https://w3id.org/dgo/DGO_00000019"' in html  # the kind links to its DGO class IRI
 
 

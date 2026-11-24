@@ -3,27 +3,27 @@
 # on the same day.
 
 lifecycle_processes:
-  - id: ex:clinical-trial-modification-2
+  - id: process:clinical-trial-modification-2
     type: modification
     label: Rewording of the definition of "clinical trial"
-    has_output: ex:clinical-trial
-    part_of: ex:research-dg
-  - id: ex:clinical-trial-modification-3
+    has_output: term:clinical-trial
+    part_of: process:research-dg
+  - id: process:clinical-trial-modification-3
     type: modification
     label: Narrowing of "clinical trial" to drug studies
-    has_output: ex:clinical-trial
-    part_of: ex:research-dg
+    has_output: term:clinical-trial
+    part_of: process:research-dg
 
 status_boundaries:
   - type: dgo:DGO_00000024           # drafted
-    part_of: ex:clinical-trial-modification-2
+    part_of: process:clinical-trial-modification-2
     occurred_on: "2026-11-01"
   - type: dgo:DGO_00000025           # submitted for review
-    part_of: ex:clinical-trial-modification-2
+    part_of: process:clinical-trial-modification-2
     occurred_on: "2026-11-02"
   - type: dgo:DGO_00000027           # rejected (listed first to test the same-day ordering)
-    part_of: ex:clinical-trial-modification-3
+    part_of: process:clinical-trial-modification-3
     occurred_on: "2026-11-03"
   - type: dgo:DGO_00000024           # drafted
-    part_of: ex:clinical-trial-modification-3
+    part_of: process:clinical-trial-modification-3
     occurred_on: "2026-11-03"
