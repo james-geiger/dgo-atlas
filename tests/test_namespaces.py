@@ -190,7 +190,8 @@ def test_processes_redirect_to_where_they_are_shown(variant):
     redirects = {r.about: r for r in site.redirects}
     assert redirects["process:research-dg"].url == "processes/research-dg.html"
     assert redirects["process:research-dg"].target == "governance.html#research-dg"
-    assert redirects["process:clinical-trial-creation"].target == "terms/clinical-trial.html#history"
+    # straight to the process's entry in its term's history
+    assert redirects["process:clinical-trial-creation"].target == "terms/clinical-trial.html#clinical-trial-creation"
     # clinical study is unpublished, so neither is its creation's IRI
     assert not any(r.target.startswith("terms/clinical-study.html") for r in site.redirects)
     assert {p.url for p in site.processes} >= {"governance.html#research-dg", "governance.html#northfield-dg"}
@@ -208,7 +209,8 @@ def test_data_pages_are_at_their_iris(variant):
 def test_certifications_redirect_to_their_data_set(variant):
     _, site = variant
     redirects = {r.about: r for r in site.redirects}
-    assert redirects["process:warehouse-studies-certification"].target == "data/warehouse-studies.html#history"
+    assert (redirects["process:warehouse-studies-certification"].target
+            == "data/warehouse-studies.html#warehouse-studies-certification")
 
 
 def test_process_minted_on_its_outputs_page_needs_no_redirect(variant):
@@ -216,6 +218,39 @@ def test_process_minted_on_its_outputs_page_needs_no_redirect(variant):
     _, site = variant
     assert not any(r.about == "data:study-dashboard#certification" or r.url == "data/study-dashboard.html"
                    for r in site.redirects)
+
+
+def test_history_entries_are_anchored_by_their_process_iri(variant):
+    """The newest entry of each process carries its anchor: the fragment of a process
+    minted on its output, so data:study-dashboard#certification scrolls to it."""
+    _, site = variant
+    dashboard = next(s for s in site.data_sets if s.about == "data:study-dashboard")
+    assert [h.anchor for h in dashboard.history] == ["certification"]
+    trial = next(t for t in site.terms if t.about == "term:clinical-trial")
+    anchored = [h for h in trial.history if h.anchor]
+    assert len(anchored) == len({h.process.about for h in trial.history})  # one per process
+    assert next(h for h in reversed(trial.history)
+                if h.process.about == "process:clinical-trial-creation").anchor == "clinical-trial-creation"
+
+
+def test_process_without_entries_is_anchored_on_the_history_heading(broken):
+    report = broken(extra={"open.yaml": (
+        "lifecycle_processes:\n  - id: term:clinical-trial#rewording\n    type: modification\n"
+        "    label: Rewording\n    has_output: term:clinical-trial\n    part_of: process:research-dg\n")})
+    assert report.ok, [str(e) for e in report.errors]
+    trial = next(t for t in Deriver(report.record, NS).site().terms if t.about == "term:clinical-trial")
+    assert "rewording" in trial.history_anchors
+
+
+def test_process_anchor_never_repeats_a_section_id(broken):
+    report = broken(extra={"clash.yaml": (
+        "lifecycle_processes:\n  - id: term:clinical-trial#history\n    type: modification\n"
+        "    label: Clash\n    has_output: term:clinical-trial\n    part_of: process:research-dg\n")})
+    assert report.ok, [str(e) for e in report.errors]
+    deriver = Deriver(report.record, NS)
+    trial = next(t for t in deriver.site().terms if t.about == "term:clinical-trial")
+    assert "history" not in (trial.history_anchors or [])
+    assert any("#history is already a section" in n for n in deriver.notes)
 
 
 def test_fragment_iris_share_a_redirect(variant):
@@ -273,6 +308,10 @@ def test_built_site_serves_every_iri(tmp_path):
     levels = (tmp_path / "data" / "sensitivity.html").read_text()
     assert '"classification.html#sensitivity-internal"' in levels
     assert 'id="sensitivity-internal"' in (tmp_path / "classification.html").read_text()
+    assert 'class="history__entry" id="certification"' in (tmp_path / "data" / "study-dashboard.html").read_text()
+    for page in tmp_path.rglob("*.html"):  # no anchor ever repeats an id
+        ids = re.findall(r'\sid="([^"]+)"', page.read_text())
+        assert len(ids) == len(set(ids)), (page, sorted(i for i in ids if ids.count(i) > 1))
 
 
 # ---------------------------------------------------------------- editor schema

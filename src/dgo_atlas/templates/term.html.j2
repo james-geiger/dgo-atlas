@@ -80,11 +80,12 @@
     </div>
     {%- endif %}
 
-    <h2 class="subhead subhead--term" id="history">{{ t("term.history") }}</h2>
+    <h2 class="subhead subhead--term" id="history">{{ t("term.history") }}
+      {%- for a in term.history_anchors or [] %}<span id="{{ a }}"></span>{% endfor %}</h2>
     {%- if term.history %}
     <ol class="history">
       {%- for h in term.history | reverse %}
-      <li class="history__entry">
+      <li class="history__entry"{% if h.anchor %} id="{{ h.anchor }}"{% endif %}>
         <div class="history__dot" aria-hidden="true"></div>
         <div class="history__meta">{{ h.occurred_on }} &middot; {{ h.process_label }} &middot; {{ h.process.label }}</div>
         <div class="history__what">{{ h.boundary_label | capitalize }}</div>

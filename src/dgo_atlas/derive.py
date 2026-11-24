@@ -51,6 +51,10 @@ PROCESS_ORDER = {"Creation": 0, "Modification": 1, "Deprecation": 2}
 PROCESS_PAGE = "governance.html"
 # Where the classification levels are shown; each has an anchor there.
 CLASSIFICATION_PAGE = "classification.html"
+# Element ids the term and data set templates use; a process anchor never takes one.
+PAGE_ANCHORS = frozenset({"main", "sitenav", "nav-toggle", "site-search", "search-results", "site-status",
+                          "theme-toggle", "permalink-value", "history", "values", "lineage", "classification",
+                          "elements"})
 # Kinds shown on another page rather than their own; their IRIs redirect.
 SHOWN_ELSEWHERE = ("process", "classification")
 
@@ -73,6 +77,7 @@ class Deriver:
         self.describe = describe or (lambda iri: ClassInfo(iri=iri))
         self.idx = index(rec)
         self.urls: dict[str, str] = {}
+        self._anchors: dict[str, str | None] = {}  # lifecycle process -> its anchor on its output's page
         # Data management.
         self.stores = self.records("data_stores")
         self.data_sets = self.records("data_sets")
@@ -147,7 +152,7 @@ class Deriver:
         for proc in self.records("lifecycle_processes"):
             owner = self.urls.get(proc.has_output)
             if owner and (proc.has_output in self.published or proc.has_output in self.certifications):
-                shown.append((proc, f"{owner}#history"))
+                shown.append((proc, f"{owner}#{self.process_anchor(proc) or 'history'}"))
         by_page: dict[str, list[tuple[object, str, str]]] = defaultdict(list)
         for obj, target in shown:
             iri = self.ns.expand(obj.id)
@@ -245,7 +250,34 @@ class Deriver:
                                              process_kind=change.process_kind,
                                              process_label=change.process_label,
                                              boundary_kind=base.slug, boundary_label=kind.name)))
-        return [row for _, row in sorted(rows, key=lambda r: r[0])]
+        entries = [row for _, row in sorted(rows, key=lambda r: r[0])]
+        anchored = set()
+        for entry in reversed(entries):  # the newest entry of each process, shown first, carries its anchor
+            if entry.process.about not in anchored:
+                anchored.add(entry.process.about)
+                entry.anchor = self.process_anchor(self.idx[entry.process.about])
+        return entries
+
+    def history_anchors(self, processes, history: list[vm.HistoryEntry]) -> list[str]:
+        """Anchors of the processes with no history entry yet, so their IRIs still land on the history."""
+        listed = {h.process.about for h in history}
+        return [a for p in processes if p.id not in listed and (a := self.process_anchor(p))]
+
+    def process_anchor(self, proc) -> str | None:
+        """The anchor of a lifecycle process on its output's page, from its IRI.
+
+        A process minted on its output (`term:x#creation`) is anchored at its fragment,
+        so its IRI scrolls to it; any other at its local name, which its redirect page
+        names. None if that would repeat an id the page already uses."""
+        if proc.id not in self._anchors:
+            iri, output = self.ns.expand(proc.id), self.ns.expand(proc.has_output)
+            anchor = iri[len(output) + 1:] if output and iri.startswith(output + "#") else self.anchor(proc.id)
+            if anchor in PAGE_ANCHORS:
+                self.notes.append(f"{proc.id}: #{anchor} is already a section of {proc.has_output}'s page, "
+                                  "so the process gets no anchor of its own")
+                anchor = None
+            self._anchors[proc.id] = anchor
+        return self._anchors[proc.id]
 
     def process_chain(self, gov: str | None) -> list[str]:
         """A governance process and every process it is part of, innermost first."""
@@ -429,7 +461,8 @@ class Deriver:
             responsibilities=self.responsibilities(term),
             governing_councils=self.refs(self.governing_councils(tid)),
             pending_changes=self.pending(tid),
-            history=self.history(tid),
+            history=(history := self.history(tid)),
+            history_anchors=self.history_anchors(self._processes(tid), history),
             successor=self.ref(successor[0]) if successor else None,
             predecessors=self.refs(t.id for t in self.terms if t.replaced_by == tid),
             broader=self.refs(self.linked(term, "broader", term.broader or [])),
@@ -515,7 +548,8 @@ class Deriver:
             certification=state,
             certified_on=certified_on,
             certifying_councils=self.refs(self.certifying_councils(s.id)),
-            history=self.history(s.id, certs),
+            history=(history := self.history(s.id, certs)),
+            history_anchors=self.history_anchors(certs, history),
             source_file=self.sources.get(s.id),
         )
 

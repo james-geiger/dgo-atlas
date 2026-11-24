@@ -87,6 +87,7 @@ classes:
       - governing_councils
       - pending_changes
       - history
+      - history_anchors
       - successor
       - predecessors
       - broader
@@ -128,7 +129,7 @@ classes:
 
   HistoryEntry:
     description: One status boundary of one of a term's or data set's lifecycle processes.
-    slots: [occurred_on, process, process_kind, process_label, boundary_kind, boundary_label]
+    slots: [occurred_on, process, process_kind, process_label, boundary_kind, boundary_label, anchor]
     slot_usage:
       process: { range: Change, inlined: true }
 
@@ -204,6 +205,7 @@ classes:
       - certified_on
       - certifying_councils
       - history
+      - history_anchors
       - source_file
     slot_usage:
       data_stores: { range: Ref, inlined: true, inlined_as_list: true }
@@ -313,6 +315,14 @@ slots:
   governing_councils: { range: Ref, multivalued: true, inlined_as_list: true }
   pending_changes: { range: Change, multivalued: true, inlined_as_list: true }
   history: { range: HistoryEntry, multivalued: true, inlined_as_list: true }
+  anchor:
+    description: >-
+      The id of this entry on the page, from its process's IRI: the fragment of
+      a process minted on its output (term:x#creation), else its local name.
+      Only the newest entry of each process has one.
+  history_anchors:
+    description: Anchors of lifecycle processes with no history entry yet, placed on the history heading.
+    multivalued: true
   successor: { range: Ref, inlined: true }
   predecessors:
     description: Terms whose replaced_by is this term.

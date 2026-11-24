@@ -353,6 +353,7 @@ class TermPage(Page):
     governing_councils: Optional[list[Ref]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['TermPage']} })
     pending_changes: Optional[list[Change]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['TermPage']} })
     history: Optional[list[HistoryEntry]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['TermPage', 'DataSetPage']} })
+    history_anchors: Optional[list[str]] = Field(default=None, description="""Anchors of lifecycle processes with no history entry yet, placed on the history heading.""", json_schema_extra = { "linkml_meta": {'domain_of': ['TermPage', 'DataSetPage']} })
     successor: Optional[Ref] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['TermPage']} })
     predecessors: Optional[list[Ref]] = Field(default=None, description="""Terms whose replaced_by is this term.""", json_schema_extra = { "linkml_meta": {'domain_of': ['TermPage']} })
     broader: Optional[list[Ref]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['TermPage']} })
@@ -452,6 +453,7 @@ class HistoryEntry(ConfiguredBaseModel):
     process_label: str = Field(default=..., description="""The process kind's name, e.g. modification: DGO's, or a local class's own.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Change', 'HistoryEntry']} })
     boundary_kind: BoundaryKind = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['HistoryEntry']} })
     boundary_label: str = Field(default=..., description="""The boundary kind's name, e.g. submitted for review: DGO's, or a local class's own.""", json_schema_extra = { "linkml_meta": {'domain_of': ['HistoryEntry']} })
+    anchor: Optional[str] = Field(default=None, description="""The id of this entry on the page, from its process's IRI: the fragment of a process minted on its output (term:x#creation), else its local name. Only the newest entry of each process has one.""", json_schema_extra = { "linkml_meta": {'domain_of': ['HistoryEntry']} })
 
 
 class CouncilPage(Page):
@@ -662,6 +664,7 @@ class DataSetPage(Page):
     certified_on: Optional[date] = Field(default=None, description="""The date of the approved boundary of the data set's certification.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Ref', 'DataSetPage']} })
     certifying_councils: Optional[list[Ref]] = Field(default=None, description="""Councils governing the data set's certifications, through their governance processes.""", json_schema_extra = { "linkml_meta": {'domain_of': ['DataSetPage']} })
     history: Optional[list[HistoryEntry]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['TermPage', 'DataSetPage']} })
+    history_anchors: Optional[list[str]] = Field(default=None, description="""Anchors of lifecycle processes with no history entry yet, placed on the history heading.""", json_schema_extra = { "linkml_meta": {'domain_of': ['TermPage', 'DataSetPage']} })
     source_file: Optional[str] = Field(default=None, description="""The governance file the object is defined in, relative to the repository.""", json_schema_extra = { "linkml_meta": {'domain_of': ['TermPage', 'DataSetPage', 'DataElementPage']} })
     about: str = Field(default=..., description="""The CURIE of the governed object this page or link is about.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'Ref', 'SemanticType', 'Change', 'Redirect']} })
     iri: str = Field(default=..., description="""The expanded IRI of the governed object (or the source).""", json_schema_extra = { "linkml_meta": {'domain_of': ['Page', 'SourceRef', 'SemanticType', 'Redirect']} })
